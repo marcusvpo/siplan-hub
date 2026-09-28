@@ -7,7 +7,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ProjectV2, ImplementationPhase, StageStatus } from "@/types/ProjectV2";
+import { ProjectV2, ImplementationPhase, ImplementationStageV2, StageStatus } from "@/types/ProjectV2";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -130,7 +130,12 @@ export function DeploymentDetailsDialog({
     const parsedStart = newStartStr ? new Date(newStartStr + "T12:00:00") : undefined;
     const parsedEnd = newEndStr ? new Date(newEndStr + "T12:00:00") : undefined;
 
-    const currentImpl = project.stages?.implementation || { status: "todo", responsible: "" };
+    const currentImpl: ImplementationStageV2 = project.stages?.implementation || {
+      status: "todo",
+      responsible: "",
+      phase1: { status: "todo", responsible: "" },
+      phase2: { status: "todo", responsible: "" },
+    };
     const currentPhase1 = currentImpl.phase1 || {};
 
     const updatedPhase1: ImplementationPhase = {

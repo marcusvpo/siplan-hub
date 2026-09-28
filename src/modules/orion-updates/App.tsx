@@ -140,9 +140,6 @@ function SharedPostPage({ id }: { id: string }) {
     return () => { cancelled = true; };
   }, [id, checkingSettings, settings]);
 
-  if (!checkingSettings && settings && !settings.public_enabled) {
-    return <PublicMaintenance title={settings.maintenance_title} message={settings.maintenance_message} />;
-  }
   useEffect(() => {
     if (!post) return;
     const previous = document.title;
@@ -151,6 +148,9 @@ function SharedPostPage({ id }: { id: string }) {
     window.history.replaceState(null, "", postPath(post));
     return () => { document.title = previous; };
   }, [post]);
+  if (!checkingSettings && settings && !settings.public_enabled) {
+    return <PublicMaintenance title={settings.maintenance_title} message={settings.maintenance_message} />;
+  }
   return <div className="page">
     <header className="topbar"><div className="container topbar-row reader-topbar-row"><div className="brand-title"><img src={appPath("/assets/Siplan_logo.png")} alt="Logo Siplan"/><div><h1>Orion Blog</h1><p>Acompanhe as novidades dos sistemas</p></div></div><BlogSignature /><div className="header-tools"><ThemeToggle/></div></div></header>
     <ReaderManagementAccess />

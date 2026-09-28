@@ -17,7 +17,6 @@ const chamados: Chamado0800[] = [
     numeroChamado: "1001",
     codigoCliente: "42",
     nomeCliente: "Cartório Central",
-    razaoSocialCliente: "Central Serviços Notariais Ltda.",
     solicitante: "Maria",
     titulo: "Falha ao emitir certidão",
     descricao: openingDescription,

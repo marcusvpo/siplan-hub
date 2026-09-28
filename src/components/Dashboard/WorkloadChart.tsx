@@ -25,7 +25,7 @@ export const WorkloadChart = ({ projects }: WorkloadChartProps) => {
   const leaderWorkload: Record<string, number> = {};
 
   projects.forEach((project) => {
-    if (project.systemType === "Modelos TN" || project.globalStatus === "done" || project.globalStatus === "archived" || project.globalStatus === "canceled") {
+    if (project.systemType === "Modelos TN" || ["done", "archived", "canceled"].includes(project.globalStatus)) {
       return;
     }
     const leader = project.projectLeader || "Sem Líder";

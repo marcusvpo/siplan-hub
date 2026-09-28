@@ -472,7 +472,7 @@ export default function ClientOverview() {
                               "implementation_status",
                             ];
                             const completed = stages.filter(
-                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
                               (s) => (project as any)[s] === "done"
                             ).length;
                             return Math.round(
@@ -494,7 +494,7 @@ export default function ClientOverview() {
                                 "conversion_status",
                                 "implementation_status",
                               ].filter(
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
                                 (s) => (project as any)[s] === "done"
                               ).length /
                                 5) *

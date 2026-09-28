@@ -2,6 +2,17 @@ import { describe, it, expect } from "vitest";
 import { parseMachineInfo, checkServerRequirements } from "../utils/infra-validation";
 
 describe("Infra Validation CPU Cores Tests", () => {
+  it.each([
+    ["Sim, VMware", "Sim"],
+    ["nao", "Não"],
+    ["Não", "Não"],
+    ["não informado", "Não"],
+    ["desconhecido", ""],
+    ["", ""],
+  ])("normaliza virtualização %s para um valor aceito pelo formulário", (raw, expected) => {
+    expect(parseMachineInfo(`[VIRTUALIZADO]\n${raw}`).virtualized).toBe(expected);
+  });
+
   it("should extract cores count from Windows/Linux processor strings", () => {
     const info1 = parseMachineInfo(`
 =================== INFORMACOES DA MAQUINA ===================

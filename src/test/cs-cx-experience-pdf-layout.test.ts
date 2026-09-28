@@ -121,6 +121,7 @@ function response(
     invitation_id: null,
     questionnaire_id: null,
     questionnaire_snapshot: null,
+    owner_profile_id: null,
     answers: {},
     registry_office: { id: registryOfficeId, name: office },
     product: null,

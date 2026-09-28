@@ -6,7 +6,7 @@ export const useKPIs = (rawProjects: ProjectV2[]): KPIData => {
     const projects = rawProjects.filter((p) => p.systemType !== "Modelos TN");
     const totalProjects = projects.length;
     const isFinalized = (p: ProjectV2) =>
-      p.globalStatus === "done" || p.globalStatus === "archived" || p.globalStatus === "canceled";
+      ["done", "archived", "canceled"].includes(p.globalStatus);
 
     const criticalProjects = projects.filter((p) => !isFinalized(p) && p.healthScore === "critical" && p.globalStatus !== "blocked").length;
     const blockedProjects = projects.filter((p) => !isFinalized(p) && p.globalStatus === "blocked").length;

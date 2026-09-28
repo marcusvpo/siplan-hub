@@ -1,0 +1,22 @@
+﻿Nova pasta\orion-blog\apps\api\src\engagement.ts 13:141  error  Unexpected control character(s) in regular expression: \x00, \x08, \x0b, \x0c, \x0e, \x1f  no-control-regex
+Nova pasta\orion-blog\apps\api\src\listing-search.ts 5:10  error  Unexpected control character(s) in regular expression: \x00, \x1f  no-control-regex
+Nova pasta\orion-blog\apps\api\src\suggestions.ts 10:10  error  Unexpected control character(s) in regular expression: \x00, \x1f                          no-control-regex
+Nova pasta\orion-blog\apps\api\src\suggestions.ts 16:12  error  Unexpected control character(s) in regular expression: \x00, \x08, \x0b, \x0c, \x0e, \x1f  no-control-regex
+Nova pasta\orion-blog\apps\web\src\App.tsx 464:5  error  Unnecessary try/catch wrapper  no-useless-catch
+src\components\FormRenderer\VisualQuestionBuilder.tsx 466:13  error    'qKey' is never reassigned. Use 'const' instead                                                                                 prefer-const
+src\components\ProjectManagement\Forms\StageForms\EnvironmentStageForm.tsx 55:13  error  'detectedVersion' is never reassigned. Use 'const' instead  prefer-const
+src\components\Reports\Implementers\ImplementerProjectsList.tsx 36:11  error  Unexpected lexical declaration in case block  no-case-declarations
+src\components\Reports\Implementers\ImplementerProjectsList.tsx 37:11  error  Unexpected lexical declaration in case block  no-case-declarations
+src\components\pos-chat\BunnyVideoPlayer.tsx 38:49  error    Unexpected combined character in character class                                                                                no-misleading-character-class
+src\components\pos-chat\BunnyVideoPlayer.tsx 38:51  error    Unexpected surrogate pair in character class. Use 'u' flag                                                                      no-misleading-character-class
+src\components\pos-chat\BunnyVideoPlayer.tsx 38:53  error    Unexpected surrogate pair in character class. Use 'u' flag                                                                      no-misleading-character-class
+src\components\pos-chat\PosChatMessageContent.tsx 148:65  error    Unexpected combined character in character class                                                                                no-misleading-character-class
+src\components\pos-chat\PosChatMessageContent.tsx 148:67  error    Unexpected surrogate pair in character class. Use 'u' flag                                                                      no-misleading-character-class
+src\components\pos-chat\PosChatMessageContent.tsx 148:69  error    Unexpected surrogate pair in character class. Use 'u' flag                                                                      no-misleading-character-class
+src\components\pos-chat\PosChatMessageContent.tsx 162:53  error    Unexpected combined character in character class                                                                                no-misleading-character-class
+src\components\pos-chat\PosChatMessageContent.tsx 162:55  error    Unexpected surrogate pair in character class. Use 'u' flag                                                                      no-misleading-character-class
+src\components\pos-chat\PosChatMessageContent.tsx 162:57  error    Unexpected surrogate pair in character class. Use 'u' flag                                                                      no-misleading-character-class
+src\modules\orion-updates\App.tsx 146:3  error  React Hook "useEffect" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+src\pages\implantadores\TransicaoPlaceholder.tsx 576:54  error    Unnecessary escape character: \/                                                                                                     no-useless-escape
+src\test\changelog-notifications.test.tsx 18:5  error  'mockHasPermission' is never reassigned. Use 'const' instead  prefer-const
+vm-worker\dist\processImproveJob.js 56:9  error  Definition for rule '@typescript-eslint/no-explicit-any' was not found  @typescript-eslint/no-explicit-any

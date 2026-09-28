@@ -80,7 +80,7 @@ export function useConversionEngines() {
     setLoading(true);
     try {
       // O schema gerado do projeto ainda é parcial; o cast fica restrito ao hook.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const { data, error } = await (supabase as any)
         .from("conversion_engines")
         .select(`
@@ -111,7 +111,7 @@ export function useConversionEngines() {
 
       if (error) throw error;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const mapped: ConversionEngineItem[] = (data || []).map((row: any) => ({
         id: row.id,
         queueId: row.queue_id,
@@ -182,7 +182,7 @@ export function useConversionEngines() {
           created_by_name: userName,
         };
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const { error } = await (supabase as any).from("conversion_engines").insert(payload);
 
         if (error) throw error;
@@ -214,7 +214,7 @@ export function useConversionEngines() {
         } = await supabase.auth.getUser();
         const requestedAt = new Date().toISOString();
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const { data: queueItem, error: queueError } = await (supabase as any)
           .from("conversion_queue")
           .select(`
@@ -227,7 +227,7 @@ export function useConversionEngines() {
         if (queueError) throw queueError;
 
         // Mantém os campos legados porque os cards da fila ainda os consomem.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const { error: updateQueueError } = await (supabase as any)
           .from("conversion_queue")
           .update({
@@ -257,7 +257,7 @@ export function useConversionEngines() {
           updated_at: requestedAt,
         };
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const { error: engineError } = await (supabase as any)
           .from("conversion_engines")
           .upsert(enginePayload, { onConflict: "queue_id" });
@@ -300,7 +300,7 @@ export function useConversionEngines() {
           updated_at: updatedAt,
         };
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const { error } = await (supabase as any)
           .from("conversion_engines")
           .update(updateData)
@@ -317,7 +317,7 @@ export function useConversionEngines() {
             updated_at: updatedAt,
           };
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
           const { error: queueError } = await (supabase as any)
             .from("conversion_queue")
             .update(queueUpdate)
@@ -350,7 +350,7 @@ export function useConversionEngines() {
     async (engineId: string): Promise<boolean> => {
       setDeleting(true);
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const { error } = await (supabase as any)
           .from("conversion_engines")
           .delete()

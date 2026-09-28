@@ -161,7 +161,7 @@ export default function RoadmapPage() {
       if (!token) return;
 
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const response = await (supabase.rpc as any)("get_roadmap_data", {
           token_uuid: token,
         });

@@ -35,7 +35,7 @@ export const BunnyVideoPlayer: React.FC<BunnyVideoPlayerProps> = ({ url, title }
   const embedUrl = formatBunnyEmbedUrl(url);
 
   // Clean title if it contains emojis or prefix already
-  const displayTitle = title ? title.replace(/^[▶️🎬🎥\s]+/, "").trim() : "Videoaula Tutorial - Orion TN";
+  const displayTitle = title ? title.replace(/^(?:▶\uFE0F?|🎬|🎥|\s)+/u, "").trim() : "Videoaula Tutorial - Orion TN";
 
   return (
     <div className="bunny-player-container my-3.5 max-w-xl w-full">

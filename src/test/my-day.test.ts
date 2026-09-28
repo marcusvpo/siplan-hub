@@ -37,14 +37,14 @@ function project(
     isArchived: false,
     stages: {
       infra: { status: "done", responsible: "Outra Pessoa" },
-      adherence: { status: "in-progress", responsible: "Bruno Fernandes" },
-      environment: { status: "todo", responsible: "" },
+      adherence: { status: "in-progress", responsible: "Bruno Fernandes", hasProductGap: false, analysisComplete: false },
+      environment: { status: "todo", responsible: "", approvedByInfra: false, testAvailable: false },
       conversion: { status: "todo", responsible: "" },
-      implementation: { status: "todo", responsible: "" },
-      post: { status: "todo", responsible: "" },
+      implementation: { status: "todo", responsible: "", phase1: { status: "todo" }, phase2: { status: "todo" } },
+      post: { status: "todo", responsible: "", followupNeeded: false },
     },
     ...overrides,
-  } as ProjectV2;
+  };
 }
 
 describe("Central de Trabalho / Meu Dia", () => {
@@ -74,11 +74,13 @@ describe("Central de Trabalho / Meu Dia", () => {
           status: "in-progress",
           responsible: "Bruno Fernandes",
           endDate: new Date("2026-09-10T12:00:00-03:00"),
+          hasProductGap: false,
+          analysisComplete: false,
         },
-        environment: { status: "todo", responsible: "" },
+        environment: { status: "todo", responsible: "", approvedByInfra: false, testAvailable: false },
         conversion: { status: "todo", responsible: "" },
-        implementation: { status: "todo", responsible: "" },
-        post: { status: "todo", responsible: "" },
+        implementation: { status: "todo", responsible: "", phase1: { status: "todo" }, phase2: { status: "todo" } },
+        post: { status: "todo", responsible: "", followupNeeded: false },
       },
     });
 
@@ -101,11 +103,11 @@ describe("Central de Trabalho / Meu Dia", () => {
           projectLeader: "Outra Pessoa",
           stages: {
             infra: { status: "in-progress", responsible: "Outra Pessoa" },
-            adherence: { status: "todo", responsible: "" },
-            environment: { status: "todo", responsible: "" },
+            adherence: { status: "todo", responsible: "", hasProductGap: false, analysisComplete: false },
+            environment: { status: "todo", responsible: "", approvedByInfra: false, testAvailable: false },
             conversion: { status: "todo", responsible: "" },
-            implementation: { status: "todo", responsible: "" },
-            post: { status: "todo", responsible: "" },
+            implementation: { status: "todo", responsible: "", phase1: { status: "todo" }, phase2: { status: "todo" } },
+            post: { status: "todo", responsible: "", followupNeeded: false },
           },
         }),
       ],
@@ -122,8 +124,8 @@ describe("Central de Trabalho / Meu Dia", () => {
       clientName: "Cartório Integrado",
       stages: {
         infra: { status: "done", responsible: "Outra Pessoa" },
-        adherence: { status: "done", responsible: "Outra Pessoa" },
-        environment: { status: "done", responsible: "Outra Pessoa" },
+        adherence: { status: "done", responsible: "Outra Pessoa", hasProductGap: false, analysisComplete: true },
+        environment: { status: "done", responsible: "Outra Pessoa", approvedByInfra: true, testAvailable: true },
         conversion: { status: "done", responsible: "Outra Pessoa" },
         implementation: {
           status: "in-progress",
@@ -141,7 +143,7 @@ describe("Central de Trabalho / Meu Dia", () => {
             endDate: new Date("2026-09-19T12:00:00-03:00"),
           },
         },
-        post: { status: "todo", responsible: "" },
+        post: { status: "todo", responsible: "", followupNeeded: false },
       },
     });
 

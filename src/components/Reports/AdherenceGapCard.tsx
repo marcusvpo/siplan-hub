@@ -9,7 +9,7 @@ interface AdherenceGapCardProps {
 
 export function AdherenceGapCard({ projects }: AdherenceGapCardProps) {
   const activeProjects = projects.filter(
-    (p) => p.systemType !== "Modelos TN" && p.globalStatus !== "done" && p.globalStatus !== "archived" && p.globalStatus !== "canceled"
+    (p) => p.systemType !== "Modelos TN" && !["done", "archived", "canceled"].includes(p.globalStatus)
   );
   const projectsWithGap = activeProjects.filter(hasAdherenceGap);
   const gapCount = projectsWithGap.length;

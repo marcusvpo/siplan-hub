@@ -480,9 +480,9 @@ export function NpsAnalyticsPanel({
                     margin={{ top: 12, right: 20, bottom: 0, left: 0 }}
                     className="cursor-pointer"
                     onClick={(event) => {
-                      const point = event?.activePayload?.[0]?.payload as
-                        | (typeof analytics.monthly)[number]
-                        | undefined;
+                      const activeIndex = event.activeTooltipIndex;
+                      if (activeIndex == null || activeIndex === "") return;
+                      const point = analytics.monthly[Number(activeIndex)];
                       if (point) openMonth(point.key, point.label);
                     }}
                   >

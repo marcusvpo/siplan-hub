@@ -52,7 +52,7 @@ export function EnvironmentStageForm({
         const osString = serverWithOs.os.trim();
         const lower = osString.toLowerCase();
         let detectedType = "";
-        let detectedVersion = osString;
+        const detectedVersion = osString;
 
         if (lower.includes("windows") || lower.includes("win")) {
           detectedType = "Windows";

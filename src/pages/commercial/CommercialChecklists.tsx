@@ -394,7 +394,7 @@ export default function CommercialChecklists() {
       // Find and delete matching deployment form if exists
       const matchedForm = forms.find(f => f.ticket_number === ticketNumber);
       if (matchedForm) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         supabase.from("deployment_forms" as any).delete().eq("id", matchedForm.id).then(() => {
           deleteChecklist.mutate(id);
         });

@@ -430,7 +430,7 @@ export type OrionUpdateAuditUpdate = Partial<OrionUpdateAuditInsert>;
  * mantêm os consumidores legados sem tipagem até ser possível regenerar todo o
  * schema, enquanto o novo cadastro de motores permanece tipado explicitamente.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 type UntypedSupabaseShape = any;
 
 export type Database = UntypedSupabaseShape;

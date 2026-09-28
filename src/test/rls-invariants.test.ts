@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import type { Client } from "pg";
 
 /**
  * Invariantes de RLS verificadas contra o banco de verdade.
@@ -19,6 +20,7 @@ import { resolve } from "node:path";
  */
 
 function getDbUrl(): string | null {
+  if (process.env.SUPABASE_DB_URL) return process.env.SUPABASE_DB_URL;
   try {
     const env = readFileSync(resolve(__dirname, "../../.env"), "utf8");
     const line = env
@@ -34,8 +36,7 @@ const dbUrl = getDbUrl();
 const suite = dbUrl ? describe : describe.skip;
 
 suite("invariantes de RLS (banco real)", () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let client: any;
+  let client: Client;
 
   beforeAll(async () => {
     // Sem try/catch de proposito: se o pg ou a conexao falharem, o teste tem
@@ -59,7 +60,7 @@ suite("invariantes de RLS (banco real)", () => {
       select tablename, cmd, policyname
       from pg_policies
       where schemaname = 'public'
-        and 'public' = any(roles)
+        and ('public' = any(roles) or 'anon' = any(roles))
         and cmd in ('INSERT','UPDATE','DELETE','ALL')
         and coalesce(with_check::text, qual::text) = 'true'
       order by tablename, cmd
@@ -70,6 +71,8 @@ suite("invariantes de RLS (banco real)", () => {
 
   it("nenhuma tabela expoe LEITURA irrestrita ao anonimo fora das rotas publicas", async () => {
     // Estas tres sustentam /roadmap/:token e /public/checklist/:id.
+    // A configuração de manutenção do blog é pública por contrato; a exceção
+    // abaixo identifica a policy exata e tem uma verificação adicional da RPC.
     const permitidas = ["roadmaps", "commercial_checklists", "form_templates"];
     const { rows } = await client.query(
       `
@@ -80,11 +83,46 @@ suite("invariantes de RLS (banco real)", () => {
         and ('public' = any(roles) or 'anon' = any(roles))
         and qual::text = 'true'
         and tablename <> all($1::text[])
+        and not (
+          tablename = 'orion_update_settings'
+          and policyname = 'orion_update_settings_public_select'
+        )
       order by tablename
     `,
       [permitidas],
     );
     expect(rows).toEqual([]);
+  });
+
+  it("a RPC pública do blog omite autoria e as policies não liberam escrita anônima", async () => {
+    const { rows } = await client.query(`
+      select
+        has_function_privilege('anon', 'public.orion_updates_get_settings()', 'EXECUTE') as public_read,
+        pg_get_function_result('public.orion_updates_get_settings()'::regprocedure) as public_result,
+        pg_get_functiondef('public.orion_updates_update_settings(boolean,text,text)'::regprocedure) as update_definition,
+        array(
+          select column_name::text from information_schema.columns
+          where table_schema = 'public' and table_name = 'orion_update_settings'
+          order by column_name
+        ) as settings_columns,
+        exists (
+          select 1 from pg_policies
+          where schemaname = 'public' and tablename = 'orion_update_settings'
+            and cmd in ('INSERT', 'UPDATE', 'DELETE', 'ALL')
+            and ('public' = any(roles) or 'anon' = any(roles))
+            and coalesce(with_check::text, qual::text) = 'true'
+        ) as anonymous_write
+    `);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ public_read: true, anonymous_write: false });
+    expect(rows[0].settings_columns).toEqual([
+      "id", "maintenance_message", "maintenance_title", "public_enabled", "updated_at", "updated_by",
+    ]);
+    expect(rows[0].public_result).toMatch(/public_enabled boolean/);
+    expect(rows[0].public_result).toMatch(/maintenance_title/);
+    expect(rows[0].public_result).toMatch(/maintenance_message/);
+    expect(rows[0].public_result).not.toMatch(/updated_by|uuid/i);
+    expect(rows[0].update_definition).toMatch(/IF NOT public\.has_permission\(auth\.uid\(\), 'orion_updates_management', 'edit'\)/i);
   });
 
   it("todo perfil nao-admin alcanca as telas do menu que enxerga", async () => {

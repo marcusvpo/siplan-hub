@@ -177,7 +177,7 @@ export default function PublicInfraCollection() {
     queryKey: ["publicProjectInfo", id],
     queryFn: async () => {
       if (!id) return null;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const { data, error } = await (supabase.rpc as any)("get_project_public_info", { p_id: id });
       if (error) throw error;
       return data;
@@ -510,7 +510,7 @@ export default function PublicInfraCollection() {
 
     setIsSubmitting(true);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const { data: success, error } = await (supabase.rpc as any)("update_project_public_infra", {
         p_id: id,
         p_workstations: workstations,

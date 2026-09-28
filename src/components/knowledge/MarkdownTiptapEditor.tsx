@@ -142,7 +142,7 @@ export function MarkdownTiptapEditor({
     if (!editor) return;
     const currentMarkdown = (editor.storage as any).markdown?.getMarkdown?.() || "";
     if (value !== currentMarkdown && editor.getHTML() !== value) {
-      editor.commands.setContent(value, false);
+      editor.commands.setContent(value, { emitUpdate: false });
     }
   }, [value, editor]);
 

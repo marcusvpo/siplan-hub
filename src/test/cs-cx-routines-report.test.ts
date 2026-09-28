@@ -15,6 +15,7 @@ const models: CsCxRoutineModel[] = [{
 const routines: CsCxOfficeRoutine[] = [{
   id: "routine-1", legacy_id: 20, registry_office_id: "office-1", routine_model_id: "model-1",
   active: true, applied_at: "2026-08-10T12:00:00.000Z", notes: "Acompanhamento mensal", origin: "legacy",
+  applied_by: null,
   registry_office: { id: "office-1", name: "Cartório Central" },
   routine_model: { id: "model-1", name: "Firmas", description: "Rotina de firmas" },
   items: [

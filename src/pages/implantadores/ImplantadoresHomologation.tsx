@@ -238,7 +238,7 @@ export default function ImplantadoresHomologation() {
 
       if (error) throw error;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const items: ConversionQueueItem[] = (data || []).map((item: any) => ({
         id: item.id,
         projectId: item.project_id,

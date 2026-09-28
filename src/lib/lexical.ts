@@ -1,6 +1,6 @@
 // Helpers para o editor Lexical usado nos campos rich-text da Transicao.
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 type LexicalNode = Record<string, any>;
 
 // Bitmask de formato do Lexical (constantes reais do editor):

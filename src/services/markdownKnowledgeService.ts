@@ -369,7 +369,7 @@ export function serializeArticleToMarkdown(
       indent: 2,
       lineWidth: -1,
       noRefs: true,
-      quotingType: '"',
+      quoteStyle: 'double',
       forceQuotes: false,
     })
     .trim();

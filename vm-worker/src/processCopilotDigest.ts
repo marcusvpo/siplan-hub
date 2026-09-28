@@ -7,7 +7,7 @@ import { humanizeCopilotText } from "./copilotLanguage.js";
 const MAX_PROJECTS = 800;
 const MAX_CONTEXT_CHARS = 130000;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 type AnyObj = any;
 
 function shortName(v: unknown): string {

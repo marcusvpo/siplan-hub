@@ -10,7 +10,13 @@ import { visitorHash } from './visitor.js';
 const paramsSchema = z.object({ id: idSchema });
 const reactionSchema = z.discriminatedUnion('tipo', [
   z.object({ tipo: z.literal('like') }).strict(),
-  z.object({ tipo: z.literal('dislike'), motivo: z.string().trim().min(1, 'Descreva o motivo.').max(1000, 'Use até 1000 caracteres.').regex(/^[^\u0000-\u0008\u000b\u000c\u000e-\u001f]*$/, 'Remova caracteres de controle.') }).strict(),
+  z.object({
+    tipo: z.literal('dislike'),
+    motivo: z.string().trim().min(1, 'Descreva o motivo.').max(1000, 'Use até 1000 caracteres.')
+      .refine(value => Array.from(value).every(character =>
+        character.charCodeAt(0) >= 0x20 || '\t\n\r'.includes(character)
+      ), 'Remova caracteres de controle.'),
+  }).strict(),
   z.object({ tipo: z.null() }).strict(),
 ]);
 const pageSchema = z.object({ page: z.coerce.number().int().min(1).max(10000).default(1) });

@@ -874,7 +874,7 @@ export function InfraStageForm({
 
   // Add Item Helpers
   const addServer = () => {
-    const newServers = [...servers, {
+    const newServers: ServerInfo[] = [...servers, {
       hostname: `SERVIDOR-0${servers.length + 1}`,
       brandModel: "",
       virtualized: "Não",
@@ -2217,7 +2217,7 @@ export function InfraStageForm({
                           <TableCell className="p-0.5">
                             <div className="flex items-center gap-1">
                               <Select
-                                value={ws.meetsRequirements || ""}
+                                value={typeof ws.meetsRequirements === "boolean" ? (ws.meetsRequirements ? "Sim" : "Não") : ws.meetsRequirements || ""}
                                 onValueChange={v => {
                                   const list = [...workstations];
                                   list[idx].meetsRequirements = v as "Sim" | "Não";

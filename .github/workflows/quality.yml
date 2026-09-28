@@ -1,0 +1,58 @@
+name: Validar aplicação e worker
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: http://127.0.0.1:54321
+      VITE_SUPABASE_PUBLISHABLE_KEY: ci-local-test-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            vm-worker/package-lock.json
+      - name: Instalar dependências da aplicação
+        run: npm ci
+      - name: Instalar dependências do worker
+        run: npm --prefix vm-worker ci
+      - name: Verificar lint
+        run: npm run lint
+      - name: Verificar tipos da aplicação e Vite
+        run: npm run typecheck
+      - name: Executar testes da aplicação
+        run: npm test
+      - name: Gerar aplicação e PWA
+        run: npm run build
+      - name: Verificar regressões no navegador e PWA offline
+        run: npm run test:browser
+      - name: Verificar tipos do worker
+        run: npm run typecheck:worker
+      - name: Executar testes do worker
+        run: npm --prefix vm-worker test
+      - name: Guardar evidências do navegador
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-regressions
+          path: |
+            node_modules/.cache/browser-regressions/*.json
+            node_modules/.cache/browser-regressions/*.png
+          if-no-files-found: ignore
+          retention-days: 7

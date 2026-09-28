@@ -1,343 +1,256 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Session, User, type SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { AuthContext, UserRole, Permission } from "./AuthContextValue";
 
 const authDb = supabase as unknown as SupabaseClient;
+const SESSION_TIMEOUT_MS = 8000;
+const ACCESS_TIMEOUT_MS = 15000;
+
+interface AuthState {
+  session: Session | null;
+  user: User | null;
+  fullName: string | null;
+  role: UserRole;
+  team: string | null;
+  permissions: Permission[];
+  loading: boolean;
+  permissionsLoaded: boolean;
+  authError: string | null;
+  accessRevision: number;
+}
+
+function emptyAuthState(session: Session | null, accessRevision: number): AuthState {
+  return {
+    session,
+    user: session?.user ?? null,
+    fullName: null,
+    role: null,
+    team: null,
+    permissions: [],
+    loading: false,
+    permissionsLoaded: !session?.user,
+    authError: null,
+    accessRevision,
+  };
+}
+
+async function withTimeout<T>(request: PromiseLike<T>, timeoutMs: number): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      request,
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error("Auth request timeout")), timeoutMs);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [fullName, setFullName] = useState<string | null>(null);
-  const [role, setRole] = useState<UserRole>(null);
-  const [team, setTeam] = useState<string | null>(null);
-  const [permissions, setPermissions] = useState<Permission[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [permissionsLoaded, setPermissionsLoaded] = useState(false);
-  const { toast } = useToast();
+  const [auth, setAuth] = useState<AuthState>(() => ({
+    ...emptyAuthState(null, 0),
+    loading: true,
+    permissionsLoaded: false,
+  }));
+  const mounted = useRef(false);
+  const requestId = useRef(0);
+  const accessRevision = useRef(0);
+  const authState = useRef(auth);
+  const currentSession = useRef<Session | null>(null);
+  const accessController = useRef<AbortController | null>(null);
+  const signingOut = useRef(false);
 
-  // Use ref to track loading state for the timeout callback
-  const loadingRef = React.useRef(loading);
-  useEffect(() => {
-    loadingRef.current = loading;
-  }, [loading]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function initializeAuth() {
-      try {
-        // Get initial session with timeout to prevent hanging
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise<{
-          data: { session: Session | null };
-          error: Error;
-        }>((resolve) =>
-          setTimeout(
-            () =>
-              resolve({
-                data: { session: null },
-                error: new Error("Auth timeout"),
-              }),
-            5000,
-          ),
-        );
-
-        const {
-          data: { session },
-          error,
-        } = await Promise.race([sessionPromise, timeoutPromise]);
-
-        if (error) {
-          // If timeout or specific error, clear session to prevent infinite loop
-          if (error.message === "Auth timeout") {
-            console.warn("Session fetch timed out. Retrying once...");
-
-            // Retry once with longer timeout
-            const retrySessionPromise = supabase.auth.getSession();
-            const retryTimeoutPromise = new Promise<{
-              data: { session: Session | null };
-              error: Error;
-            }>((resolve) =>
-              setTimeout(
-                () =>
-                  resolve({
-                    data: { session: null },
-                    error: new Error("Auth timeout retry"),
-                  }),
-                8000,
-              ),
-            );
-
-            const {
-              data: { session: retrySession },
-              error: retryError,
-            } = await Promise.race([retrySessionPromise, retryTimeoutPromise]);
-
-            if (!retryError && retrySession) {
-              if (mounted) {
-                setSession(retrySession);
-                setUser(retrySession.user ?? null);
-                // Don't await this, let it run in background to not block UI
-                fetchUserRole(retrySession.user.id);
-                setLoading(false);
-              }
-              return;
-            }
-
-            console.warn("Retry failed or timed out. Clearing session.");
-
-            // Force sign out without waiting to prevent blocking
-            supabase.auth.signOut().catch(console.error);
-
-            // Manually clear ALL Supabase keys from local storage
-            Object.keys(localStorage).forEach((key) => {
-              if (key.startsWith("sb-")) {
-                localStorage.removeItem(key);
-              }
-            });
-
-            if (mounted) {
-              setSession(null);
-              setUser(null);
-              setFullName(null);
-              setRole(null);
-              setTeam(null);
-              setLoading(false);
-              setPermissionsLoaded(true);
-            }
-            return;
-          }
-
-          console.error("Error getting session:", error);
-          if (mounted) {
-            setLoading(false);
-            setPermissionsLoaded(true);
-          }
-          return;
-        }
-
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-
-          if (session?.user) {
-            // Don't await role fetch to prevent blocking initial load
-            fetchUserRole(session.user.id);
-            setLoading(false);
-          } else {
-            setLoading(false);
-            setPermissionsLoaded(true);
-          }
-        }
-      } catch (error) {
-        console.error("Error initializing auth:", error);
-        if (mounted) {
-          setLoading(false);
-          setPermissionsLoaded(true);
-        }
-      }
-    }
-
-    initializeAuth();
-
-    // Listen for changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (mounted) {
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          // Don't await role fetch here either
-          fetchUserRole(session.user.id);
-        } else {
-          setRole(null);
-          setFullName(null);
-          setTeam(null);
-          setPermissions([]);
-          setLoading(false);
-          setPermissionsLoaded(true);
-        }
-      }
-    });
-
-    // Safety timeout to prevent infinite loading
-    const timeoutId = setTimeout(() => {
-      if (mounted && loadingRef.current) {
-        console.warn("Auth loading timed out, forcing completion.");
-        setLoading(false);
-      }
-    }, 10000); // 10 seconds timeout
-
-    return () => {
-      mounted = false;
-      clearTimeout(timeoutId);
-      subscription.unsubscribe();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  const publishAuth = useCallback((nextState: AuthState) => {
+    authState.current = nextState;
+    setAuth(nextState);
   }, []);
 
-  const fetchPermissions = async (roleName: string) => {
+  const advanceAccessRevision = useCallback(() => ++accessRevision.current, []);
+
+  const startRequest = useCallback(() => {
+    accessController.current?.abort();
+    return ++requestId.current;
+  }, []);
+
+  const applySession = useCallback(async (nextSession: Session | null) => {
+    const previous = authState.current;
+    const preserveAccess = Boolean(nextSession?.user &&
+      previous.user?.id === nextSession.user.id && !previous.loading &&
+      previous.permissionsLoaded && !previous.authError &&
+      previous.accessRevision === accessRevision.current && !signingOut.current);
+    const activeRequest = startRequest();
+    currentSession.current = nextSession;
+    if (preserveAccess) {
+      // Renovar a mesma sessão mantém formulários e drafts montados durante a revalidação.
+      publishAuth({ ...previous, session: nextSession, user: nextSession?.user ?? null });
+    } else {
+      publishAuth(emptyAuthState(nextSession, advanceAccessRevision()));
+    }
+    if (!nextSession?.user) return;
+
+    const controller = new AbortController();
+    accessController.current = controller;
+    const isCurrentRequest = () => mounted.current && requestId.current === activeRequest;
+    let errorMessage = "Não foi possível carregar seu perfil. Verifique sua conexão e tente novamente.";
+
     try {
-      const [globalResult, csCxResult] = await Promise.all([
+      const profileResult = await withTimeout(
         supabase
-          .from("app_roles")
-          .select(`
-            name,
-            app_role_permissions (
-              app_permissions (
-                resource,
-                action
-              )
-            )
-          `)
-          .eq("name", roleName)
+          .from("profiles")
+          .select("role, team, full_name")
+          .eq("id", nextSession.user.id)
+          .abortSignal(controller.signal)
           .single(),
-        authDb.rpc("cs_cx_get_my_permissions"),
-      ]);
+        ACCESS_TIMEOUT_MS,
+      );
+      if (!isCurrentRequest()) return;
+      if (profileResult.error) throw profileResult.error;
+      if (!profileResult.data?.role) throw new Error("Perfil sem função de acesso");
 
-      if (globalResult.error) console.error("Error fetching global permissions:", globalResult.error);
-      if (csCxResult.error) console.error("Error fetching CS/CX permissions:", csCxResult.error);
+      const profile = profileResult.data;
+      errorMessage = "Não foi possível carregar suas permissões. Verifique sua conexão e tente novamente.";
+      const [globalResult, csCxResult] = await withTimeout(
+        Promise.all([
+          supabase
+            .from("app_roles")
+            .select("name, app_role_permissions (app_permissions (resource, action))")
+            .eq("name", profile.role)
+            .abortSignal(controller.signal)
+            .single(),
+          authDb.rpc("cs_cx_get_my_permissions").abortSignal(controller.signal),
+        ]),
+        ACCESS_TIMEOUT_MS,
+      );
+      if (!isCurrentRequest()) return;
+      if (globalResult.error) throw globalResult.error;
+      if (csCxResult.error) throw csCxResult.error;
+      if (!globalResult.data) throw new Error("Perfil de permissões não encontrado");
 
-      const globalPermissions: Permission[] = globalResult.data?.app_role_permissions
-          .map((rp: { app_permissions: unknown }) => rp.app_permissions as unknown as Permission)
-          .filter(Boolean) ?? [];
+      const globalPermissions = (globalResult.data.app_role_permissions ?? [])
+        .map((entry: { app_permissions: unknown }) => entry.app_permissions as Permission | null)
+        .filter((permission): permission is Permission => Boolean(permission));
       const csCxPermissions = (csCxResult.data ?? []) as Permission[];
       const uniquePermissions = new Map<string, Permission>();
       for (const permission of [...globalPermissions, ...csCxPermissions]) {
         uniquePermissions.set(`${permission.resource}:${permission.action}`, permission);
       }
-      setPermissions([...uniquePermissions.values()]);
+
+      // Publica perfil e permissões juntos, somente para a sessão ainda vigente.
+      publishAuth({
+        ...emptyAuthState(nextSession, advanceAccessRevision()),
+        role: profile.role,
+        team: profile.team || null,
+        fullName: profile.full_name || null,
+        permissions: [...uniquePermissions.values()],
+        permissionsLoaded: true,
+      });
     } catch (error) {
-      console.error("Exception fetching permissions:", error);
-      setPermissions([]);
+      controller.abort();
+      if (!isCurrentRequest()) return;
+      console.error("Erro ao carregar o acesso do usuário:", error);
+      publishAuth({
+        ...emptyAuthState(nextSession, advanceAccessRevision()),
+        permissionsLoaded: true,
+        authError: errorMessage,
+      });
     } finally {
-      setPermissionsLoaded(true);
+      if (accessController.current === controller) accessController.current = null;
     }
-  };
+  }, [advanceAccessRevision, publishAuth, startRequest]);
 
-  const fetchUserRole = async (userId: string) => {
+  const retryAuth = useCallback(async () => {
+    if (signingOut.current) return;
+    const activeRequest = startRequest();
+    const nextState = emptyAuthState(currentSession.current, advanceAccessRevision());
+    publishAuth({ ...nextState, loading: true, permissionsLoaded: false });
+
     try {
-      // Create a promise that rejects after timeout
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Role fetch timeout")), 15000),
-      );
-      const fetchPromise = supabase
-        .from("profiles")
-        .select("role, team, full_name")
-        .eq("id", userId)
-        .single();
-
-      // Race the fetch against the timeout
-      const { data, error } = await Promise.race([
-        fetchPromise,
-        timeoutPromise,
-      ]);
-
-      if (error) {
-        console.error("Error fetching role:", error);
-        setRole("user");
-      } else {
-        setRole(data?.role as UserRole);
-        setTeam(data?.team || null);
-        setFullName(data?.full_name || null);
-        if (data?.role) {
-            // we intentionally wait for permissions to finish if we await fetchPermissions
-            await fetchPermissions(data.role as string);
-          } else {
-            setPermissions([]);
-            setPermissionsLoaded(true);
-          }
-        }
-      } catch (error) {
-      // If timeout, try one more time
-      if (error instanceof Error && error.message === "Role fetch timeout") {
-        console.warn("Role fetch timed out. Retrying once...");
-        try {
-          const { data, error: retryError } = await supabase
-            .from("profiles")
-            .select("role, team, full_name")
-            .eq("id", userId)
-            .single();
-
-          if (retryError) {
-            console.error("Error fetching role (retry):", retryError);
-            setRole("user");
-          } else {
-            setRole(data?.role as UserRole);
-            setTeam(data?.team || null);
-            setFullName(data?.full_name || null);
-            if (data?.role) {
-                await fetchPermissions(data.role as string);
-              } else {
-                setPermissions([]);
-                setPermissionsLoaded(true);
-              }
-            }
-          } catch (retryErr) {
-          console.error("Error in fetchUserRole (retry):", retryErr);
-          setRole("user");
-          setPermissionsLoaded(true);
-        }
-      } else {
-        console.error("Error in fetchUserRole:", error);
-        setRole("user");
-        setPermissionsLoaded(true);
-      }
-    } finally {
-      // Ensure loading is set to false regardless of outcome
-      // We check if loading is still true to avoid unnecessary state updates
-      if (loadingRef.current) {
-        setLoading(false);
-      }
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("Error signing out:", error);
-      }
-    } catch (err) {
-      console.error("Exception during sign out:", err);
-    } finally {
-      // Force clear local state
-      setSession(null);
-      setUser(null);
-      setFullName(null);
-      setRole(null);
-      setTeam(null);
-      setPermissions([]);
-
-      // Clear Supabase tokens from local storage
-      Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith("sb-")) {
-          localStorage.removeItem(key);
-        }
+      const { data, error } = await withTimeout(supabase.auth.getSession(), SESSION_TIMEOUT_MS);
+      // Eventos de autenticação têm precedência sobre uma leitura de sessão atrasada.
+      if (!mounted.current || requestId.current !== activeRequest) return;
+      if (error) throw error;
+      await applySession(data.session);
+    } catch (error) {
+      if (!mounted.current || requestId.current !== activeRequest) return;
+      console.error("Erro ao carregar a sessão:", error);
+      publishAuth({
+        ...nextState,
+        permissionsLoaded: true,
+        authError: "Não foi possível verificar sua sessão. Verifique sua conexão e tente novamente.",
       });
     }
+  }, [advanceAccessRevision, applySession, publishAuth, startRequest]);
+
+  useEffect(() => {
+    mounted.current = true;
+    void retryAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!mounted.current || signingOut.current) return;
+      // Não aguarde consultas dentro do callback: o Supabase ainda detém o lock de Auth.
+      void applySession(nextSession);
+    });
+
+    return () => {
+      mounted.current = false;
+      startRequest();
+      advanceAccessRevision();
+      subscription.unsubscribe();
+    };
+  }, [advanceAccessRevision, applySession, retryAuth, startRequest]);
+
+  const signOut = async () => {
+    if (signingOut.current) return;
+    signingOut.current = true;
+    const activeRequest = startRequest();
+    const logoutState = emptyAuthState(null, advanceAccessRevision());
+    currentSession.current = null;
+    // Revoga o acesso local imediatamente, inclusive para respostas ainda em trânsito.
+    publishAuth({ ...logoutState, loading: true, permissionsLoaded: false });
+    const storedCredentials = new Map<string, string | null>();
+    try {
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith("sb-")) storedCredentials.set(key, localStorage.getItem(key));
+      });
+    } catch (error) {
+      console.error("Erro ao consultar credenciais locais:", error);
+    }
+    try {
+      // Aguarda o SDK concluir: liberar antes deixaria o logout apagar um login posterior.
+      const { error } = await supabase.auth.signOut();
+      if (error) console.error("Erro ao sair:", error);
+    } catch (error) {
+      console.error("Erro ao sair:", error);
+    } finally {
+      try {
+        storedCredentials.forEach((credential, key) => {
+          if (localStorage.getItem(key) === credential) localStorage.removeItem(key);
+        });
+      } catch (error) {
+        console.error("Erro ao remover credenciais locais:", error);
+      }
+      signingOut.current = false;
+      if (mounted.current && requestId.current === activeRequest) publishAuth(logoutState);
+    }
   };
 
+  const accessReady = !auth.loading && auth.permissionsLoaded && !auth.authError &&
+    Boolean(auth.user) && auth.accessRevision === accessRevision.current;
   const hasPermission = (resource: string, action: string) => {
-    if (role === "admin") return true; // Falback for superadmin
-    return permissions.some((p) => p.resource === resource && p.action === action);
+    if (!accessReady || auth.accessRevision !== accessRevision.current) return false;
+    if (auth.role === "admin") return true;
+    return auth.permissions.some((permission) => permission.resource === resource && permission.action === action);
   };
 
+  const { accessRevision: _, ...state } = auth;
   const value = {
-    session,
-    user,
-    fullName,
-    role,
-    team,
-    permissions,
-    permissionsLoaded,
-    loading,
+    ...state,
+    retryAuth,
     signOut,
-    isAdmin: role === "admin",
+    isAdmin: accessReady && auth.role === "admin",
     hasPermission,
   };
 

@@ -8,7 +8,7 @@ interface HealthDistributionProps {
 
 export function HealthDistribution({ projects }: HealthDistributionProps) {
   const activeProjects = projects.filter(
-    (p) => p.systemType !== "Modelos TN" && p.globalStatus !== "done" && p.globalStatus !== "archived" && p.globalStatus !== "canceled"
+    (p) => p.systemType !== "Modelos TN" && !["done", "archived", "canceled"].includes(p.globalStatus)
   );
   const ok = activeProjects.filter((p) => p.healthScore === "ok").length;
   const warning = activeProjects.filter((p) => p.healthScore === "warning").length;

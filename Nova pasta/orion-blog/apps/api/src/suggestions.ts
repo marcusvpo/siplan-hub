@@ -7,13 +7,17 @@ import { requireAdmin } from './auth/session.js';
 import { publicationSearchSchema } from './listing-search.js';
 
 const shortText = (max: number) => z.string().trim().min(1, 'Campo obrigatório.').max(max, `Use até ${max} caracteres.`)
-  .regex(/^[^\u0000-\u001f\u007f]*$/, 'Remova caracteres de controle.');
+  .refine(value => Array.from(value).every(character =>
+    character.charCodeAt(0) >= 0x20 && character.charCodeAt(0) !== 0x7f
+  ), 'Remova caracteres de controle.');
 const suggestionSchema = z.object({
   envio_id: z.string().uuid(),
   nome: shortText(100),
   cartorio: shortText(180),
   sugestao: z.string().trim().min(1, 'Descreva sua sugestão.').max(4000, 'Use até 4000 caracteres.')
-    .regex(/^[^\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]*$/, 'Remova caracteres de controle.'),
+    .refine(value => Array.from(value).every(character =>
+      (character.charCodeAt(0) >= 0x20 && character.charCodeAt(0) !== 0x7f) || '\t\n\r'.includes(character)
+    ), 'Remova caracteres de controle.'),
 }).strict();
 
 const inboxQuery = z.object({

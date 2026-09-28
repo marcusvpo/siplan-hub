@@ -218,9 +218,10 @@ export const parseMachineInfo = (text: string) => {
 
   // Campos extras de servidor
   const brandModel = info["MARCA/MODELO"]?.[0] || info["MARCA MODELO"]?.[0] || "";
-  let virtualized = info["VIRTUALIZADO"]?.[0] || info["VIRTUALIZADO?"]?.[0] || "";
-  if (virtualized) {
-    const vLower = virtualized.trim().toLowerCase();
+  const virtualizationText = info["VIRTUALIZADO"]?.[0] || info["VIRTUALIZADO?"]?.[0] || "";
+  let virtualized: "" | "Sim" | "Não" = "";
+  if (virtualizationText) {
+    const vLower = virtualizationText.trim().toLowerCase();
     if (vLower.startsWith("sim")) {
       virtualized = "Sim";
     } else if (vLower.startsWith("nao") || vLower.includes("n?o") || vLower.startsWith("não")) {

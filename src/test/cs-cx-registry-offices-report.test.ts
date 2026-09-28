@@ -11,6 +11,7 @@ function office(
     name: "Cartório Central",
     sap_code: null,
     active: true,
+    is_analyzed: false,
     contact_details: null,
     notes: null,
     origin: "hub",

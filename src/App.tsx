@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { lazy, Suspense } from "react";
 
 // Imports críticos (imediatos - usados no first load)
-import { MainLayout } from "@/components/Layout/MainLayout";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PwaProvider } from "@/components/pwa/PwaStatus";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -14,6 +13,13 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { RequirePermission } from "@/components/auth/RequirePermission";
 import { ChunkErrorBoundary } from "@/components/common/ChunkErrorBoundary";
 import Login from "@/pages/Login";
+
+// O shell autenticado só é necessário depois de sair das rotas públicas.
+const MainLayout = lazy(() =>
+  import("@/components/Layout/MainLayout").then((module) => ({
+    default: module.MainLayout,
+  })),
+);
 
 // Code Splitting: Lazy loading para rotas secundárias
 const DashboardV2 = lazy(() => import("./pages/DashboardV2"));
@@ -230,6 +236,7 @@ const App = () => (
               <BrowserRouter
                 future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
               >
+            <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Public Routes */}
               <Route path="/login" element={<Login />} />
@@ -975,6 +982,7 @@ const App = () => (
                 }
               />
             </Routes>
+            </Suspense>
             </BrowserRouter>
           </AuthProvider>
           </ChunkErrorBoundary>

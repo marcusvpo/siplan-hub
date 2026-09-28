@@ -75,7 +75,7 @@ export default function Calendar() {
   const removeInteractiveEvent = useCalendarStore((state) => state.removeInteractiveEvent);
   const setRealEvents = useCalendarStore((state) => state.setRealEvents);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const [activeDragItem, setActiveDragItem] = useState<any>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
     null,
@@ -170,7 +170,7 @@ export default function Calendar() {
     })
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const handleDragStart = (event: any) => {
     setActiveDragItem(event.active.data.current);
   };

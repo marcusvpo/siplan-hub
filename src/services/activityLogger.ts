@@ -21,6 +21,7 @@ export type LogAction =
   | "project_stage_updated"
   // Conversion actions
   | "conversion_queue_assigned"
+  | "conversion_queue_unassigned"
   | "conversion_queue_transferred"
   | "conversion_queue_removed"
   | "conversion_queue_completed"

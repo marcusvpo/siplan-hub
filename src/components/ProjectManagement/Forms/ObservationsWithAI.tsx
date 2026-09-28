@@ -19,7 +19,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 function walkText(nodes: any[]): string {
   return nodes.map((n) => n.text ?? (n.children ? walkText(n.children) : "")).join("");
 }

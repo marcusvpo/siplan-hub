@@ -173,6 +173,7 @@ describe("project-transformers", () => {
             version: "v2",
             realDate: endDate,
             approvedByInfra: true,
+            testAvailable: true,
           },
           conversion: {
             status: "in-progress",
@@ -185,7 +186,7 @@ describe("project-transformers", () => {
             toolUsed: "ToolX",
             homologationDate: endDate,
             deviations: "None",
-            homologationStatus: "waiting_adjustment",
+            homologationStatus: "Aguardando Adequação",
             homologationResponsible: "Homolog Guy",
             sentAt: startDate,
             finishedAt: endDate,
@@ -199,8 +200,8 @@ describe("project-transformers", () => {
             startDate,
             endDate,
             observations: "Imp obs",
-            phase1: { status: "done" } as any,
-            phase2: { status: "todo" } as any,
+            phase1: { status: "done" },
+            phase2: { status: "todo" },
           },
           modelosEditor: {
             status: "in-progress",
@@ -208,8 +209,8 @@ describe("project-transformers", () => {
             startDate,
             endDate,
             observations: "Model obs",
-            sentFiles: [{ name: "file1" }],
-            availableFiles: [{ name: "file2" }],
+            sentFiles: [{ id: "file-1", name: "file1", path: "projects/test/file1.pdf", size: 1024, uploadedAt: startDate.toISOString() }],
+            availableFiles: [{ id: "file-2", name: "file2", path: "projects/test/file2.pdf", size: 2048, uploadedAt: endDate.toISOString() }],
           },
           post: {
             status: "done",
@@ -283,7 +284,7 @@ describe("project-transformers", () => {
       expect(result.conversion_tool_used).toBe("ToolX");
       expect(result.conversion_homologation_date).toBe(endDate.toISOString());
       expect(result.conversion_deviations).toBe("None");
-      expect(result.conversion_homologation_status).toBe("waiting_adjustment");
+      expect(result.conversion_homologation_status).toBe("Aguardando Adequação");
       expect(result.conversion_homologation_responsible).toBe("Homolog Guy");
       expect(result.conversion_sent_at).toBe(startDate.toISOString());
       expect(result.conversion_finished_at).toBe(endDate.toISOString());
@@ -306,8 +307,12 @@ describe("project-transformers", () => {
       expect(result.modelos_editor_start_date).toBe(startDate.toISOString());
       expect(result.modelos_editor_end_date).toBe(endDate.toISOString());
       expect(result.modelos_editor_observations).toBe("Model obs");
-      expect(result.modelos_editor_sent_files).toEqual([{ name: "file1" }]);
-      expect(result.modelos_editor_available_files).toEqual([{ name: "file2" }]);
+      expect(result.modelos_editor_sent_files).toEqual([
+        { id: "file-1", name: "file1", path: "projects/test/file1.pdf", size: 1024, uploadedAt: startDate.toISOString() },
+      ]);
+      expect(result.modelos_editor_available_files).toEqual([
+        { id: "file-2", name: "file2", path: "projects/test/file2.pdf", size: 2048, uploadedAt: endDate.toISOString() },
+      ]);
 
       // Post
       expect(result.post_status).toBe("done");

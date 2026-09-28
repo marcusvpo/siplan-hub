@@ -38,7 +38,6 @@ describe("cálculos do gerenciamento de horas do SD", () => {
   it("usa a primeira hora cronológica para ordenar lançamentos", () => {
     expect(
       entryStartMinutes({
-        work_date: "2026-08-28",
         intervals: [
           { started_at: "17:00", ended_at: "17:30" },
           { started_at: "15:35", ended_at: "16:00" },
