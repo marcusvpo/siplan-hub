@@ -1,5 +1,6 @@
 import { appPath } from "./paths";
 import { BlogSignature } from "./BlogSignature";
+import { PublicFooter } from "./PublicFooter";
 
 interface PublicMaintenanceProps {
   title?: string;
@@ -8,20 +9,26 @@ interface PublicMaintenanceProps {
 
 export function PublicMaintenance({
   title = "Estamos em manutenção",
-  message = "O Orion Blog está passando por melhorias no momento. Voltaremos em breve.",
+  message = "O Orion Changelog está passando por melhorias no momento. Voltaremos em breve.",
 }: PublicMaintenanceProps) {
   return (
     <div className="page maintenance-page">
       <header className="topbar">
         <div className="container topbar-row reader-topbar-row">
-          <div className="brand-title">
-            <img src={appPath("/assets/Siplan_logo.png")} alt="Logo Siplan" />
-            <div>
-              <h1>Orion Blog</h1>
-              <p>Acompanhe as novidades dos sistemas</p>
-            </div>
+          <div className="reader-header-start">
+            <h1>Orion Changelog</h1>
+            <p>Acompanhe as novidades dos sistemas</p>
           </div>
-          <BlogSignature />
+          <div className="reader-header-center">
+            <img
+              src={appPath("/assets/Siplan_logo.png")}
+              alt="Logo Siplan"
+              className="reader-header-logo"
+            />
+          </div>
+          <div className="reader-header-end">
+            <BlogSignature />
+          </div>
         </div>
       </header>
 
@@ -56,6 +63,8 @@ export function PublicMaintenance({
           </div>
         </div>
       </main>
+
+      <PublicFooter />
     </div>
   );
 }

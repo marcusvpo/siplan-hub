@@ -6,6 +6,7 @@ import { Calendar, Clock, Monitor, Tag, CheckCircle2, PlayCircle } from "lucide-
 import { motion } from "framer-motion";
 import { useMemo } from "react";
 import { EllevoTicketLink } from "@/components/EllevoTicketLink";
+import { normalizeSpecialty } from "@/utils/projectSpecialty";
 
 interface DeploymentCardProps {
   project: ProjectV2;
@@ -164,7 +165,7 @@ export function DeploymentCard({
               <Monitor className="w-3 h-3" />
             </div>
             <span className="min-w-0 break-words font-medium sm:truncate">
-              {project.specialty || "Módulo Padrão"}
+              {normalizeSpecialty(project.specialty) || "Módulo Padrão"}
             </span>
           </div>
         )}

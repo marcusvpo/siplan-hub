@@ -1193,6 +1193,20 @@ export function InfraStageForm({
 
   return (
     <>
+      {stage.status === "done" && (servers.length === 0 || workstations.length === 0 || !stage.serverStatus || !stage.workstationsStatus) && (
+        <div className="col-span-full mb-3 p-3 rounded-lg bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-start gap-2.5 text-xs text-amber-900 dark:text-amber-200 shadow-sm animate-in fade-in duration-200">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+          <div>
+            <p className="font-semibold text-amber-900 dark:text-amber-100">Atenção: Status da etapa requer validação completa de infraestrutura</p>
+            <p className="mt-0.5 text-amber-800/90 dark:text-amber-300/90 text-[11px] leading-relaxed">
+              Esta etapa requer o preenchimento de <strong>Servidor</strong> e <strong>Estações de Trabalho</strong> para ser considerada Finalizada.
+              {servers.length === 0 && " Ainda faltam os dados do Servidor."}
+              {workstations.length === 0 && " Ainda faltam os dados das Estações."}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Botões e Status originais no topo */}
       <div className="col-span-full mb-2.5 flex flex-wrap gap-2 items-center justify-between">
         <div className="flex flex-wrap gap-2 items-center">
@@ -1335,6 +1349,16 @@ export function InfraStageForm({
               )}
             </>
           )}
+          {servers.length === 0 && (
+            <Badge variant="outline" className="bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border-amber-200">
+              Aguardando Servidor
+            </Badge>
+          )}
+          {workstations.length === 0 && (
+            <Badge variant="outline" className="bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 border-amber-200">
+              Aguardando Estações
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -1351,7 +1375,7 @@ export function InfraStageForm({
           <SelectTrigger
             className="h-9 border border-input bg-background font-medium text-xs text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 transition-all duration-200"
           >
-            <SelectValue placeholder="Selecione..." />
+            <SelectValue placeholder={servers.length === 0 ? "Aguardando envio..." : "Selecione..."} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="Adequado" className="text-green-600 dark:text-emerald-400 font-medium">
@@ -1403,7 +1427,7 @@ export function InfraStageForm({
           <SelectTrigger
             className="h-9 border border-input bg-background font-medium text-xs text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 transition-all duration-200"
           >
-            <SelectValue placeholder="Selecione..." />
+            <SelectValue placeholder={workstations.length === 0 ? "Aguardando envio..." : "Selecione..."} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="Adequado" className="text-green-600 dark:text-emerald-400 font-medium">

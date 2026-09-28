@@ -1,5 +1,6 @@
 import React from "react";
 
+import { plainTextToLexicalJson } from "@/lib/lexical";
 import { cn } from "@/lib/utils";
 
 interface LexicalContentNode {
@@ -142,12 +143,25 @@ const parseContent = (content: RichTextContentProps["content"]): LexicalContentN
 
   try {
     const parsed = JSON.parse(content) as LexicalContentNode;
-    return parsed?.type === "root" || parsed?.children || parsed?.type
-      ? parsed
-      : parsed?.root;
+    if (parsed?.type === "root" || parsed?.children || parsed?.type || parsed?.root) {
+      return parsed;
+    }
   } catch {
-    return undefined;
+    // Não é JSON válido
   }
+
+  if (typeof content === "string" && /<[a-z][\s\S]*>/i.test(content)) {
+    try {
+      const parsedFromHtml = JSON.parse(plainTextToLexicalJson(content)) as LexicalContentNode;
+      if (parsedFromHtml?.type === "root" || parsedFromHtml?.children || parsedFromHtml?.root) {
+        return parsedFromHtml;
+      }
+    } catch {
+      // Ignora falha de conversão
+    }
+  }
+
+  return undefined;
 };
 
 export function RichTextContent({ content, className, emptyText }: RichTextContentProps) {

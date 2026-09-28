@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -76,6 +78,8 @@ export default function KnowledgeEditorPage() {
     syncErrorMessage,
     syncedFileId,
     resetSaveState,
+    syncStorageKnowledgeBase,
+    isSyncingStorage,
     isUnsavedDialogOpen,
     confirmDiscardAndSwitch,
     cancelArticleSwitch,
@@ -183,6 +187,26 @@ export default function KnowledgeEditorPage() {
   const handleSelectArticle = (articleId: string) => {
     setSelectedArticleId(articleId);
     setIsMobileNavigatorOpen(false);
+  };
+
+  const handleManualSync = async () => {
+    if (isDirty) {
+      const confirmSync = window.confirm(
+        "Existem alterações não salvas no editor. Se você sincronizar agora com o Supabase Storage, suas alterações locais não salvas serão substituídas pelo arquivo do Storage. Deseja continuar?",
+      );
+      if (!confirmSync) return;
+    }
+
+    try {
+      const res = await syncStorageKnowledgeBase();
+      toast.success("Base de conhecimento sincronizada!", {
+        description: `Versão ${res.versionTag} registrada e ativa (${res.articlesCount} rotinas carregadas).`,
+      });
+    } catch (err: any) {
+      toast.error("Erro ao sincronizar com o Supabase Storage", {
+        description: err?.message || "Ocorreu um erro durante a sincronização.",
+      });
+    }
   };
 
   // 3. Loading State com Skeletons
@@ -353,6 +377,23 @@ export default function KnowledgeEditorPage() {
                 {versions.length}
               </Badge>
             )}
+          </Button>
+
+          {/* Botão Sincronizar Base com Supabase Storage */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleManualSync}
+            disabled={isSyncingStorage || isFetching}
+            className="h-9 min-w-0 gap-1 px-2 text-[11px] sm:gap-1.5 sm:px-3 sm:text-xs"
+            title="Sincronizar base de conhecimento com o arquivo mestre do Supabase Storage"
+          >
+            <RotateCw
+              className={cn("h-4 w-4 text-primary", (isSyncingStorage || isFetching) && "animate-spin")}
+            />
+            <span className="sm:hidden">Sincronizar</span>
+            <span className="hidden sm:inline">Sincronizar Storage</span>
           </Button>
 
           {/* Histórico de Última Modificação */}

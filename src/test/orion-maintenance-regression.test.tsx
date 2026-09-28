@@ -100,7 +100,7 @@ describe("Publicação compartilhada do Orion Blog", () => {
     await act(async () => detailResponse.resolve(publication));
 
     expect(screen.getByRole("heading", { name: publication.titulo })).toBeInTheDocument();
-    expect(document.title).toBe(`${publication.titulo} — Orion Blog`);
+    expect(document.title).toBe(`${publication.titulo} — Orion Changelog`);
     expect(window.location.pathname).toBe("/atualizacoes/posts/42/publicacao-compartilhada");
     unmount();
     expect(document.title).toBe("Siplan Hub");

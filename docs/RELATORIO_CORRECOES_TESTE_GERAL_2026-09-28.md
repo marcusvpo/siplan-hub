@@ -3,8 +3,10 @@
 Os três defeitos funcionais confirmados no diagnóstico inicial foram corrigidos,
 assim como os seis testes que falhavam, os 22 erros de lint e os 101 diagnósticos
 de TypeScript. A revisão também corrigiu filtros de gráficos e preservação dos
-dados do documento de transição. As alterações permanecem locais, sem commit,
-push, deploy ou execução de migrations no banco remoto.
+dados do documento de transição. Este relatório registra a validação local do
+snapshot `fe36114`, anterior à integração e publicação autorizadas posteriormente.
+Os resultados abaixo pertencem a essa etapa; a versão de publicação incorpora
+também os nove commits que já estavam na `main` remota.
 
 ## Comportamento corrigido
 
@@ -46,6 +48,8 @@ workflow [.github/workflows/quality.yml](../.github/workflows/quality.yml) está
 preparado para pull requests e pushes em `main`. Ele usa configuração fictícia
 do Supabase e não recebe credenciais de produção. Para impedir merge com falha,
 o check deve ser exigido na proteção da branch após a publicação do workflow.
+O fluxo de publicação passou a exigir também lint, tipos, testes e build na
+própria Vercel, pelo `npm run build:release` declarado em `vercel.json`.
 
 O script [check-browser-regressions.mjs](../scripts/check-browser-regressions.mjs)
 valida geometria real em 320, 390 e 1440 px, recuperação de acesso, menu vazio e

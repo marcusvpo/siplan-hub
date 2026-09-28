@@ -1109,10 +1109,12 @@ const AdherenceQuestionField = (props: FieldProps) => {
         compact ? "gap-3" : "gap-6",
       )}>
         {/* Left column: Answer */}
-        <div className={cn(compact ? "space-y-1" : "space-y-1.5", "md:col-span-3")}>
+        <div className={cn(compact ? "space-y-1" : "space-y-1.5", "md:col-span-4")}>
           {isText ? (
             <div>
-              <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Resposta:</Label>
+              <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">
+                Situação Atual / Resposta:
+              </Label>
               {isDate ? (
                 <Input
                   type="text"
@@ -1132,13 +1134,15 @@ const AdherenceQuestionField = (props: FieldProps) => {
                   onChange={(e) => handleUpdate({ valor: e.target.value })}
                   disabled={disabled || readonly}
                   className="bg-background text-xs min-h-[60px] border-muted-foreground/20 focus-visible:ring-primary focus-visible:border-primary"
-                  placeholder="Digite a resposta..."
+                  placeholder="Descreva a rotina ou situação atual..."
                 />
               )}
             </div>
           ) : (
             <div className="space-y-1.5">
-              <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">Utiliza?</Label>
+              <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+                Utiliza na Serventia?
+              </Label>
               {readonly || disabled ? (
                 <span className={cn(
                   "inline-block px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wider border",
@@ -1185,10 +1189,10 @@ const AdherenceQuestionField = (props: FieldProps) => {
         </div>
 
         {/* Right column: Impact selector and observations */}
-        <div className={cn(compact ? "space-y-2" : "space-y-3", "md:col-span-9")}>
+        <div className={cn(compact ? "space-y-2" : "space-y-3", "md:col-span-8")}>
           <div className={compact ? "space-y-1" : "space-y-1.5"}>
             <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
-              Possui impacto?
+              Avaliação de Aderência:
             </Label>
             {readonly || disabled ? (
               <span className={cn(
@@ -1199,37 +1203,28 @@ const AdherenceQuestionField = (props: FieldProps) => {
                     ? "bg-amber-500/10 text-amber-600 border-amber-500/20"
                     : "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
               )}>
-                {nivel_impacto}
+                {nivel_impacto === "SIM"
+                  ? "Não Aderente"
+                  : nivel_impacto === "ATENÇÃO"
+                    ? "Ponto de Atenção"
+                    : "Aderente"}
               </span>
             ) : (
-              <div className="flex rounded-md overflow-hidden border border-muted-foreground/25 w-fit bg-background">
+              <div className="flex flex-wrap rounded-md overflow-hidden border border-muted-foreground/25 w-fit bg-background">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => handleUpdate({ nivel_impacto: "NÃO" })}
                   className={cn(
-                    "h-10 rounded-none px-3 text-xs font-bold transition-colors border-r border-muted-foreground/25 sm:h-7",
+                    "h-10 rounded-none px-3 text-xs font-bold transition-colors border-r border-muted-foreground/25 sm:h-8 gap-1.5",
                     nivel_impacto === "NÃO"
                       ? "bg-emerald-600 text-white hover:bg-emerald-600 hover:text-white"
                       : "bg-background text-muted-foreground hover:bg-muted"
                   )}
                 >
-                  NÃO
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleUpdate({ nivel_impacto: "SIM" })}
-                  className={cn(
-                    "h-10 rounded-none px-3 text-xs font-bold transition-colors border-r border-muted-foreground/25 sm:h-7",
-                    nivel_impacto === "SIM"
-                      ? "bg-rose-600 text-white hover:bg-rose-600 hover:text-white"
-                      : "bg-background text-muted-foreground hover:bg-muted"
-                  )}
-                >
-                  SIM
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Aderente
                 </Button>
                 <Button
                   type="button"
@@ -1237,13 +1232,29 @@ const AdherenceQuestionField = (props: FieldProps) => {
                   size="sm"
                   onClick={() => handleUpdate({ nivel_impacto: "ATENÇÃO" })}
                   className={cn(
-                    "h-10 rounded-none px-3 text-xs font-bold transition-colors sm:h-7",
+                    "h-10 rounded-none px-3 text-xs font-bold transition-colors border-r border-muted-foreground/25 sm:h-8 gap-1.5",
                     nivel_impacto === "ATENÇÃO"
                       ? "bg-amber-500 text-white hover:bg-amber-500 hover:text-white"
                       : "bg-background text-muted-foreground hover:bg-muted"
                   )}
                 >
-                  ATENÇÃO
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  Ponto de Atenção
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleUpdate({ nivel_impacto: "SIM" })}
+                  className={cn(
+                    "h-10 rounded-none px-3 text-xs font-bold transition-colors sm:h-8 gap-1.5",
+                    nivel_impacto === "SIM"
+                      ? "bg-rose-600 text-white hover:bg-rose-600 hover:text-white"
+                      : "bg-background text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  Não Aderente
                 </Button>
               </div>
             )}
@@ -1251,7 +1262,7 @@ const AdherenceQuestionField = (props: FieldProps) => {
 
           <div className={compact ? "space-y-1" : "space-y-1.5"}>
             <Label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
-              Observações / Justificativa
+              Observações / Detalhes Técnicos:
             </Label>
             {readonly || disabled ? (
               <div
@@ -1274,7 +1285,7 @@ const AdherenceQuestionField = (props: FieldProps) => {
               <RichTextEditor
                 content={detalhes}
                 onChange={(content) => handleUpdate({ detalhes: content })}
-                placeholder="Descreva as observações ou justificativa..."
+                placeholder="Descreva observações, detalhes técnicos ou justificativa do impacto..."
                 compact={compact}
                 className={cn(
                   compact ? "min-h-[112px] text-xs transition-colors" : "min-h-[160px] text-xs transition-colors",

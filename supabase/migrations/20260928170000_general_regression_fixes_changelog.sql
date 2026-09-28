@@ -22,7 +22,7 @@ FROM (VALUES
    'O histórico de observações exibe o responsável e a data registrados no atendimento, usando os dados corretos da solicitação.',
    '/cs-cx/registros'),
   ('projects', 'Carregamento da aplicação mais leve',
-   'O layout autenticado e as bibliotecas de formulários são carregados em arquivos menores. O build passa a verificar tamanho e ciclos de dependência, com cobertura de navegador para login e PWA offline.',
+   'O layout autenticado e as bibliotecas de formulários são carregados em arquivos menores. A publicação exige lint, tipos e testes, e o build verifica tamanho e ciclos de dependência, com cobertura de navegador para login e PWA offline.',
    '/projects')
 ) AS fix(permission_resource, title, message, action_url)
 WHERE NOT EXISTS (

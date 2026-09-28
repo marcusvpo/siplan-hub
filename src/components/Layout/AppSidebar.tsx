@@ -1391,11 +1391,11 @@ export function AppSidebar() {
                         : "ghost"
                     }
                     className="w-full justify-between hover:bg-muted/50"
-                    title="Orion Blog"
+                    title="Orion Changelog"
                   >
                     <div className="flex items-center gap-3">
                       <Newspaper className="h-5 w-5" />
-                      <span>Orion Blog</span>
+                      <span>Orion Changelog</span>
                     </div>
                     <ChevronDown
                       className={cn(
@@ -1459,7 +1459,7 @@ export function AppSidebar() {
                 <Button
                   variant={location.pathname.startsWith("/atualizacoes") ? "secondary" : "ghost"}
                   className="w-full justify-center px-0"
-                  title="Orion Blog"
+                  title="Orion Changelog"
                 >
                   <Newspaper className="h-5 w-5" />
                 </Button>

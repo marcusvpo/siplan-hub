@@ -4,6 +4,11 @@ Resumo do que roda sozinho e o que cada parte precisa.
 
 ## 1. Frontend
 Vercel faz deploy automático a cada push em `main`. Nada a configurar.
+A instalação usa `npm ci` e o `package-lock.json` validado no projeto.
+O `buildCommand` em `vercel.json` executa `npm run build:release`: lint, tipos,
+testes e build/PWA devem passar antes de a nova versão ser promovida. A
+configuração versionada substitui o comando do painel, conforme a
+[documentação da Vercel](https://vercel.com/docs/project-configuration/vercel-json#buildcommand).
 
 ## 2. Worker na VM (auto-deploy)
 `vm-worker/scripts/auto-deploy.sh` roda no cron do root da VM (a cada 5 min): baixa os
@@ -11,22 +16,26 @@ fontes mais novos de `vm-worker/src` (branch `main`) e, se algo mudou, reinicia 
 Agora também sincroniza `package.json`/`package-lock.json` e roda `npm install` quando as
 dependências mudam. Instalação: ver `vm-worker/README.md` (seção "Auto-deploy"). Sem secret.
 
-## 3. Migrations do Supabase (GitHub Actions)
-Workflow `.github/workflows/supabase-migrations.yml` aplica migrations novas quando um push
-em `main` mexe em `supabase/migrations/**`.
+## 3. Migrations do Supabase
+O workflow `.github/workflows/supabase-migrations.yml` apenas valida os pacotes
+de migration. Ele não aplica alterações no banco de produção.
 
-**Secrets do repositório** (Settings → Secrets and variables → Actions):
-- `SUPABASE_ACCESS_TOKEN` — token pessoal do Supabase (Account → Access Tokens).
-- `SUPABASE_PROJECT_ID` — ref do projeto (Project Settings → General → Reference ID).
-- `SUPABASE_DB_PASSWORD` — senha do banco (Project Settings → Database).
+O histórico remoto ainda precisa ser reconciliado com todos os arquivos locais.
+Conforme `AGENTS.md`, `supabase db push` permanece proibido até essa reconciliação.
+Não marque versões como aplicadas sem comprovar que o SQL correspondente já foi
+executado no banco.
 
-**Baseline único (obrigatório antes do 1º uso):** migrations já aplicadas na mão não estão
-no histórico. Marque-as como aplicadas para o `db push` não tentar re-rodá-las:
+Para uma publicação autorizada, revise a migration específica e seu estado
+remoto, aplique somente o arquivo necessário e confira o resultado. O script
+existente usa `SUPABASE_DB_URL` do ambiente ou do `.env` local:
+
 ```bash
-supabase link --project-ref <ref>
-supabase migration list
-supabase migration repair --status applied <VERSAO>   # para cada uma já aplicada
+node scripts/apply-migration.js supabase/migrations/<arquivo-revisado>.sql
 ```
+
+Esse script executa o SQL informado e não atualiza `schema_migrations`. Não use
+o comando para aplicar indiscriminadamente arquivos pendentes. Registre o arquivo
+aplicado, os efeitos e a verificação no relatório da publicação.
 
 ## 4. Alerta se o worker cair (GitHub Actions)
 Workflow `.github/workflows/worker-heartbeat-alert.yml` roda a cada 10 min, lê o último

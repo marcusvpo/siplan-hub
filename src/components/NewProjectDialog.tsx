@@ -38,6 +38,12 @@ import { Badge } from "@/components/ui/badge";
 import { Check, ChevronsUpDown, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePermissions } from "@/hooks/usePermissions";
+import {
+  MAIN_SYSTEMS,
+  SPECIALTY_OPTIONS,
+  getSpecialtyForSystem,
+  normalizeSpecialty,
+} from "@/utils/projectSpecialty";
 
 export const NewProjectDialog = () => {
   const [open, setOpen] = useState(false);
@@ -58,8 +64,15 @@ export const NewProjectDialog = () => {
   const [products, setProducts] = useState<string[]>([]);
   const [productsOpen, setProductsOpen] = useState(false);
 
+  const handleSystemTypeChange = (value: string) => {
+    setSystemType(value);
+    const autoSpecialty = getSpecialtyForSystem(value);
+    if (autoSpecialty) {
+      setSpecialty(autoSpecialty);
+    }
+  };
+
   // Constants
-  const MAIN_SYSTEMS = ["Orion TN", "Orion PRO", "Orion REG", "Modelos TN"];
   const AVAILABLE_PRODUCTS = [
     "LCW",
     "SGA",
@@ -190,7 +203,7 @@ export const NewProjectDialog = () => {
                     Sistema Principal{" "}
                     <span className="text-destructive">*</span>
                   </Label>
-                  <Select value={systemType} onValueChange={setSystemType}>
+                  <Select value={systemType} onValueChange={handleSystemTypeChange}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o sistema principal" />
                     </SelectTrigger>
@@ -341,20 +354,16 @@ export const NewProjectDialog = () => {
 
                     <div className="space-y-2 col-span-1 sm:col-span-2">
                       <Label htmlFor="specialty">Especialidade</Label>
-                      <Select value={specialty} onValueChange={setSpecialty}>
+                      <Select value={normalizeSpecialty(specialty)} onValueChange={setSpecialty}>
                         <SelectTrigger id="specialty">
                           <SelectValue placeholder="Selecione a especialidade" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="protesto">Protesto</SelectItem>
-                          <SelectItem value="notas">Notas</SelectItem>
-                          <SelectItem value="registro_civil">
-                            Registro Civil
-                          </SelectItem>
-                          <SelectItem value="registro_imoveis">
-                            Registro de Imóveis
-                          </SelectItem>
-                          <SelectItem value="tdpj">TDPJ</SelectItem>
+                          {SPECIALTY_OPTIONS.map((spec) => (
+                            <SelectItem key={spec} value={spec}>
+                              {spec}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>

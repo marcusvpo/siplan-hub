@@ -34,7 +34,7 @@ export type PermissionCategory =
   | "Implantadores"
   | "CS/CX"
   | "Modelos Editor OrionTN"
-  | "Orion Blog"
+  | "Orion Changelog"
   | "Assistentes"
   | "Copiloto"
   | "Administração";
@@ -51,7 +51,7 @@ export const PERMISSION_CATEGORY_ORDER: PermissionCategory[] = [
   "Implantadores",
   "CS/CX",
   "Modelos Editor OrionTN",
-  "Orion Blog",
+  "Orion Changelog",
   "Assistentes",
   "Copiloto",
   "Administração",
@@ -148,10 +148,10 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   { resource: "orion_projects", label: "Orion - Projetos", category: "Modelos Editor OrionTN", actions: ["view"] },
   { resource: "orion_editor", label: "Orion - Editor de Modelos", category: "Modelos Editor OrionTN", actions: ["view", "edit"] },
 
-  // Orion Blog
-  { resource: "menu_atualizacoes", label: "Menu Orion Blog", category: "Orion Blog", actions: ["view"] },
-  { resource: "orion_updates", label: "Orion Blog - Leitura", category: "Orion Blog", actions: ["view"] },
-  { resource: "orion_updates_management", label: "Orion Blog - Gestão", category: "Orion Blog", actions: ["view", "create", "edit", "delete"] },
+  // Orion Changelog
+  { resource: "menu_atualizacoes", label: "Menu Orion Changelog", category: "Orion Changelog", actions: ["view"] },
+  { resource: "orion_updates", label: "Orion Changelog - Leitura", category: "Orion Changelog", actions: ["view"] },
+  { resource: "orion_updates_management", label: "Orion Changelog - Gestão", category: "Orion Changelog", actions: ["view", "create", "edit", "delete"] },
 
   // Assistentes
   { resource: "menu_assistentes", label: "Menu Assistentes", category: "Assistentes", actions: ["view"] },
