@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { buildDtcPostStage, buildDtcStageUpdates } from "@/utils/dtc-stage-updates";
 import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -303,18 +304,6 @@ const LexicalRenderer = ({ jsonStr, fallback }: { jsonStr: string; fallback: str
 };
 
 // Stage mapping helper
-const dtcStatusToStageStatus = (status: DTCData["status"]) => {
-  switch (status) {
-    case "submitted":
-      return "waiting_adjustment";
-    case "approved":
-      return "done";
-    case "draft":
-    default:
-      return "in-progress";
-  }
-};
-
 // ⑥ Sortable item wrapper for drag & drop lists
 function SortableItem({ id, children }: { id: string; children: (dragHandleProps: React.HTMLAttributes<HTMLSpanElement>) => React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
@@ -475,7 +464,7 @@ function TransicaoPlaceholder() {
 
   const {
     data: localDtc,
-    updateData: setLocalDtc,
+    setData: setLocalDtc,
     saveState,
   } = useAutoSave<DTCData | null>(
     initialDtcValue,
@@ -489,24 +478,7 @@ function TransicaoPlaceholder() {
             ...project.customFields,
             dtc: newData,
           },
-          stages: {
-            post: {
-              status: dtcStatusToStageStatus(newData.status),
-              responsible: newData.analystResponsible || project.responsiblePost || undefined,
-            },
-            environment: {
-              remoteAccessList: newData.remoteAccessList,
-              soLogin: newData.soLogin,
-              soPassword: newData.soPassword,
-              postgresVersion: newData.postgresVersion,
-              postgresAccessData: newData.postgresAccessData,
-              postgresHost: newData.postgresHost,
-              postgresUser: newData.postgresUser,
-              postgresPassword: newData.postgresPassword,
-              osType: newData.osType,
-              osVersion: newData.osVersion,
-            },
-          },
+          stages: buildDtcStageUpdates(project.stages, newData, project.responsiblePost),
         },
       });
     },
@@ -573,7 +545,7 @@ function TransicaoPlaceholder() {
         versionsObj[selectedSystems[0]] = localDtc.systemVersions || "";
       } else {
         selectedSystems.forEach((sys) => {
-          const regex = new RegExp(`${sys.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&")}\\s*\\(v?([^)]+)\\)`);
+          const regex = new RegExp(`${sys.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}\\s*\\(v?([^)]+)\\)`);
           const match = localDtc.systemVersions?.match(regex);
           if (match) {
             versionsObj[sys] = match[1];
@@ -677,10 +649,7 @@ function TransicaoPlaceholder() {
               dtc: updatedDtc,
             },
             stages: {
-              post: {
-                status: dtcStatusToStageStatus(newStatus),
-                responsible: updatedDtc.analystResponsible || project.responsiblePost || undefined,
-              },
+              post: buildDtcPostStage(project.stages.post, updatedDtc, project.responsiblePost),
             },
           },
         })

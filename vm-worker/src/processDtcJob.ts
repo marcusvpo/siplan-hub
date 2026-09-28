@@ -6,7 +6,7 @@ import { runSkill, ProgressStep } from "./runSkill.js";
 const MAX_LOG_STEPS = 80;
 const PROGRESS_FLUSH_MS = 2500;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 type AnyObj = any;
 
 // Extrai texto puro de um campo Lexical (JSON com root/children) ou string legada.

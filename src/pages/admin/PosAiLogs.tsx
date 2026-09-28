@@ -187,14 +187,14 @@ export default function PosAiLogs() {
 
   const kpis = data?.kpis;
   const timeline = data?.timeline || [];
-  const projectsActivityList = data?.by_project || [];
+  const projectsActivityList = useMemo(() => data?.by_project || [], [data?.by_project]);
   const hourlyData = data?.hourly_distribution || [];
-  const logs = data?.logs || [];
+  const logs = useMemo(() => data?.logs || [], [data?.logs]);
   const slowestResponses = data?.slowest_responses || [];
   const fastestResponses = data?.fastest_responses || [];
   const helpfulResponses = data?.helpful_responses || [];
   const unhelpfulResponses = data?.unhelpful_responses || [];
-  const latencyDist = data?.latency_distribution || { fast_count: 0, moderate_count: 0, slow_count: 0 };
+  const latencyDist = useMemo(() => data?.latency_distribution || { fast_count: 0, moderate_count: 0, slow_count: 0 }, [data?.latency_distribution]);
 
   // Current selected project info
   const selectedProjectInfo = useMemo(() => {
@@ -1998,9 +1998,9 @@ export default function PosAiLogs() {
                 Conteúdo da Mensagem
               </span>
               {(inspectingLog as any)?.role === "user" ? (
-                <p className="text-sm whitespace-pre-wrap leading-relaxed">{inspectingLog?.content}</p>
+                <p className="text-sm whitespace-pre-wrap leading-relaxed">{inspectingLog && "content" in inspectingLog ? inspectingLog.content : ""}</p>
               ) : (
-                <PosChatMessageContent content={inspectingLog?.content || ""} />
+                <PosChatMessageContent content={inspectingLog && "content" in inspectingLog ? inspectingLog.content || "" : ""} />
               )}
             </div>
 

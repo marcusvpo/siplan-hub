@@ -6,9 +6,30 @@ import {
   isBunnyStreamUrl,
 } from "@/components/pos-chat/PosChatMessageContent";
 import { isTriageMessage } from "@/pages/public/PublicPosChat";
-import { formatBunnyEmbedUrl } from "@/components/pos-chat/BunnyVideoPlayer";
+import { BunnyVideoPlayer, formatBunnyEmbedUrl } from "@/components/pos-chat/BunnyVideoPlayer";
 
 describe("PosChatMessageContent & BunnyVideoPlayer", () => {
+  it.each(["▶️", "▶", "🎬", "🎥", "🎬 🎥 ▶️"])(
+    "remove o prefixo inteiro %s do título da videoaula",
+    (prefix) => {
+      render(<BunnyVideoPlayer url="https://iframe.mediadelivery.net/embed/1/2" title={`${prefix} Tutorial 🔒`} />);
+      expect(document.querySelector("iframe")?.title).toBe("Tutorial 🔒");
+    },
+  );
+
+  it("preserva emojis do título que compartilham o mesmo surrogate dos prefixos", () => {
+    render(<BunnyVideoPlayer url="https://iframe.mediadelivery.net/embed/1/2" title="🔒 Tutorial" />);
+    expect(document.querySelector("iframe")?.title).toBe("🔒 Tutorial");
+  });
+
+  it.each(["🎬", "🎥", "▶️", "▶"])(
+    "limpa o prefixo %s de URL avulsa e mantém o título Unicode",
+    (prefix) => {
+      render(<PosChatMessageContent content={`${prefix} **: 🔒 Tutorial https://iframe.mediadelivery.net/embed/1/2`} />);
+      expect(document.querySelector("iframe")?.title).toBe("🔒 Tutorial");
+    },
+  );
+
   it("correctly identifies Bunny.net stream URLs", () => {
     expect(
       isBunnyStreamUrl("https://iframe.mediadelivery.net/embed/467408/41549f54-b53a-4703-9765-3d5e2c8d221b?t=0")

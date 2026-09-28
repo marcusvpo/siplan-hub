@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import {
   ProjectV2,
+  ProjectUpdate,
   StageStatus,
   InfraStageV2,
   AdherenceStageV2,
@@ -424,7 +425,7 @@ function mapPostStage(post: PostStageV2 | undefined, oldPost?: PostStageV2): Rec
 }
 
 // Transform Project V3 to DB row
-export function transformToDB(project: Partial<ProjectV2>, currentProject?: ProjectV2): Record<string, unknown> {
+export function transformToDB(project: ProjectUpdate, currentProject?: ProjectV2): Record<string, unknown> {
   const dbRow: Record<string, unknown> = {};
 
   // All guards use !== undefined to allow saving falsy values (0, "", false)

@@ -22,7 +22,7 @@ export function LogsTab({ project }: LogsTabProps) {
   const logsPerPage = 5;
 
   const logs = (timelineEvents || [])
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     .map((event: any) => ({
       id: event.id,
       projectId: event.project_id,
@@ -32,7 +32,7 @@ export function LogsTab({ project }: LogsTabProps) {
       details: event.metadata || {},
     }))
     .sort(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       (a: any, b: any) =>
         new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime()
     );
@@ -86,7 +86,7 @@ export function LogsTab({ project }: LogsTabProps) {
                   Nenhuma alteração registrada até o momento.
                 </div>
               ) : (
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
                 currentLogs.map((log: any, index: number) => (
                   <div
                     key={log.id || index}

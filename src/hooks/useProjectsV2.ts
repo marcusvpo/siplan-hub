@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import {
   ProjectV2,
+  ProjectUpdate,
   StageStatus,
   InfraStageV2,
   AdherenceStageV2,
@@ -40,7 +41,7 @@ export const useProjectsV2 = () => {
   const { data: projects, isLoading } = projectsQuery;
 
   const updateProject = useMutation({
-    mutationFn: async ({ projectId, updates }: { projectId: string; updates: Partial<ProjectV2> }) => {
+    mutationFn: async ({ projectId, updates }: { projectId: string; updates: ProjectUpdate }) => {
       // Get current project state for comparison
       let currentProject = queryClient.getQueryData<ProjectV2[]>(["projectsV3_with_dates"])?.find(p => p.id === projectId);
 

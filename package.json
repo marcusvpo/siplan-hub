@@ -5,17 +5,22 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && npm run check:bundle",
+    "check:bundle": "node scripts/check-build-size.mjs",
     "build:dev": "vite build --mode development",
     "check:cs-cx": "node scripts/check-cs-cx-readiness.mjs",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
+    "typecheck:worker": "npm --prefix vm-worker run typecheck",
+    "check": "npm run lint && npm run typecheck && npm test && npm run build && npm run test:browser && npm run typecheck:worker && npm --prefix vm-worker test",
     "migrate:cs-cx": "node scripts/migrate-cs-cx.mjs",
     "migrate:cs-cx-files": "node scripts/migrate-cs-cx-files.mjs",
     "prepare:cs-cx": "node scripts/prepare-cs-cx-schema.mjs",
     "prepare:my-day-board": "node scripts/prepare-my-day-board-schema.mjs",
     "prepare:sd-time": "node scripts/prepare-sd-time-schema.mjs",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:browser": "node scripts/check-browser-regressions.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -123,6 +128,7 @@
     "vite": "^6.0.0",
     "vite-plugin-pwa": "^1.3.0",
     "vitest": "^2.1.8",
-    "workbox-window": "^7.4.1"
+    "workbox-window": "^7.4.1",
+    "ws": "^8.19.0"
   }
 }

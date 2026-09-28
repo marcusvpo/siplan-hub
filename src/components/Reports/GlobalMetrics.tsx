@@ -60,7 +60,7 @@ export function GlobalMetrics({ projects }: GlobalMetricsProps) {
   
   const stageStats = stages.map((stageKey) => {
     const projectsWithStageDates = projects.filter((p) => {
-      if (p.systemType === "Modelos TN" || p.globalStatus === "done" || p.globalStatus === "archived" || p.globalStatus === "canceled") return false;
+      if (p.systemType === "Modelos TN" || ["done", "archived", "canceled"].includes(p.globalStatus)) return false;
       const stage = p.stages[stageKey];
       return stage.startDate && stage.endDate;
     });

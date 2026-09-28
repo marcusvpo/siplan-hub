@@ -1,0 +1,1646 @@
+﻿[
+    {
+        "group":  "ui-results.json",
+        "label":  "login-desktop",
+        "mode":  "anonymous",
+        "route":  "/login",
+        "url":  "/login",
+        "viewport":  1440,
+        "scrollWidth":  1440,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "login-mobile",
+        "mode":  "anonymous",
+        "route":  "/login",
+        "url":  "/login",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "login-forgot-mobile",
+        "mode":  "anonymous",
+        "route":  null,
+        "url":  "/login",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "anonymous-guard",
+        "mode":  "anonymous",
+        "route":  "/",
+        "url":  "/login",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "anonymous-guard",
+        "mode":  "anonymous",
+        "route":  "/projects",
+        "url":  "/login",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "anonymous-guard",
+        "mode":  "anonymous",
+        "route":  "/admin/roles",
+        "url":  "/login",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "anonymous-guard",
+        "mode":  "anonymous",
+        "route":  "/cs-cx/rotinas",
+        "url":  "/login",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "anonymous-guard",
+        "mode":  "anonymous",
+        "route":  "/assistentes/logs",
+        "url":  "/login",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "profile-error",
+        "mode":  "profile-error",
+        "route":  "/projects",
+        "url":  "/projects",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "permission-denied",
+        "mode":  "user",
+        "route":  "/projects",
+        "url":  "/projects",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "permission-denied",
+        "mode":  "user",
+        "route":  "/admin/roles",
+        "url":  "/dashboard",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "permission-denied",
+        "mode":  "user",
+        "route":  "/cs-cx/rotinas",
+        "url":  "/cs-cx/rotinas",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/atualizacoes",
+        "url":  "/atualizacoes",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/atualizacoes/gestao",
+        "url":  "/atualizacoes/gestao",
+        "viewport":  320,
+        "scrollWidth":  310,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/admin/pos-ai-logs",
+        "url":  "/assistentes/logs",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/admin",
+        "url":  "/admin",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/",
+        "url":  "/",
+        "viewport":  320,
+        "scrollWidth":  310,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/meu-dia",
+        "url":  "/meu-dia",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/meu-dia/quadro",
+        "url":  "/meu-dia/quadro",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/implantacao",
+        "url":  "/implantacao",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/calendario",
+        "url":  "/calendario",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/commercial",
+        "url":  "/commercial",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/conversion",
+        "url":  "/conversion",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/orion-tn-models",
+        "url":  "/orion-tn-models",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/assistentes",
+        "url":  "/assistentes",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/dashboard",
+        "url":  "/dashboard",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/dashboard/indicadores",
+        "url":  "/dashboard/indicadores",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/copilot",
+        "url":  "/copilot",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/dashboard/kanban",
+        "url":  "/dashboard/kanban",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/dashboard/pos-implantacao",
+        "url":  "/dashboard/pos-implantacao",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/dashboard/pos-panorama-geral",
+        "url":  "/dashboard/pos-panorama-geral",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/projects",
+        "url":  "/projects",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/calendar",
+        "url":  "/calendar",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/agenda-analistas",
+        "url":  "/agenda-analistas",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/compare",
+        "url":  "/compare",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/reports",
+        "url":  "/reports",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/analytics",
+        "url":  "/analytics",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/deployments",
+        "url":  "/deployments",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/deployments/latest",
+        "url":  "/deployments/latest",
+        "viewport":  320,
+        "scrollWidth":  310,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/deployments/tickets",
+        "url":  "/deployments/tickets",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/deployments/tickets-legacy",
+        "url":  "/deployments/tickets-legacy",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/commercial/blockers",
+        "url":  "/commercial/blockers",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/commercial/contacts",
+        "url":  "/commercial/contacts",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/commercial/customers",
+        "url":  "/commercial/customers",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/commercial/deployment-forms",
+        "url":  "/commercial/checklists",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/commercial/checklists",
+        "url":  "/commercial/checklists",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/commercial/checklists/questions",
+        "url":  "/commercial/checklists/questions",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/conversion/atividades",
+        "url":  "/conversion/atividades",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/implantadores/homologation",
+        "url":  "/implantadores/homologation",
+        "viewport":  320,
+        "scrollWidth":  310,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/conversion/engines",
+        "url":  "/conversion/engines",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/orion-tn-models/dashboard",
+        "url":  "/orion-tn-models/dashboard",
+        "viewport":  320,
+        "scrollWidth":  310,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/sd",
+        "url":  "/sd",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/sd/solucoes",
+        "url":  "/sd/solucoes",
+        "viewport":  320,
+        "scrollWidth":  310,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/sd/horas",
+        "url":  "/sd/horas",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/sd/consulta-horas",
+        "url":  "/sd/consulta-horas",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/sd/bi-atendimento",
+        "url":  "/sd/bi-atendimento",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/assistentes/conhecimento",
+        "url":  "/assistentes/conhecimento",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/assistentes/logs",
+        "url":  "/assistentes/logs",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/assistentes/links-chats",
+        "url":  "/assistentes/links-chats",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/assistentes/base-conhecimento/orion-tn",
+        "url":  "/assistentes/conhecimento",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/orion-tn-models/projects",
+        "url":  "/orion-tn-models/projects",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/implantadores",
+        "url":  "/implantadores",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/implantadores/aderencia",
+        "url":  "/implantadores/aderencia",
+        "viewport":  320,
+        "scrollWidth":  310,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/implantadores/aderencia/finalizadas",
+        "url":  "/implantadores/aderencia/finalizadas",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/implantadores/treinamento",
+        "url":  "/implantadores/treinamento",
+        "viewport":  320,
+        "scrollWidth":  310,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/implantadores/transicao",
+        "url":  "/implantadores/transicao",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/cs-cx",
+        "url":  "/cs-cx",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/cs-cx/registros",
+        "url":  "/cs-cx/registros",
+        "viewport":  320,
+        "scrollWidth":  310,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/cs-cx/cartorios",
+        "url":  "/cs-cx/cartorios",
+        "viewport":  320,
+        "scrollWidth":  310,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/cs-cx/contatos",
+        "url":  "/cs-cx/contatos",
+        "viewport":  320,
+        "scrollWidth":  310,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/cs-cx/agendamentos",
+        "url":  "/cs-cx/agendamentos",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/cs-cx/rotinas",
+        "url":  "/cs-cx/rotinas",
+        "viewport":  320,
+        "scrollWidth":  310,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/cs-cx/visitas",
+        "url":  "/cs-cx/visitas",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/cs-cx/nps",
+        "url":  "/cs-cx/nps",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/cs-cx/relatorios",
+        "url":  "/cs-cx/relatorios",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/cs-cx/admin",
+        "url":  "/cs-cx/admin",
+        "viewport":  320,
+        "scrollWidth":  310,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/admin/users",
+        "url":  "/admin/users",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/admin/roles",
+        "url":  "/admin/roles",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/admin/teams",
+        "url":  "/admin/teams",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-mobile",
+        "mode":  "admin",
+        "route":  "/admin/settings",
+        "url":  "/admin/settings",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-desktop",
+        "mode":  "admin",
+        "route":  "/",
+        "url":  "/",
+        "viewport":  1440,
+        "scrollWidth":  1440,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-desktop",
+        "mode":  "admin",
+        "route":  "/dashboard/indicadores",
+        "url":  "/dashboard/indicadores",
+        "viewport":  1440,
+        "scrollWidth":  1430,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-desktop",
+        "mode":  "admin",
+        "route":  "/projects",
+        "url":  "/projects",
+        "viewport":  1440,
+        "scrollWidth":  1440,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-desktop",
+        "mode":  "admin",
+        "route":  "/reports",
+        "url":  "/reports",
+        "viewport":  1440,
+        "scrollWidth":  1430,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-desktop",
+        "mode":  "admin",
+        "route":  "/calendar",
+        "url":  "/calendar",
+        "viewport":  1440,
+        "scrollWidth":  1440,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-desktop",
+        "mode":  "admin",
+        "route":  "/my-day",
+        "url":  "/my-day",
+        "viewport":  1440,
+        "scrollWidth":  1430,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-desktop",
+        "mode":  "admin",
+        "route":  "/comercial",
+        "url":  "/comercial",
+        "viewport":  1440,
+        "scrollWidth":  1430,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-desktop",
+        "mode":  "admin",
+        "route":  "/conversion",
+        "url":  "/conversion",
+        "viewport":  1440,
+        "scrollWidth":  1440,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-desktop",
+        "mode":  "admin",
+        "route":  "/cs-cx",
+        "url":  "/cs-cx",
+        "viewport":  1440,
+        "scrollWidth":  1440,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "admin-empty-desktop",
+        "mode":  "admin",
+        "route":  "/sd",
+        "url":  "/sd",
+        "viewport":  1440,
+        "scrollWidth":  1440,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-results.json",
+        "label":  "pwa-standalone",
+        "mode":  "admin",
+        "route":  "/",
+        "url":  "/",
+        "viewport":  320,
+        "scrollWidth":  310,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-targeted-results.json",
+        "label":  "orion-maintenance-shared-post",
+        "mode":  "anonymous",
+        "route":  "/atualizacoes/posts/qa-unavailable",
+        "url":  "/atualizacoes/posts/qa-unavailable",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+                           "Error: Rendered fewer hooks than expected. This may be caused by an accidental early return statement.",
+                           "Error: Rendered fewer hooks than expected. This may be caused by an accidental early return statement."
+                       ]
+    },
+    {
+        "group":  "ui-targeted-results.json",
+        "label":  "nps-invalid-token",
+        "mode":  "anonymous",
+        "route":  "/nps/responder/qa-invalid",
+        "url":  "/nps/responder/qa-invalid",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-targeted-results.json",
+        "label":  "infra-invalid-token",
+        "mode":  "anonymous",
+        "route":  "/public/infra-coleta/00000000-0000-4000-8000-000000000098",
+        "url":  "/public/infra-coleta/00000000-0000-4000-8000-000000000098",
+        "viewport":  320,
+        "scrollWidth":  310,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-targeted-results.json",
+        "label":  "pos-chat-invalid-token",
+        "mode":  "anonymous",
+        "route":  "/public/pos-chat/00000000-0000-4000-8000-000000000098",
+        "url":  "/public/pos-chat/00000000-0000-4000-8000-000000000098",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-targeted-results.json",
+        "label":  "roadmap-invalid-token",
+        "mode":  "anonymous",
+        "route":  "/roadmap/qa-invalid",
+        "url":  "/roadmap/qa-invalid",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+                           "TypeError: Cannot read properties of undefined (reading \u0027stages\u0027)",
+                           "TypeError: Cannot read properties of undefined (reading \u0027stages\u0027)"
+                       ]
+    },
+    {
+        "group":  "ui-targeted-results.json",
+        "label":  "home-dialog-tests",
+        "mode":  "admin",
+        "route":  "/",
+        "url":  "/",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-targeted-results.json",
+        "label":  "notifications-open-mobile",
+        "mode":  "admin",
+        "route":  null,
+        "url":  "/",
+        "viewport":  320,
+        "scrollWidth":  310,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-targeted-results.json",
+        "label":  "contact-dialog-test",
+        "mode":  "admin",
+        "route":  "/cs-cx/contatos",
+        "url":  "/cs-cx/contatos",
+        "viewport":  320,
+        "scrollWidth":  310,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-targeted-results.json",
+        "label":  "contact-dialog-open-mobile",
+        "mode":  "admin",
+        "route":  null,
+        "url":  "/cs-cx/contatos",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-pwa-results.json",
+        "label":  "production-login",
+        "mode":  "anonymous",
+        "route":  "/login",
+        "url":  "/login",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-pwa-results.json",
+        "label":  "pwa-registration",
+        "mode":  null,
+        "route":  null,
+        "url":  null,
+        "viewport":  null,
+        "scrollWidth":  null,
+        "dialogs":  null,
+        "standalone":  null,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-pwa-results.json",
+        "label":  "pwa-offline-reload",
+        "mode":  "anonymous",
+        "route":  null,
+        "url":  "/login",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-notification-results.json",
+        "label":  "roadmap-invalid-correct-response",
+        "mode":  "anonymous",
+        "route":  "/roadmap/00000000-0000-4000-8000-000000000098",
+        "url":  "/roadmap/00000000-0000-4000-8000-000000000098",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-notification-results.json",
+        "label":  "home-notification-check",
+        "mode":  "admin",
+        "route":  "/",
+        "url":  "/",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  1,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-notification-results.json",
+        "label":  "notifications-open-confirmed",
+        "mode":  null,
+        "route":  null,
+        "url":  "/",
+        "viewport":  320,
+        "scrollWidth":  320,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  {
+                     "x":  0,
+                     "width":  420,
+                     "right":  420,
+                     "viewport":  320,
+                     "text":  "Notificações\nTodas (0)\nNovidades\nAtividades\n\nNenhuma notificação."
+                 },
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-desktop-final-results.json",
+        "label":  "desktop-canonical",
+        "mode":  "admin",
+        "route":  "/meu-dia",
+        "url":  "/meu-dia",
+        "viewport":  1440,
+        "scrollWidth":  1430,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-desktop-final-results.json",
+        "label":  "desktop-canonical",
+        "mode":  "admin",
+        "route":  "/commercial",
+        "url":  "/commercial",
+        "viewport":  1440,
+        "scrollWidth":  1440,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+
+                       ]
+    },
+    {
+        "group":  "ui-desktop-final-results.json",
+        "label":  "desktop-canonical",
+        "mode":  "admin",
+        "route":  "/atualizacoes/gestao",
+        "url":  "/atualizacoes/gestao",
+        "viewport":  1440,
+        "scrollWidth":  1440,
+        "dialogs":  0,
+        "standalone":  false,
+        "menu":  null,
+        "exceptions":  [
+                           "TypeError: Cannot read properties of undefined (reading \u0027filter\u0027)",
+                           "TypeError: Cannot read properties of undefined (reading \u0027filter\u0027)"
+                       ]
+    }
+]

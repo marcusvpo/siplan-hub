@@ -56,7 +56,7 @@ function parseState(obs?: string): PostState {
   try {
     const p = JSON.parse(obs);
     if (p && p.v === 2 && Array.isArray(p.blocks)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const blocks = (p.blocks as any[]).map((b) =>
         makeBlock(
           typeof b?.content === "string" ? b.content : b?.content ? JSON.stringify(b.content) : "",
@@ -84,7 +84,7 @@ function serialize(blocks: Block[], summary: Block): string {
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 function walkText(nodes: any[]): string {
   return nodes.map((n) => n.text ?? (n.children ? walkText(n.children) : "")).join("");
 }
@@ -108,7 +108,7 @@ function blockToPlain(content: string): string {
     const p = JSON.parse(content);
     if (!p?.root?.children) return content.trim();
     const lines: string[] = [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const walk = (nodes: any[]): void => {
       for (const node of nodes) {
         if (node?.type === "text" && typeof node.text === "string") {
@@ -137,7 +137,7 @@ const FMT_BOLD = 1, FMT_ITALIC = 2, FMT_STRIKE = 4, FMT_UNDERLINE = 8;
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 function inlineHtml(nodes: any[]): string {
   return (nodes || [])
     .map((n) => {
@@ -157,14 +157,14 @@ function inlineHtml(nodes: any[]): string {
 }
 function lexToHtml(content: string): string {
   if (!content || !content.trim()) return "";
-  let parsed: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  let parsed: any;
   try {
     parsed = JSON.parse(content);
   } catch {
     return `<p>${escapeHtml(content)}</p>`;
   }
   if (!parsed?.root?.children) return `<p>${escapeHtml(content)}</p>`;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const render = (node: any): string => {
     const type = node?.type;
     if (type === "heading") {
@@ -174,7 +174,7 @@ function lexToHtml(content: string): string {
     if (type === "list") {
       const tag = node.listType === "number" ? "ol" : "ul";
       const items = (node.children || [])
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         .map((li: any) => `<li>${inlineHtml(li.children || [])}</li>`)
         .join("");
       return `<${tag}>${items}</${tag}>`;

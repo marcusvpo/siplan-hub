@@ -107,9 +107,7 @@ export const TimelineChart = ({ projects }: TimelineChartProps) => {
     .filter((p) => {
       if (
         p.systemType === "Modelos TN" ||
-        p.globalStatus === "archived" ||
-        p.globalStatus === "done" ||
-        p.globalStatus === "canceled"
+        ["done", "archived", "canceled"].includes(p.globalStatus)
       ) {
         return false;
       }

@@ -145,7 +145,7 @@ function extractBunnyVideoFromLine(line: string): { url: string; title: string; 
   if (genericMatch) {
     const title = genericMatch[1].replace(/^\[+|\]+$/g, "").trim();
     const url = genericMatch[2].trim();
-    const prefix = line.replace(genericMatch[0], "").replace(/^[▶️🎬🎥\s*:]+/, "").trim();
+    const prefix = line.replace(genericMatch[0], "").replace(/^(?:▶\uFE0F?|🎬|🎥|[\s*:])+/u, "").trim();
     return {
       url,
       title: title || "Videoaula - Orion TN",
@@ -159,7 +159,7 @@ function extractBunnyVideoFromLine(line: string): { url: string; title: string; 
 
   if (bareMatch) {
     const url = bareMatch[1].trim();
-    const prefix = line.replace(url, "").replace(/^[▶️🎬🎥\s*:]+/, "").trim();
+    const prefix = line.replace(url, "").replace(/^(?:▶\uFE0F?|🎬|🎥|[\s*:])+/u, "").trim();
     return {
       url,
       title: prefix || "Videoaula - Orion TN",

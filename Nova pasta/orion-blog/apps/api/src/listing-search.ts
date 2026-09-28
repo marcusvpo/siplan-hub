@@ -2,7 +2,9 @@
 import { z } from 'zod';
 
 export const publicationSearchSchema = z.string().trim().max(200)
-  .regex(/^[^\u0000-\u001f\u007f]*$/, 'Informe um texto de busca válido.')
+  .refine(value => Array.from(value).every(character =>
+    character.charCodeAt(0) >= 0x20 && character.charCodeAt(0) !== 0x7f
+  ), 'Informe um texto de busca válido.')
   .transform(value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' '))
   .default('');
 

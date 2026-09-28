@@ -1246,9 +1246,9 @@ export default function CsCxRequests() {
                     >
                       <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                         <span className="font-semibold text-foreground">
-                          {update.profile?.full_name ?? "Sistema"}
+                          {update.author?.full_name ?? "Sistema"}
                         </span>
-                        <span>{formatDateTime(update.created_at)}</span>
+                        <span>{formatDateTime(update.occurred_at)}</span>
                       </div>
                       <p className="whitespace-pre-wrap text-xs leading-5 text-foreground/90">
                         {update.observation}

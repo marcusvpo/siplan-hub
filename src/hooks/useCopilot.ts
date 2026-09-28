@@ -29,7 +29,7 @@ export interface CopilotJob {
   followups?: string[];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const mapAccess = (a: any): CopilotAccess => ({
   userId: a.user_id,
   enabled: !!a.enabled,
@@ -38,7 +38,7 @@ const mapAccess = (a: any): CopilotAccess => ({
   periodResetAt: a.period_reset_at,
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const mapJob = (j: any): CopilotJob => ({
   id: j.id,
   userId: j.user_id,
@@ -227,11 +227,10 @@ export function useCopilot() {
             // Merge (nao sobrescreve): em updates parciais o Postgres omite colunas
             // grandes/TOAST inalteradas (ex.: result_text ao curtir), que chegam como
             // undefined. Mantemos o valor anterior nesses campos.
-            const merged = { ...prev[idx] } as CopilotJob;
-            (Object.keys(mapped) as (keyof CopilotJob)[]).forEach((k) => {
-              const v = mapped[k];
-              if (v !== undefined) (merged as Record<string, unknown>)[k as string] = v;
-            });
+            const definedUpdates = Object.fromEntries(
+              Object.entries(mapped).filter(([, value]) => value !== undefined),
+            );
+            const merged: CopilotJob = { ...prev[idx], ...definedUpdates };
             const copy = prev.slice();
             copy[idx] = merged;
             return copy;

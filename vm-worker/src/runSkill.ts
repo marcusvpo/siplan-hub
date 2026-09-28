@@ -7,7 +7,7 @@ export interface ProgressStep {
   kind: "system" | "text" | "tool" | "result";
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 type AnyObj = any;
 
 export interface RunSkillOptions {

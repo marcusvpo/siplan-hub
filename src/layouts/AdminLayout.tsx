@@ -28,11 +28,12 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/hooks/use-theme";
 import { activityLogger } from "@/services/activityLogger";
+import { AuthLoadError } from "@/components/auth/AuthLoadError";
 
 const ADMIN_SIDEBAR_COLLAPSED_KEY = "admin-sidebar-collapsed";
 
 export default function AdminLayout() {
-  const { user, role, loading, permissionsLoaded, signOut } = useAuth();
+  const { user, role, loading, permissionsLoaded, authError, signOut } = useAuth();
   const { canManageUsers, hasPermission } = usePermissions();
   const { theme } = useTheme();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -67,7 +68,7 @@ export default function AdminLayout() {
 
   // Heartbeat to keep user marked as online while in admin area
   useEffect(() => {
-    if (!userId || loading || !permissionsLoaded) return;
+    if (!userId || loading || !permissionsLoaded || authError) return;
 
     const sendHeartbeat = () => {
       activityLogger.log({
@@ -85,7 +86,9 @@ export default function AdminLayout() {
     const interval = setInterval(sendHeartbeat, 10 * 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [userId, loading, permissionsLoaded]);
+  }, [userId, loading, permissionsLoaded, authError]);
+
+  if (authError) return <AuthLoadError />;
 
   if (loading || !permissionsLoaded) {
     return (

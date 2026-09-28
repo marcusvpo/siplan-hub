@@ -15,6 +15,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -27,6 +28,8 @@ export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { theme } = useTheme();
+  const { loading: authLoading } = useAuth();
+  const busy = loading || authLoading;
 
   const isDark =
     theme === "dark" ||
@@ -39,6 +42,7 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (busy) return;
     setLoading(true);
 
     try {
@@ -55,14 +59,14 @@ export default function Login() {
         console.log("Session found, navigating...");
         // Check role if trying to login as admin
         if (isAdminLogin) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
           const { data: profile } = await (supabase as any)
             .from("profiles")
             .select("role")
             .eq("id", data.session.user.id)
             .single();
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
           if ((profile as any)?.role !== "admin") {
             await supabase.auth.signOut();
             throw new Error(
@@ -102,6 +106,7 @@ export default function Login() {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (busy) return;
     setLoading(true);
 
     try {
@@ -244,7 +249,7 @@ export default function Login() {
                 : "Insira suas credenciais para acessar sua conta."}
           </CardDescription>
         </CardHeader>
-        <form onSubmit={isForgotMode ? handleForgotPassword : handleLogin}>
+        <form onSubmit={isForgotMode ? handleForgotPassword : handleLogin} aria-busy={busy}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-foreground/80">Email</Label>
@@ -255,7 +260,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={loading}
+                disabled={busy}
                 className="bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
               />
             </div>
@@ -265,6 +270,7 @@ export default function Login() {
                   <Label htmlFor="password" className="text-foreground/80">Senha</Label>
                   <button
                     type="button"
+                    disabled={busy}
                     onClick={() => setIsForgotMode(true)}
                     className="text-xs text-muted-foreground hover:text-primary transition-colors"
                   >
@@ -277,18 +283,18 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  disabled={loading}
+                  disabled={busy}
                   className="bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
                 />
               </div>
             )}
           </CardContent>
           <CardFooter className="flex-col gap-3">
-            <Button className="w-full font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all active:scale-[0.98]" type="submit" disabled={loading}>
-              {loading ? (
+            <Button className="w-full font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all active:scale-[0.98]" type="submit" disabled={busy}>
+              {busy ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isForgotMode ? "Enviando..." : "Entrando..."}
+                  {authLoading ? "Aguarde..." : isForgotMode ? "Enviando..." : "Entrando..."}
                 </>
               ) : isForgotMode ? (
                 "Enviar link de recuperação"
@@ -299,6 +305,7 @@ export default function Login() {
             {isForgotMode && (
               <button
                 type="button"
+                disabled={busy}
                 onClick={() => setIsForgotMode(false)}
                 className="text-xs text-muted-foreground hover:text-primary transition-colors"
               >

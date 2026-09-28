@@ -14,6 +14,7 @@ function contact(
     contact_date: contactDate,
     notes: null,
     pending_items: null,
+    is_alert: false,
     product_id: "product-1",
     contact_person: name,
     contact_details: null,

@@ -32,10 +32,11 @@ export const ImplementerProjectsList: React.FC<ImplementerProjectsListProps> = (
       switch (sortBy) {
         case 'clientName':
           return (a.project.clientName || '').localeCompare(b.project.clientName || '');
-        case 'createdAt':
+        case 'createdAt': {
           const dateA = new Date(a.project.createdAt || 0).getTime();
           const dateB = new Date(b.project.createdAt || 0).getTime();
           return dateB - dateA;
+        }
         case 'status':
           return (a.project.globalStatus || '').localeCompare(b.project.globalStatus || '');
         case 'progress':

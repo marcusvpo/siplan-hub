@@ -593,9 +593,12 @@ export function PosImplantacaoTab({ project }: PosImplantacaoTabProps) {
                       barSize={18}
                       radius={[0, 4, 4, 0]}
                       className="cursor-pointer"
-                      onClick={(d: { natureza?: string }) =>
-                        d?.natureza && setFiltro({ tipo: "natureza", valor: d.natureza })
-                      }
+                      onClick={(bar) => {
+                        const payload: unknown = bar.payload;
+                        if (payload && typeof payload === "object" && "natureza" in payload && typeof payload.natureza === "string" && payload.natureza) {
+                          setFiltro({ tipo: "natureza", valor: payload.natureza });
+                        }
+                      }}
                     >
                       <LabelList
                         dataKey="total"

@@ -1,0 +1,4278 @@
+{
+  "runId": "2026-09-28T19-46-33-156Z",
+  "results": [
+    {
+      "name": "login-320",
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "path": "/noise.svg",
+          "method": "GET",
+          "status": 403,
+          "mocked": true
+        }
+      ],
+      "status": "passed",
+      "layout": {
+        "viewport": {
+          "width": 320,
+          "height": 740
+        },
+        "bounds": {
+          "x": 17,
+          "y": 367,
+          "width": 286,
+          "height": 240,
+          "right": 303,
+          "bottom": 607
+        },
+        "scrollWidth": 320,
+        "bodyWidth": 320,
+        "controls": [
+          {
+            "name": "Esqueci minha senha?",
+            "x": 163.3125,
+            "y": 455,
+            "width": 115.6875,
+            "height": 16,
+            "right": 279,
+            "bottom": 471
+          },
+          {
+            "name": "Aguarde...",
+            "x": 41,
+            "y": 543,
+            "width": 238,
+            "height": 40,
+            "right": 279,
+            "bottom": 583
+          }
+        ],
+        "overflow": [],
+        "text": "Email\nSenha\nEsqueci minha senha?\nAguarde...",
+        "scrollArea": null
+      },
+      "durationMs": 3379
+    },
+    {
+      "name": "login-390",
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "requests": [],
+      "status": "passed",
+      "layout": {
+        "viewport": {
+          "width": 390,
+          "height": 740
+        },
+        "bounds": {
+          "x": 17,
+          "y": 357,
+          "width": 356,
+          "height": 240,
+          "right": 373,
+          "bottom": 597
+        },
+        "scrollWidth": 390,
+        "bodyWidth": 390,
+        "controls": [
+          {
+            "name": "Esqueci minha senha?",
+            "x": 233.3125,
+            "y": 445,
+            "width": 115.6875,
+            "height": 16,
+            "right": 349,
+            "bottom": 461
+          },
+          {
+            "name": "Entrar",
+            "x": 41,
+            "y": 533,
+            "width": 308,
+            "height": 40,
+            "right": 349,
+            "bottom": 573
+          }
+        ],
+        "overflow": [],
+        "text": "Email\nSenha\nEsqueci minha senha?\nEntrar",
+        "scrollArea": null
+      },
+      "durationMs": 1126
+    },
+    {
+      "name": "login-1440",
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "requests": [],
+      "status": "passed",
+      "layout": {
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "bounds": {
+          "x": 497,
+          "y": 437,
+          "width": 446,
+          "height": 240,
+          "right": 943,
+          "bottom": 677
+        },
+        "scrollWidth": 1440,
+        "bodyWidth": 1440,
+        "controls": [
+          {
+            "name": "Esqueci minha senha?",
+            "x": 803.3125,
+            "y": 525,
+            "width": 115.6875,
+            "height": 16,
+            "right": 919,
+            "bottom": 541
+          },
+          {
+            "name": "Entrar",
+            "x": 521,
+            "y": 613,
+            "width": 398,
+            "height": 40,
+            "right": 919,
+            "bottom": 653
+          }
+        ],
+        "overflow": [],
+        "text": "Email\nSenha\nEsqueci minha senha?\nEntrar",
+        "scrollArea": null
+      },
+      "durationMs": 1989
+    },
+    {
+      "name": "auth-retry-320",
+      "runtimeErrors": [],
+      "consoleErrors": [
+        "Erro ao carregar o acesso do usuário: Object"
+      ],
+      "requests": [
+        {
+          "path": "/rest/v1/profiles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "GET",
+          "status": 503,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "POST",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/projects",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/notifications",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/projects",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/notifications",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        }
+      ],
+      "status": "passed",
+      "errorLayout": {
+        "viewport": {
+          "width": 320,
+          "height": 740
+        },
+        "bounds": {
+          "x": 16,
+          "y": 240,
+          "width": 288,
+          "height": 260,
+          "right": 304,
+          "bottom": 500
+        },
+        "scrollWidth": 320,
+        "bodyWidth": 320,
+        "controls": [
+          {
+            "name": "Tentar novamente",
+            "x": 16,
+            "y": 456,
+            "width": 288,
+            "height": 44,
+            "right": 304,
+            "bottom": 500
+          }
+        ],
+        "overflow": [],
+        "text": "Não foi possível carregar seu acesso\n\nNão foi possível carregar seu perfil. Verifique sua conexão e tente novamente.\n\nTentar novamente",
+        "scrollArea": null
+      },
+      "durationMs": 2050
+    },
+    {
+      "name": "auth-retry-390",
+      "runtimeErrors": [],
+      "consoleErrors": [
+        "Erro ao carregar o acesso do usuário: Object"
+      ],
+      "requests": [
+        {
+          "path": "/rest/v1/profiles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "GET",
+          "status": 503,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "POST",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/projects",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/notifications",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/projects",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/notifications",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        }
+      ],
+      "status": "passed",
+      "errorLayout": {
+        "viewport": {
+          "width": 390,
+          "height": 740
+        },
+        "bounds": {
+          "x": 16,
+          "y": 266,
+          "width": 358,
+          "height": 208,
+          "right": 374,
+          "bottom": 474
+        },
+        "scrollWidth": 390,
+        "bodyWidth": 390,
+        "controls": [
+          {
+            "name": "Tentar novamente",
+            "x": 16,
+            "y": 430,
+            "width": 358,
+            "height": 44,
+            "right": 374,
+            "bottom": 474
+          }
+        ],
+        "overflow": [],
+        "text": "Não foi possível carregar seu acesso\n\nNão foi possível carregar seu perfil. Verifique sua conexão e tente novamente.\n\nTentar novamente",
+        "scrollArea": null
+      },
+      "durationMs": 977
+    },
+    {
+      "name": "auth-retry-1440",
+      "runtimeErrors": [],
+      "consoleErrors": [
+        "Erro ao carregar o acesso do usuário: Object"
+      ],
+      "requests": [
+        {
+          "path": "/rest/v1/profiles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "GET",
+          "status": 503,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "POST",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/projects",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/notifications",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/projects",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/notifications",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        }
+      ],
+      "status": "passed",
+      "errorLayout": {
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "bounds": {
+          "x": 496,
+          "y": 346,
+          "width": 448,
+          "height": 208,
+          "right": 944,
+          "bottom": 554
+        },
+        "scrollWidth": 1440,
+        "bodyWidth": 1440,
+        "controls": [
+          {
+            "name": "Tentar novamente",
+            "x": 630.75,
+            "y": 510,
+            "width": 178.5,
+            "height": 44,
+            "right": 809.25,
+            "bottom": 554
+          }
+        ],
+        "overflow": [],
+        "text": "Não foi possível carregar seu acesso\n\nNão foi possível carregar seu perfil. Verifique sua conexão e tente novamente.\n\nTentar novamente",
+        "scrollArea": null
+      },
+      "durationMs": 1372
+    },
+    {
+      "name": "notifications-empty-320",
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "path": "/rest/v1/profiles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "POST",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/projects",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/notifications",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/projects",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/notifications",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        }
+      ],
+      "status": "passed",
+      "layout": {
+        "viewport": {
+          "width": 320,
+          "height": 740
+        },
+        "bounds": {
+          "x": 8,
+          "y": 54,
+          "width": 304,
+          "height": 215,
+          "right": 312,
+          "bottom": 269
+        },
+        "scrollWidth": 320,
+        "bodyWidth": 310,
+        "controls": [
+          {
+            "name": "Todas (0)",
+            "x": 17,
+            "y": 91,
+            "width": 92.65625,
+            "height": 44,
+            "right": 109.65625,
+            "bottom": 135
+          },
+          {
+            "name": "Novidades",
+            "x": 113.65625,
+            "y": 91,
+            "width": 92.671875,
+            "height": 44,
+            "right": 206.328125,
+            "bottom": 135
+          },
+          {
+            "name": "Atividades",
+            "x": 210.328125,
+            "y": 91,
+            "width": 92.65625,
+            "height": 44,
+            "right": 302.984375,
+            "bottom": 135
+          }
+        ],
+        "overflow": [],
+        "text": "Notificações\nTodas (0)\nNovidades\nAtividades\n\nNenhuma notificação.",
+        "scrollArea": {
+          "x": 9,
+          "y": 144,
+          "width": 302,
+          "height": 124,
+          "right": 311,
+          "bottom": 268,
+          "contentHeight": 124,
+          "scrollTop": 0
+        }
+      },
+      "durationMs": 1316
+    },
+    {
+      "name": "notifications-empty-390",
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "path": "/rest/v1/profiles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "POST",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/projects",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/notifications",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/projects",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/notifications",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        }
+      ],
+      "status": "passed",
+      "layout": {
+        "viewport": {
+          "width": 390,
+          "height": 740
+        },
+        "bounds": {
+          "x": 8,
+          "y": 54,
+          "width": 374,
+          "height": 215,
+          "right": 382,
+          "bottom": 269
+        },
+        "scrollWidth": 390,
+        "bodyWidth": 380,
+        "controls": [
+          {
+            "name": "Todas (0)",
+            "x": 17,
+            "y": 91,
+            "width": 116,
+            "height": 44,
+            "right": 133,
+            "bottom": 135
+          },
+          {
+            "name": "Novidades",
+            "x": 137,
+            "y": 91,
+            "width": 116,
+            "height": 44,
+            "right": 253,
+            "bottom": 135
+          },
+          {
+            "name": "Atividades",
+            "x": 257,
+            "y": 91,
+            "width": 116,
+            "height": 44,
+            "right": 373,
+            "bottom": 135
+          }
+        ],
+        "overflow": [],
+        "text": "Notificações\nTodas (0)\nNovidades\nAtividades\n\nNenhuma notificação.",
+        "scrollArea": {
+          "x": 9,
+          "y": 144,
+          "width": 372,
+          "height": 124,
+          "right": 381,
+          "bottom": 268,
+          "contentHeight": 124,
+          "scrollTop": 0
+        }
+      },
+      "durationMs": 1222
+    },
+    {
+      "name": "notifications-empty-1440",
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "path": "/rest/v1/profiles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "POST",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/projects",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/notifications",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/projects",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/notifications",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        }
+      ],
+      "status": "passed",
+      "layout": {
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "bounds": {
+          "x": 900,
+          "y": 58,
+          "width": 420,
+          "height": 215,
+          "right": 1320,
+          "bottom": 273
+        },
+        "scrollWidth": 1440,
+        "bodyWidth": 1440,
+        "controls": [
+          {
+            "name": "Todas (0)",
+            "x": 909,
+            "y": 95,
+            "width": 131.328125,
+            "height": 44,
+            "right": 1040.328125,
+            "bottom": 139
+          },
+          {
+            "name": "Novidades",
+            "x": 1044.328125,
+            "y": 95,
+            "width": 131.328125,
+            "height": 44,
+            "right": 1175.65625,
+            "bottom": 139
+          },
+          {
+            "name": "Atividades",
+            "x": 1179.65625,
+            "y": 95,
+            "width": 131.328125,
+            "height": 44,
+            "right": 1310.984375,
+            "bottom": 139
+          }
+        ],
+        "overflow": [],
+        "text": "Notificações\nTodas (0)\nNovidades\nAtividades\n\nNenhuma notificação.",
+        "scrollArea": {
+          "x": 901,
+          "y": 148,
+          "width": 418,
+          "height": 124,
+          "right": 1319,
+          "bottom": 272,
+          "contentHeight": 124,
+          "scrollTop": 0
+        }
+      },
+      "durationMs": 1479
+    },
+    {
+      "name": "notifications-long-320",
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "path": "/rest/v1/profiles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "POST",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/projects",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/notifications",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/projects",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/notifications",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        }
+      ],
+      "status": "passed",
+      "layout": {
+        "viewport": {
+          "width": 320,
+          "height": 740
+        },
+        "bounds": {
+          "x": 8,
+          "y": 54,
+          "width": 304,
+          "height": 600,
+          "right": 312,
+          "bottom": 654
+        },
+        "scrollWidth": 320,
+        "bodyWidth": 310,
+        "controls": [
+          {
+            "name": "Marcar todas lidas",
+            "x": 21,
+            "y": 91,
+            "width": 143.6875,
+            "height": 44,
+            "right": 164.6875,
+            "bottom": 135
+          },
+          {
+            "name": "Todas (12)",
+            "x": 17,
+            "y": 139,
+            "width": 92.65625,
+            "height": 44,
+            "right": 109.65625,
+            "bottom": 183
+          },
+          {
+            "name": "Novidades",
+            "x": 113.65625,
+            "y": 139,
+            "width": 92.671875,
+            "height": 44,
+            "right": 206.328125,
+            "bottom": 183
+          },
+          {
+            "name": "Atividades",
+            "x": 210.328125,
+            "y": 139,
+            "width": 92.65625,
+            "height": 44,
+            "right": 302.984375,
+            "bottom": 183
+          },
+          {
+            "name": "Abrir notificação: Novidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": 200,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": 856
+          },
+          {
+            "name": "Limpar notificação: Novidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": 200,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": 244
+          },
+          {
+            "name": "Abrir notificação: Novidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": 873,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": 1529
+          },
+          {
+            "name": "Limpar notificação: Novidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": 873,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": 917
+          },
+          {
+            "name": "Abrir notificação: Novidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": 1546,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": 2202
+          },
+          {
+            "name": "Limpar notificação: Novidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": 1546,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": 1590
+          },
+          {
+            "name": "Abrir notificação: Novidade 4: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": 2219,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": 2875
+          },
+          {
+            "name": "Limpar notificação: Novidade 4: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": 2219,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": 2263
+          },
+          {
+            "name": "Abrir notificação: Novidade 5: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": 2892,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": 3548
+          },
+          {
+            "name": "Limpar notificação: Novidade 5: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": 2892,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": 2936
+          },
+          {
+            "name": "Abrir notificação: Novidade 6: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": 3565,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": 4221
+          },
+          {
+            "name": "Limpar notificação: Novidade 6: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": 3565,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": 3609
+          },
+          {
+            "name": "Abrir notificação: Novidade 7: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": 4238,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": 4894
+          },
+          {
+            "name": "Limpar notificação: Novidade 7: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": 4238,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": 4282
+          },
+          {
+            "name": "Abrir notificação: Novidade 8: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": 4911,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": 5567
+          },
+          {
+            "name": "Limpar notificação: Novidade 8: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": 4911,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": 4955
+          },
+          {
+            "name": "Abrir notificação: Novidade 9: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": 5584,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": 6240
+          },
+          {
+            "name": "Limpar notificação: Novidade 9: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": 5584,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": 5628
+          },
+          {
+            "name": "Abrir notificação: Novidade 10: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 19,
+            "y": 6257,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": 6913
+          },
+          {
+            "name": "Limpar notificação: Novidade 10: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 249,
+            "y": 6257,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": 6301
+          },
+          {
+            "name": "Abrir notificação: Novidade 11: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 19,
+            "y": 6930,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": 7586
+          },
+          {
+            "name": "Limpar notificação: Novidade 11: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 249,
+            "y": 6930,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": 6974
+          },
+          {
+            "name": "Abrir notificação: Novidade 12: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 19,
+            "y": 7603,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": 8259
+          },
+          {
+            "name": "Limpar notificação: Novidade 12: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 249,
+            "y": 7603,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": 7647
+          }
+        ],
+        "overflow": [],
+        "text": "Notificações\n12 novidades\nMarcar todas lidas\nTodas (12)\nNovidades\nAtividades\nNovidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 1. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. ConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaços\nhá menos de um minuto\nAcessar\nNovidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 2. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. ConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaços\nhá menos de um minuto\nAcessar\nNovidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 3. Informações do sistema para o cartóri",
+        "scrollArea": {
+          "x": 9,
+          "y": 192,
+          "width": 302,
+          "height": 461,
+          "right": 311,
+          "bottom": 653,
+          "contentHeight": 8075,
+          "scrollTop": 0
+        }
+      },
+      "listEndLayout": {
+        "viewport": {
+          "width": 320,
+          "height": 740
+        },
+        "bounds": {
+          "x": 8,
+          "y": 54,
+          "width": 304,
+          "height": 600,
+          "right": 312,
+          "bottom": 654
+        },
+        "scrollWidth": 320,
+        "bodyWidth": 310,
+        "controls": [
+          {
+            "name": "Marcar todas lidas",
+            "x": 21,
+            "y": 91,
+            "width": 143.6875,
+            "height": 44,
+            "right": 164.6875,
+            "bottom": 135
+          },
+          {
+            "name": "Todas (12)",
+            "x": 17,
+            "y": 139,
+            "width": 92.65625,
+            "height": 44,
+            "right": 109.65625,
+            "bottom": 183
+          },
+          {
+            "name": "Novidades",
+            "x": 113.65625,
+            "y": 139,
+            "width": 92.671875,
+            "height": 44,
+            "right": 206.328125,
+            "bottom": 183
+          },
+          {
+            "name": "Atividades",
+            "x": 210.328125,
+            "y": 139,
+            "width": 92.65625,
+            "height": 44,
+            "right": 302.984375,
+            "bottom": 183
+          },
+          {
+            "name": "Abrir notificação: Novidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -7414,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -6758
+          },
+          {
+            "name": "Limpar notificação: Novidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": -7414,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -7370
+          },
+          {
+            "name": "Abrir notificação: Novidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -6741,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -6085
+          },
+          {
+            "name": "Limpar notificação: Novidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": -6741,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -6697
+          },
+          {
+            "name": "Abrir notificação: Novidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -6068,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -5412
+          },
+          {
+            "name": "Limpar notificação: Novidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": -6068,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -6024
+          },
+          {
+            "name": "Abrir notificação: Novidade 4: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -5395,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -4739
+          },
+          {
+            "name": "Limpar notificação: Novidade 4: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": -5395,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -5351
+          },
+          {
+            "name": "Abrir notificação: Novidade 5: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -4722,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -4066
+          },
+          {
+            "name": "Limpar notificação: Novidade 5: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": -4722,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -4678
+          },
+          {
+            "name": "Abrir notificação: Novidade 6: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -4049,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -3393
+          },
+          {
+            "name": "Limpar notificação: Novidade 6: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": -4049,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -4005
+          },
+          {
+            "name": "Abrir notificação: Novidade 7: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -3376,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -2720
+          },
+          {
+            "name": "Limpar notificação: Novidade 7: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": -3376,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -3332
+          },
+          {
+            "name": "Abrir notificação: Novidade 8: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -2703,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -2047
+          },
+          {
+            "name": "Limpar notificação: Novidade 8: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": -2703,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -2659
+          },
+          {
+            "name": "Abrir notificação: Novidade 9: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -2030,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -1374
+          },
+          {
+            "name": "Limpar notificação: Novidade 9: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": -2030,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -1986
+          },
+          {
+            "name": "Abrir notificação: Novidade 10: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 19,
+            "y": -1357,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -701
+          },
+          {
+            "name": "Limpar notificação: Novidade 10: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 249,
+            "y": -1357,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -1313
+          },
+          {
+            "name": "Abrir notificação: Novidade 11: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 19,
+            "y": -684,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -28
+          },
+          {
+            "name": "Limpar notificação: Novidade 11: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 249,
+            "y": -684,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -640
+          },
+          {
+            "name": "Abrir notificação: Novidade 12: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 19,
+            "y": -11,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": 645
+          },
+          {
+            "name": "Limpar notificação: Novidade 12: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 249,
+            "y": -11,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": 33
+          }
+        ],
+        "overflow": [],
+        "text": "Notificações\n12 novidades\nMarcar todas lidas\nTodas (12)\nNovidades\nAtividades\nNovidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 1. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. ConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaços\nhá menos de um minuto\nAcessar\nNovidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 2. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. ConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaços\nhá menos de um minuto\nAcessar\nNovidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 3. Informações do sistema para o cartóri",
+        "scrollArea": {
+          "x": 9,
+          "y": 192,
+          "width": 302,
+          "height": 461,
+          "right": 311,
+          "bottom": 653,
+          "contentHeight": 8075,
+          "scrollTop": 7614
+        }
+      },
+      "scrolledLayout": {
+        "viewport": {
+          "width": 320,
+          "height": 740
+        },
+        "bounds": {
+          "x": 8,
+          "y": 54,
+          "width": 304,
+          "height": 600,
+          "right": 312,
+          "bottom": 654
+        },
+        "scrollWidth": 320,
+        "bodyWidth": 310,
+        "controls": [
+          {
+            "name": "Marcar todas lidas",
+            "x": 21,
+            "y": 91,
+            "width": 143.6875,
+            "height": 44,
+            "right": 164.6875,
+            "bottom": 135
+          },
+          {
+            "name": "Todas (12)",
+            "x": 17,
+            "y": 139,
+            "width": 92.65625,
+            "height": 44,
+            "right": 109.65625,
+            "bottom": 183
+          },
+          {
+            "name": "Novidades",
+            "x": 113.65625,
+            "y": 139,
+            "width": 92.671875,
+            "height": 44,
+            "right": 206.328125,
+            "bottom": 183
+          },
+          {
+            "name": "Atividades",
+            "x": 210.328125,
+            "y": 139,
+            "width": 92.65625,
+            "height": 44,
+            "right": 302.984375,
+            "bottom": 183
+          },
+          {
+            "name": "Abrir notificação: Novidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -7211,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -6555
+          },
+          {
+            "name": "Limpar notificação: Novidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": -7211,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -7167
+          },
+          {
+            "name": "Abrir notificação: Novidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -6538,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -5882
+          },
+          {
+            "name": "Limpar notificação: Novidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": -6538,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -6494
+          },
+          {
+            "name": "Abrir notificação: Novidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -5865,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -5209
+          },
+          {
+            "name": "Limpar notificação: Novidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": -5865,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -5821
+          },
+          {
+            "name": "Abrir notificação: Novidade 4: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -5192,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -4536
+          },
+          {
+            "name": "Limpar notificação: Novidade 4: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": -5192,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -5148
+          },
+          {
+            "name": "Abrir notificação: Novidade 5: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -4519,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -3863
+          },
+          {
+            "name": "Limpar notificação: Novidade 5: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": -4519,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -4475
+          },
+          {
+            "name": "Abrir notificação: Novidade 6: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -3846,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -3190
+          },
+          {
+            "name": "Limpar notificação: Novidade 6: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": -3846,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -3802
+          },
+          {
+            "name": "Abrir notificação: Novidade 7: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -3173,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -2517
+          },
+          {
+            "name": "Limpar notificação: Novidade 7: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": -3173,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -3129
+          },
+          {
+            "name": "Abrir notificação: Novidade 8: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -2500,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -1844
+          },
+          {
+            "name": "Limpar notificação: Novidade 8: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": -2500,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -2456
+          },
+          {
+            "name": "Abrir notificação: Novidade 9: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -1827,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -1171
+          },
+          {
+            "name": "Limpar notificação: Novidade 9: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 249,
+            "y": -1827,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -1783
+          },
+          {
+            "name": "Abrir notificação: Novidade 10: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 19,
+            "y": -1154,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": -498
+          },
+          {
+            "name": "Limpar notificação: Novidade 10: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 249,
+            "y": -1154,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -1110
+          },
+          {
+            "name": "Abrir notificação: Novidade 11: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 19,
+            "y": -481,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": 175
+          },
+          {
+            "name": "Limpar notificação: Novidade 11: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 249,
+            "y": -481,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": -437
+          },
+          {
+            "name": "Abrir notificação: Novidade 12: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 19,
+            "y": 192,
+            "width": 226,
+            "height": 656,
+            "right": 245,
+            "bottom": 848
+          },
+          {
+            "name": "Limpar notificação: Novidade 12: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 249,
+            "y": 192,
+            "width": 44,
+            "height": 44,
+            "right": 293,
+            "bottom": 236
+          }
+        ],
+        "overflow": [],
+        "text": "Notificações\n12 novidades\nMarcar todas lidas\nTodas (12)\nNovidades\nAtividades\nNovidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 1. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. ConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaços\nhá menos de um minuto\nAcessar\nNovidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 2. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. ConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaços\nhá menos de um minuto\nAcessar\nNovidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 3. Informações do sistema para o cartóri",
+        "scrollArea": {
+          "x": 9,
+          "y": 192,
+          "width": 302,
+          "height": 461,
+          "right": 311,
+          "bottom": 653,
+          "contentHeight": 8075,
+          "scrollTop": 7411
+        }
+      },
+      "durationMs": 1294
+    },
+    {
+      "name": "notifications-long-390",
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "path": "/rest/v1/profiles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "POST",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/projects",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/notifications",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/projects",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/notifications",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        }
+      ],
+      "status": "passed",
+      "layout": {
+        "viewport": {
+          "width": 390,
+          "height": 740
+        },
+        "bounds": {
+          "x": 8,
+          "y": 54,
+          "width": 374,
+          "height": 600,
+          "right": 382,
+          "bottom": 654
+        },
+        "scrollWidth": 390,
+        "bodyWidth": 380,
+        "controls": [
+          {
+            "name": "Marcar todas lidas",
+            "x": 225.3125,
+            "y": 63,
+            "width": 143.6875,
+            "height": 44,
+            "right": 369,
+            "bottom": 107
+          },
+          {
+            "name": "Todas (12)",
+            "x": 17,
+            "y": 111,
+            "width": 116,
+            "height": 44,
+            "right": 133,
+            "bottom": 155
+          },
+          {
+            "name": "Novidades",
+            "x": 137,
+            "y": 111,
+            "width": 116,
+            "height": 44,
+            "right": 253,
+            "bottom": 155
+          },
+          {
+            "name": "Atividades",
+            "x": 257,
+            "y": 111,
+            "width": 116,
+            "height": 44,
+            "right": 373,
+            "bottom": 155
+          },
+          {
+            "name": "Abrir notificação: Novidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": 172,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": 676
+          },
+          {
+            "name": "Limpar notificação: Novidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": 172,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": 216
+          },
+          {
+            "name": "Abrir notificação: Novidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": 693,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": 1197
+          },
+          {
+            "name": "Limpar notificação: Novidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": 693,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": 737
+          },
+          {
+            "name": "Abrir notificação: Novidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": 1214,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": 1718
+          },
+          {
+            "name": "Limpar notificação: Novidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": 1214,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": 1258
+          },
+          {
+            "name": "Abrir notificação: Novidade 4: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": 1735,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": 2239
+          },
+          {
+            "name": "Limpar notificação: Novidade 4: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": 1735,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": 1779
+          },
+          {
+            "name": "Abrir notificação: Novidade 5: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": 2256,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": 2760
+          },
+          {
+            "name": "Limpar notificação: Novidade 5: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": 2256,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": 2300
+          },
+          {
+            "name": "Abrir notificação: Novidade 6: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": 2777,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": 3281
+          },
+          {
+            "name": "Limpar notificação: Novidade 6: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": 2777,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": 2821
+          },
+          {
+            "name": "Abrir notificação: Novidade 7: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": 3298,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": 3802
+          },
+          {
+            "name": "Limpar notificação: Novidade 7: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": 3298,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": 3342
+          },
+          {
+            "name": "Abrir notificação: Novidade 8: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": 3819,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": 4323
+          },
+          {
+            "name": "Limpar notificação: Novidade 8: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": 3819,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": 3863
+          },
+          {
+            "name": "Abrir notificação: Novidade 9: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": 4340,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": 4844
+          },
+          {
+            "name": "Limpar notificação: Novidade 9: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": 4340,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": 4384
+          },
+          {
+            "name": "Abrir notificação: Novidade 10: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 19,
+            "y": 4861,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": 5365
+          },
+          {
+            "name": "Limpar notificação: Novidade 10: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 319,
+            "y": 4861,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": 4905
+          },
+          {
+            "name": "Abrir notificação: Novidade 11: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 19,
+            "y": 5382,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": 5886
+          },
+          {
+            "name": "Limpar notificação: Novidade 11: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 319,
+            "y": 5382,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": 5426
+          },
+          {
+            "name": "Abrir notificação: Novidade 12: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 19,
+            "y": 5903,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": 6407
+          },
+          {
+            "name": "Limpar notificação: Novidade 12: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 319,
+            "y": 5903,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": 5947
+          }
+        ],
+        "overflow": [],
+        "text": "Notificações\n12 novidades\nMarcar todas lidas\nTodas (12)\nNovidades\nAtividades\nNovidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 1. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. ConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaços\nhá menos de um minuto\nAcessar\nNovidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 2. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. ConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaços\nhá menos de um minuto\nAcessar\nNovidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 3. Informações do sistema para o cartóri",
+        "scrollArea": {
+          "x": 9,
+          "y": 164,
+          "width": 372,
+          "height": 489,
+          "right": 381,
+          "bottom": 653,
+          "contentHeight": 6251,
+          "scrollTop": 0
+        }
+      },
+      "listEndLayout": {
+        "viewport": {
+          "width": 390,
+          "height": 740
+        },
+        "bounds": {
+          "x": 8,
+          "y": 54,
+          "width": 374,
+          "height": 600,
+          "right": 382,
+          "bottom": 654
+        },
+        "scrollWidth": 390,
+        "bodyWidth": 380,
+        "controls": [
+          {
+            "name": "Marcar todas lidas",
+            "x": 225.3125,
+            "y": 63,
+            "width": 143.6875,
+            "height": 44,
+            "right": 369,
+            "bottom": 107
+          },
+          {
+            "name": "Todas (12)",
+            "x": 17,
+            "y": 111,
+            "width": 116,
+            "height": 44,
+            "right": 133,
+            "bottom": 155
+          },
+          {
+            "name": "Novidades",
+            "x": 137,
+            "y": 111,
+            "width": 116,
+            "height": 44,
+            "right": 253,
+            "bottom": 155
+          },
+          {
+            "name": "Atividades",
+            "x": 257,
+            "y": 111,
+            "width": 116,
+            "height": 44,
+            "right": 373,
+            "bottom": 155
+          },
+          {
+            "name": "Abrir notificação: Novidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -5590,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -5086
+          },
+          {
+            "name": "Limpar notificação: Novidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": -5590,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -5546
+          },
+          {
+            "name": "Abrir notificação: Novidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -5069,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -4565
+          },
+          {
+            "name": "Limpar notificação: Novidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": -5069,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -5025
+          },
+          {
+            "name": "Abrir notificação: Novidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -4548,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -4044
+          },
+          {
+            "name": "Limpar notificação: Novidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": -4548,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -4504
+          },
+          {
+            "name": "Abrir notificação: Novidade 4: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -4027,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -3523
+          },
+          {
+            "name": "Limpar notificação: Novidade 4: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": -4027,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -3983
+          },
+          {
+            "name": "Abrir notificação: Novidade 5: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -3506,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -3002
+          },
+          {
+            "name": "Limpar notificação: Novidade 5: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": -3506,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -3462
+          },
+          {
+            "name": "Abrir notificação: Novidade 6: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -2985,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -2481
+          },
+          {
+            "name": "Limpar notificação: Novidade 6: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": -2985,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -2941
+          },
+          {
+            "name": "Abrir notificação: Novidade 7: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -2464,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -1960
+          },
+          {
+            "name": "Limpar notificação: Novidade 7: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": -2464,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -2420
+          },
+          {
+            "name": "Abrir notificação: Novidade 8: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -1943,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -1439
+          },
+          {
+            "name": "Limpar notificação: Novidade 8: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": -1943,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -1899
+          },
+          {
+            "name": "Abrir notificação: Novidade 9: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -1422,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -918
+          },
+          {
+            "name": "Limpar notificação: Novidade 9: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": -1422,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -1378
+          },
+          {
+            "name": "Abrir notificação: Novidade 10: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 19,
+            "y": -901,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -397
+          },
+          {
+            "name": "Limpar notificação: Novidade 10: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 319,
+            "y": -901,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -857
+          },
+          {
+            "name": "Abrir notificação: Novidade 11: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 19,
+            "y": -380,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": 124
+          },
+          {
+            "name": "Limpar notificação: Novidade 11: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 319,
+            "y": -380,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -336
+          },
+          {
+            "name": "Abrir notificação: Novidade 12: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 19,
+            "y": 141,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": 645
+          },
+          {
+            "name": "Limpar notificação: Novidade 12: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 319,
+            "y": 141,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": 185
+          }
+        ],
+        "overflow": [],
+        "text": "Notificações\n12 novidades\nMarcar todas lidas\nTodas (12)\nNovidades\nAtividades\nNovidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 1. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. ConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaços\nhá menos de um minuto\nAcessar\nNovidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 2. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. ConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaços\nhá menos de um minuto\nAcessar\nNovidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 3. Informações do sistema para o cartóri",
+        "scrollArea": {
+          "x": 9,
+          "y": 164,
+          "width": 372,
+          "height": 489,
+          "right": 381,
+          "bottom": 653,
+          "contentHeight": 6251,
+          "scrollTop": 5762
+        }
+      },
+      "scrolledLayout": {
+        "viewport": {
+          "width": 390,
+          "height": 740
+        },
+        "bounds": {
+          "x": 8,
+          "y": 54,
+          "width": 374,
+          "height": 600,
+          "right": 382,
+          "bottom": 654
+        },
+        "scrollWidth": 390,
+        "bodyWidth": 380,
+        "controls": [
+          {
+            "name": "Marcar todas lidas",
+            "x": 225.3125,
+            "y": 63,
+            "width": 143.6875,
+            "height": 44,
+            "right": 369,
+            "bottom": 107
+          },
+          {
+            "name": "Todas (12)",
+            "x": 17,
+            "y": 111,
+            "width": 116,
+            "height": 44,
+            "right": 133,
+            "bottom": 155
+          },
+          {
+            "name": "Novidades",
+            "x": 137,
+            "y": 111,
+            "width": 116,
+            "height": 44,
+            "right": 253,
+            "bottom": 155
+          },
+          {
+            "name": "Atividades",
+            "x": 257,
+            "y": 111,
+            "width": 116,
+            "height": 44,
+            "right": 373,
+            "bottom": 155
+          },
+          {
+            "name": "Abrir notificação: Novidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -5567,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -5063
+          },
+          {
+            "name": "Limpar notificação: Novidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": -5567,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -5523
+          },
+          {
+            "name": "Abrir notificação: Novidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -5046,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -4542
+          },
+          {
+            "name": "Limpar notificação: Novidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": -5046,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -5002
+          },
+          {
+            "name": "Abrir notificação: Novidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -4525,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -4021
+          },
+          {
+            "name": "Limpar notificação: Novidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": -4525,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -4481
+          },
+          {
+            "name": "Abrir notificação: Novidade 4: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -4004,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -3500
+          },
+          {
+            "name": "Limpar notificação: Novidade 4: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": -4004,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -3960
+          },
+          {
+            "name": "Abrir notificação: Novidade 5: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -3483,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -2979
+          },
+          {
+            "name": "Limpar notificação: Novidade 5: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": -3483,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -3439
+          },
+          {
+            "name": "Abrir notificação: Novidade 6: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -2962,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -2458
+          },
+          {
+            "name": "Limpar notificação: Novidade 6: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": -2962,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -2918
+          },
+          {
+            "name": "Abrir notificação: Novidade 7: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -2441,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -1937
+          },
+          {
+            "name": "Limpar notificação: Novidade 7: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": -2441,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -2397
+          },
+          {
+            "name": "Abrir notificação: Novidade 8: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -1920,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -1416
+          },
+          {
+            "name": "Limpar notificação: Novidade 8: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": -1920,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -1876
+          },
+          {
+            "name": "Abrir notificação: Novidade 9: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 19,
+            "y": -1399,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -895
+          },
+          {
+            "name": "Limpar notificação: Novidade 9: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 319,
+            "y": -1399,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -1355
+          },
+          {
+            "name": "Abrir notificação: Novidade 10: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 19,
+            "y": -878,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": -374
+          },
+          {
+            "name": "Limpar notificação: Novidade 10: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 319,
+            "y": -878,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -834
+          },
+          {
+            "name": "Abrir notificação: Novidade 11: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 19,
+            "y": -357,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": 147
+          },
+          {
+            "name": "Limpar notificação: Novidade 11: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 319,
+            "y": -357,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": -313
+          },
+          {
+            "name": "Abrir notificação: Novidade 12: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 19,
+            "y": 164,
+            "width": 296,
+            "height": 504,
+            "right": 315,
+            "bottom": 668
+          },
+          {
+            "name": "Limpar notificação: Novidade 12: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 319,
+            "y": 164,
+            "width": 44,
+            "height": 44,
+            "right": 363,
+            "bottom": 208
+          }
+        ],
+        "overflow": [],
+        "text": "Notificações\n12 novidades\nMarcar todas lidas\nTodas (12)\nNovidades\nAtividades\nNovidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 1. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. ConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaços\nhá menos de um minuto\nAcessar\nNovidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 2. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. ConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaços\nhá menos de um minuto\nAcessar\nNovidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 3. Informações do sistema para o cartóri",
+        "scrollArea": {
+          "x": 9,
+          "y": 164,
+          "width": 372,
+          "height": 489,
+          "right": 381,
+          "bottom": 653,
+          "contentHeight": 6251,
+          "scrollTop": 5739
+        }
+      },
+      "durationMs": 1210
+    },
+    {
+      "name": "notifications-long-1440",
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "path": "/rest/v1/profiles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "POST",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/projects",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/projects",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_access",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/notifications",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_jobs",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/copilot_digests",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/notifications",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        }
+      ],
+      "status": "passed",
+      "layout": {
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "bounds": {
+          "x": 900,
+          "y": 58,
+          "width": 420,
+          "height": 600,
+          "right": 1320,
+          "bottom": 658
+        },
+        "scrollWidth": 1440,
+        "bodyWidth": 1440,
+        "controls": [
+          {
+            "name": "Marcar todas lidas",
+            "x": 1163.3125,
+            "y": 67,
+            "width": 143.6875,
+            "height": 44,
+            "right": 1307,
+            "bottom": 111
+          },
+          {
+            "name": "Todas (12)",
+            "x": 909,
+            "y": 115,
+            "width": 131.328125,
+            "height": 44,
+            "right": 1040.328125,
+            "bottom": 159
+          },
+          {
+            "name": "Novidades",
+            "x": 1044.328125,
+            "y": 115,
+            "width": 131.328125,
+            "height": 44,
+            "right": 1175.65625,
+            "bottom": 159
+          },
+          {
+            "name": "Atividades",
+            "x": 1179.65625,
+            "y": 115,
+            "width": 131.328125,
+            "height": 44,
+            "right": 1310.984375,
+            "bottom": 159
+          },
+          {
+            "name": "Abrir notificação: Novidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": 180,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": 627.5
+          },
+          {
+            "name": "Limpar notificação: Novidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": 180,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": 224
+          },
+          {
+            "name": "Abrir notificação: Novidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": 652.5,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": 1100
+          },
+          {
+            "name": "Limpar notificação: Novidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": 652.5,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": 696.5
+          },
+          {
+            "name": "Abrir notificação: Novidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": 1125,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": 1572.5
+          },
+          {
+            "name": "Limpar notificação: Novidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": 1125,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": 1169
+          },
+          {
+            "name": "Abrir notificação: Novidade 4: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": 1597.5,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": 2045
+          },
+          {
+            "name": "Limpar notificação: Novidade 4: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": 1597.5,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": 1641.5
+          },
+          {
+            "name": "Abrir notificação: Novidade 5: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": 2070,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": 2517.5
+          },
+          {
+            "name": "Limpar notificação: Novidade 5: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": 2070,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": 2114
+          },
+          {
+            "name": "Abrir notificação: Novidade 6: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": 2542.5,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": 2990
+          },
+          {
+            "name": "Limpar notificação: Novidade 6: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": 2542.5,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": 2586.5
+          },
+          {
+            "name": "Abrir notificação: Novidade 7: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": 3015,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": 3462.5
+          },
+          {
+            "name": "Limpar notificação: Novidade 7: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": 3015,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": 3059
+          },
+          {
+            "name": "Abrir notificação: Novidade 8: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": 3487.5,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": 3935
+          },
+          {
+            "name": "Limpar notificação: Novidade 8: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": 3487.5,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": 3531.5
+          },
+          {
+            "name": "Abrir notificação: Novidade 9: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": 3960,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": 4407.5
+          },
+          {
+            "name": "Limpar notificação: Novidade 9: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": 3960,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": 4004
+          },
+          {
+            "name": "Abrir notificação: Novidade 10: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 915,
+            "y": 4432.5,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": 4880
+          },
+          {
+            "name": "Limpar notificação: Novidade 10: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 1253,
+            "y": 4432.5,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": 4476.5
+          },
+          {
+            "name": "Abrir notificação: Novidade 11: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 915,
+            "y": 4905,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": 5352.5
+          },
+          {
+            "name": "Limpar notificação: Novidade 11: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 1253,
+            "y": 4905,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": 4949
+          },
+          {
+            "name": "Abrir notificação: Novidade 12: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 915,
+            "y": 5377.5,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": 5825
+          },
+          {
+            "name": "Limpar notificação: Novidade 12: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 1253,
+            "y": 5377.5,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": 5421.5
+          }
+        ],
+        "overflow": [],
+        "text": "Notificações\n12 novidades\nMarcar todas lidas\nTodas (12)\nNovidades\nAtividades\nNovidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 1. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. ConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaços\nhá menos de um minuto\nAcessar\nNovidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 2. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. ConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaços\nhá menos de um minuto\nAcessar\nNovidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 3. Informações do sistema para o cartóri",
+        "scrollArea": {
+          "x": 901,
+          "y": 168,
+          "width": 418,
+          "height": 489,
+          "right": 1319,
+          "bottom": 657,
+          "contentHeight": 5669,
+          "scrollTop": 0
+        }
+      },
+      "listEndLayout": {
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "bounds": {
+          "x": 900,
+          "y": 58,
+          "width": 420,
+          "height": 600,
+          "right": 1320,
+          "bottom": 658
+        },
+        "scrollWidth": 1440,
+        "bodyWidth": 1440,
+        "controls": [
+          {
+            "name": "Marcar todas lidas",
+            "x": 1163.3125,
+            "y": 67,
+            "width": 143.6875,
+            "height": 44,
+            "right": 1307,
+            "bottom": 111
+          },
+          {
+            "name": "Todas (12)",
+            "x": 909,
+            "y": 115,
+            "width": 131.328125,
+            "height": 44,
+            "right": 1040.328125,
+            "bottom": 159
+          },
+          {
+            "name": "Novidades",
+            "x": 1044.328125,
+            "y": 115,
+            "width": 131.328125,
+            "height": 44,
+            "right": 1175.65625,
+            "bottom": 159
+          },
+          {
+            "name": "Atividades",
+            "x": 1179.65625,
+            "y": 115,
+            "width": 131.328125,
+            "height": 44,
+            "right": 1310.984375,
+            "bottom": 159
+          },
+          {
+            "name": "Abrir notificação: Novidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": -5000,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -4552.5
+          },
+          {
+            "name": "Limpar notificação: Novidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": -5000,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -4956
+          },
+          {
+            "name": "Abrir notificação: Novidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": -4527.5,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -4080
+          },
+          {
+            "name": "Limpar notificação: Novidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": -4527.5,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -4483.5
+          },
+          {
+            "name": "Abrir notificação: Novidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": -4055,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -3607.5
+          },
+          {
+            "name": "Limpar notificação: Novidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": -4055,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -4011
+          },
+          {
+            "name": "Abrir notificação: Novidade 4: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": -3582.5,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -3135
+          },
+          {
+            "name": "Limpar notificação: Novidade 4: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": -3582.5,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -3538.5
+          },
+          {
+            "name": "Abrir notificação: Novidade 5: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": -3110,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -2662.5
+          },
+          {
+            "name": "Limpar notificação: Novidade 5: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": -3110,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -3066
+          },
+          {
+            "name": "Abrir notificação: Novidade 6: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": -2637.5,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -2190
+          },
+          {
+            "name": "Limpar notificação: Novidade 6: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": -2637.5,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -2593.5
+          },
+          {
+            "name": "Abrir notificação: Novidade 7: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": -2165,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -1717.5
+          },
+          {
+            "name": "Limpar notificação: Novidade 7: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": -2165,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -2121
+          },
+          {
+            "name": "Abrir notificação: Novidade 8: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": -1692.5,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -1245
+          },
+          {
+            "name": "Limpar notificação: Novidade 8: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": -1692.5,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -1648.5
+          },
+          {
+            "name": "Abrir notificação: Novidade 9: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": -1220,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -772.5
+          },
+          {
+            "name": "Limpar notificação: Novidade 9: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": -1220,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -1176
+          },
+          {
+            "name": "Abrir notificação: Novidade 10: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 915,
+            "y": -747.5,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -300
+          },
+          {
+            "name": "Limpar notificação: Novidade 10: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 1253,
+            "y": -747.5,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -703.5
+          },
+          {
+            "name": "Abrir notificação: Novidade 11: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 915,
+            "y": -275,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": 172.5
+          },
+          {
+            "name": "Limpar notificação: Novidade 11: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 1253,
+            "y": -275,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -231
+          },
+          {
+            "name": "Abrir notificação: Novidade 12: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 915,
+            "y": 197.5,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": 645
+          },
+          {
+            "name": "Limpar notificação: Novidade 12: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 1253,
+            "y": 197.5,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": 241.5
+          }
+        ],
+        "overflow": [],
+        "text": "Notificações\n12 novidades\nMarcar todas lidas\nTodas (12)\nNovidades\nAtividades\nNovidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 1. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. ConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaços\nhá menos de um minuto\nAcessar\nNovidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 2. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. ConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaços\nhá menos de um minuto\nAcessar\nNovidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 3. Informações do sistema para o cartóri",
+        "scrollArea": {
+          "x": 901,
+          "y": 168,
+          "width": 418,
+          "height": 489,
+          "right": 1319,
+          "bottom": 657,
+          "contentHeight": 5669,
+          "scrollTop": 5180
+        }
+      },
+      "scrolledLayout": {
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "bounds": {
+          "x": 900,
+          "y": 58,
+          "width": 420,
+          "height": 600,
+          "right": 1320,
+          "bottom": 658
+        },
+        "scrollWidth": 1440,
+        "bodyWidth": 1440,
+        "controls": [
+          {
+            "name": "Marcar todas lidas",
+            "x": 1163.3125,
+            "y": 67,
+            "width": 143.6875,
+            "height": 44,
+            "right": 1307,
+            "bottom": 111
+          },
+          {
+            "name": "Todas (12)",
+            "x": 909,
+            "y": 115,
+            "width": 131.328125,
+            "height": 44,
+            "right": 1040.328125,
+            "bottom": 159
+          },
+          {
+            "name": "Novidades",
+            "x": 1044.328125,
+            "y": 115,
+            "width": 131.328125,
+            "height": 44,
+            "right": 1175.65625,
+            "bottom": 159
+          },
+          {
+            "name": "Atividades",
+            "x": 1179.65625,
+            "y": 115,
+            "width": 131.328125,
+            "height": 44,
+            "right": 1310.984375,
+            "bottom": 159
+          },
+          {
+            "name": "Abrir notificação: Novidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": -5000,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -4552.5
+          },
+          {
+            "name": "Limpar notificação: Novidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": -5000,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -4956
+          },
+          {
+            "name": "Abrir notificação: Novidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": -4527.5,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -4080
+          },
+          {
+            "name": "Limpar notificação: Novidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": -4527.5,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -4483.5
+          },
+          {
+            "name": "Abrir notificação: Novidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": -4055,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -3607.5
+          },
+          {
+            "name": "Limpar notificação: Novidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": -4055,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -4011
+          },
+          {
+            "name": "Abrir notificação: Novidade 4: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": -3582.5,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -3135
+          },
+          {
+            "name": "Limpar notificação: Novidade 4: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": -3582.5,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -3538.5
+          },
+          {
+            "name": "Abrir notificação: Novidade 5: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": -3110,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -2662.5
+          },
+          {
+            "name": "Limpar notificação: Novidade 5: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": -3110,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -3066
+          },
+          {
+            "name": "Abrir notificação: Novidade 6: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": -2637.5,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -2190
+          },
+          {
+            "name": "Limpar notificação: Novidade 6: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": -2637.5,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -2593.5
+          },
+          {
+            "name": "Abrir notificação: Novidade 7: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": -2165,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -1717.5
+          },
+          {
+            "name": "Limpar notificação: Novidade 7: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": -2165,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -2121
+          },
+          {
+            "name": "Abrir notificação: Novidade 8: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": -1692.5,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -1245
+          },
+          {
+            "name": "Limpar notificação: Novidade 8: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": -1692.5,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -1648.5
+          },
+          {
+            "name": "Abrir notificação: Novidade 9: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEs",
+            "x": 915,
+            "y": -1220,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -772.5
+          },
+          {
+            "name": "Limpar notificação: Novidade 9: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 1253,
+            "y": -1220,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -1176
+          },
+          {
+            "name": "Abrir notificação: Novidade 10: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 915,
+            "y": -747.5,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": -300
+          },
+          {
+            "name": "Limpar notificação: Novidade 10: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 1253,
+            "y": -747.5,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -703.5
+          },
+          {
+            "name": "Abrir notificação: Novidade 11: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 915,
+            "y": -275,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": 172.5
+          },
+          {
+            "name": "Limpar notificação: Novidade 11: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 1253,
+            "y": -275,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": -231
+          },
+          {
+            "name": "Abrir notificação: Novidade 12: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemE",
+            "x": 915,
+            "y": 197.5,
+            "width": 330,
+            "height": 447.5,
+            "right": 1245,
+            "bottom": 645
+          },
+          {
+            "name": "Limpar notificação: Novidade 12: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSem",
+            "x": 1253,
+            "y": 197.5,
+            "width": 44,
+            "height": 44,
+            "right": 1297,
+            "bottom": 241.5
+          }
+        ],
+        "overflow": [],
+        "text": "Notificações\n12 novidades\nMarcar todas lidas\nTodas (12)\nNovidades\nAtividades\nNovidade 1: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 1. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. ConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaços\nhá menos de um minuto\nAcessar\nNovidade 2: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 2. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. Informações do sistema para o cartório. ConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaçosConteúdoSemEspaços\nhá menos de um minuto\nAcessar\nNovidade 3: TítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaçosTítuloSemEspaços\nCorreção\nMensagem longa 3. Informações do sistema para o cartóri",
+        "scrollArea": {
+          "x": 901,
+          "y": 168,
+          "width": 418,
+          "height": 489,
+          "right": 1319,
+          "bottom": 657,
+          "contentHeight": 5669,
+          "scrollTop": 5180
+        }
+      },
+      "durationMs": 1166
+    },
+    {
+      "name": "orion-maintenance-320",
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "path": "/rest/v1/rpc/orion_updates_get_settings",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "POST",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/orion_updates_get_settings",
+          "method": "POST",
+          "status": 200,
+          "mocked": true
+        }
+      ],
+      "status": "passed",
+      "layout": {
+        "viewport": {
+          "width": 320,
+          "height": 740
+        },
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 320,
+          "height": 690.140625,
+          "right": 320,
+          "bottom": 690.140625
+        },
+        "scrollWidth": 320,
+        "bodyWidth": 320,
+        "controls": [],
+        "overflow": [],
+        "text": "Orion Blog\n\nAcompanhe as novidades dos sistemas\n\nEm Manutenção\nManutenção simulada do Orion Blog\n\nMensagem de manutenção simulada para a regressão de hooks.\n\nAgradecemos a sua compreensão. Em caso de urgência, entre em contato com o suporte Siplan.",
+        "scrollArea": null
+      },
+      "durationMs": 983
+    },
+    {
+      "name": "orion-maintenance-390",
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "path": "/rest/v1/rpc/orion_updates_get_settings",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "POST",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/orion_updates_get_settings",
+          "method": "POST",
+          "status": 200,
+          "mocked": true
+        }
+      ],
+      "status": "passed",
+      "layout": {
+        "viewport": {
+          "width": 390,
+          "height": 740
+        },
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 623.421875,
+          "right": 390,
+          "bottom": 623.421875
+        },
+        "scrollWidth": 390,
+        "bodyWidth": 390,
+        "controls": [],
+        "overflow": [],
+        "text": "Orion Blog\n\nAcompanhe as novidades dos sistemas\n\nEm Manutenção\nManutenção simulada do Orion Blog\n\nMensagem de manutenção simulada para a regressão de hooks.\n\nAgradecemos a sua compreensão. Em caso de urgência, entre em contato com o suporte Siplan.",
+        "scrollArea": null
+      },
+      "durationMs": 876
+    },
+    {
+      "name": "orion-maintenance-1440",
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "path": "/rest/v1/profiles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/profiles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/orion_updates_get_settings",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "OPTIONS",
+          "status": 204,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/app_roles",
+          "method": "GET",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/cs_cx_get_my_permissions",
+          "method": "POST",
+          "status": 200,
+          "mocked": true
+        },
+        {
+          "path": "/rest/v1/rpc/orion_updates_get_settings",
+          "method": "POST",
+          "status": 200,
+          "mocked": true
+        }
+      ],
+      "status": "passed",
+      "layout": {
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "bounds": {
+          "x": 0,
+          "y": 0,
+          "width": 1440,
+          "height": 649,
+          "right": 1440,
+          "bottom": 649
+        },
+        "scrollWidth": 1440,
+        "bodyWidth": 1440,
+        "controls": [],
+        "overflow": [],
+        "text": "Orion Blog\n\nAcompanhe as novidades dos sistemas\n\nCARTÓRIO\n\nConectado com você\nPróximo do seu cartório.\n\nEm Manutenção\nManutenção simulada do Orion Blog\n\nMensagem de manutenção simulada para a regressão de hooks.\n\nAgradecemos a sua compreensão. Em caso de urgência, entre em contato com o suporte Siplan.",
+        "scrollArea": null
+      },
+      "durationMs": 984
+    },
+    {
+      "name": "login-pwa-offline-390",
+      "runtimeErrors": [],
+      "consoleErrors": [],
+      "requests": [
+        {
+          "path": "/noise.svg",
+          "method": "GET",
+          "status": 403,
+          "mocked": true
+        },
+        {
+          "path": "/noise.svg",
+          "method": "GET",
+          "status": 403,
+          "mocked": true
+        },
+        {
+          "path": "/noise.svg",
+          "method": "GET",
+          "status": 403,
+          "mocked": true
+        }
+      ],
+      "status": "passed",
+      "serviceWorkers": [
+        {
+          "scope": "http://127.0.0.1:61788/",
+          "state": "activated"
+        }
+      ],
+      "layout": {
+        "viewport": {
+          "width": 390,
+          "height": 740
+        },
+        "bounds": {
+          "x": 17,
+          "y": 357,
+          "width": 356,
+          "height": 240,
+          "right": 373,
+          "bottom": 597
+        },
+        "scrollWidth": 390,
+        "bodyWidth": 390,
+        "controls": [
+          {
+            "name": "Esqueci minha senha?",
+            "x": 233.3125,
+            "y": 445,
+            "width": 115.6875,
+            "height": 16,
+            "right": 349,
+            "bottom": 461
+          },
+          {
+            "name": "Entrar",
+            "x": 41,
+            "y": 533,
+            "width": 308,
+            "height": 40,
+            "right": 349,
+            "bottom": 573
+          }
+        ],
+        "overflow": [],
+        "text": "Email\nSenha\nEsqueci minha senha?\nEntrar",
+        "scrollArea": null
+      },
+      "durationMs": 1675
+    }
+  ]
+}

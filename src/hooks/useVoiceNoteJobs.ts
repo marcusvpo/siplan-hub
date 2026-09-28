@@ -6,7 +6,7 @@ import { DtcAiJob } from "@/types/ProjectV2";
 
 const BUCKET = "project-files";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const mapJob = (item: any): DtcAiJob => ({
   id: item.id,
   projectId: item.project_id,
@@ -91,7 +91,7 @@ export function useVoiceNoteJobs(
       target_field: "voice",
       audio_path: audioPath,
       requested_by: requestedBy,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     } as any;
     const { data, error } = await supabase
       .from("dtc_ai_jobs")

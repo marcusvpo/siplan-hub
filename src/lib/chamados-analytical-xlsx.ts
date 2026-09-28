@@ -704,7 +704,7 @@ function buildAnalysisSheet(analytics: TicketsAiAnalytics): XlsxSheet {
       to: { column: 21, row: chartStartRow + 58 },
       showLegend: false,
     },
-  ].filter((chart) => chart.categories.length > 0);
+  ];
 
   return {
     name: "Análise IA",
@@ -712,7 +712,7 @@ function buildAnalysisSheet(analytics: TicketsAiAnalytics): XlsxSheet {
     frozenRows: 0,
     headerRows: [0, dataStartRow, dataStartRow + 1],
     autoFilter: false,
-    charts,
+    charts: charts.filter((chart) => chart.categories.length > 0),
   };
 }
 

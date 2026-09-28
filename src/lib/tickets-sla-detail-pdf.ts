@@ -155,7 +155,7 @@ export async function generateTicketSlaDetailPdf(
       pdf.setFillColor(248, 250, 252);
       pdf.setDrawColor(225, 230, 237);
       pdf.roundedRect(x, cardY, cardWidth, cardHeight, 1.5, 1.5, "FD");
-      pdf.setFillColor(...card.accent);
+      pdf.setFillColor(card.accent[0], card.accent[1], card.accent[2]);
       pdf.rect(x, cardY, 2, cardHeight, "F");
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(8.5);

@@ -210,11 +210,23 @@ describe("CS/CX contatos e agendamentos — permissões", () => {
     renderPage(<CsCxContacts />, ["cs_cx_contatos:create", "cs_cx_registros:create"]);
 
     fireEvent.click(screen.getByRole("button", { name: /novo contato/i }));
+    const offices = screen.getByRole("combobox", { name: /cartórios do contato/i });
+    fireEvent.click(offices);
+    fireEvent.click(screen.getByRole("option", { name: "Cartório Central" }));
+    fireEvent.click(offices);
     const newRequestBtn = screen.getByRole("button", { name: /nova solicitação/i });
     expect(newRequestBtn).toBeInTheDocument();
 
     fireEvent.click(newRequestBtn);
     expect(screen.getByText("Nova solicitação (Registros)")).toBeInTheDocument();
+  });
+
+  it("bloqueia a solicitação vinculada quando nenhum cartório foi selecionado", () => {
+    renderPage(<CsCxContacts />, ["cs_cx_contatos:create", "cs_cx_registros:create"]);
+    fireEvent.click(screen.getByRole("button", { name: /novo contato/i }));
+    fireEvent.click(screen.getByRole("button", { name: /nova solicitação/i }));
+    expect(screen.queryByText("Nova solicitação (Registros)")).not.toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toHaveTextContent("Novo contato");
   });
 
   it("contabiliza no card Hoje apenas os contatos da data local atual", () => {
@@ -224,7 +236,7 @@ describe("CS/CX contatos e agendamentos — permissões", () => {
     try {
       renderPage(<CsCxContacts />, []);
 
-      const todayMetric = screen.getByText("Hoje").closest(".transition-all");
+      const todayMetric = screen.getByText("Hoje").closest<HTMLElement>(".transition-all");
       expect(todayMetric).not.toBeNull();
       expect(within(todayMetric!).getByText("11")).toBeInTheDocument();
       expect(screen.queryByText("Com pendências")).not.toBeInTheDocument();
@@ -445,14 +457,13 @@ describe("CS/CX contatos e agendamentos — permissões", () => {
     );
   });
 
-  it("mantém o período em duas linhas antes de telas 2xl", () => {
+  it("aplica o período selecionado à lista de contatos", () => {
     renderPage(<CsCxContacts />, []);
-
-    const filters = screen.getByLabelText("Data final").parentElement;
-    expect(filters).toHaveClass("xl:grid-cols-[minmax(240px,1fr)_190px_170px]");
-    expect(filters).toHaveClass(
-      "2xl:grid-cols-[minmax(240px,1fr)_190px_170px_180px_145px_145px]",
-    );
+    const today = localIsoDate();
+    fireEvent.change(screen.getByLabelText("Data inicial"), { target: { value: today } });
+    fireEvent.change(screen.getByLabelText("Data final"), { target: { value: today } });
+    expect(screen.getByText("Maria")).toBeInTheDocument();
+    expect(screen.queryByText("Pessoa 12")).not.toBeInTheDocument();
   });
 
   it("mantém agenda em leitura e esconde criação", () => {

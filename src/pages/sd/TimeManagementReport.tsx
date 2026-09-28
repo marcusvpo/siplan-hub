@@ -69,6 +69,19 @@ const PAGE_SIZE_OPTIONS = [5, 10, 20];
 const SD_ATTENDANCE_GROUPS = ["SD - TN/RC", "SD - GLOBAL", "SD - Protesto", "SD - RI/TD"];
 type PeriodView = "day" | "week";
 
+interface TimeChartTotals {
+  day: string;
+  date: string;
+  hours: number;
+  hubHours: number;
+  importedHours: number;
+}
+
+type TimeChartPoint = TimeChartTotals & (
+  | { kind: "date"; dateKey: string }
+  | { kind: "analyst"; userId: string; fullName: string }
+);
+
 export default function TimeManagementReport() {
   const shouldReduceMotion = useReducedMotion();
   const isMobile = useIsMobile();
@@ -120,7 +133,7 @@ export default function TimeManagementReport() {
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const activePage = Math.min(page, totalPages);
 
-  const chartData = useMemo(() => {
+  const chartData = useMemo<TimeChartPoint[]>(() => {
     if (periodView === "week") {
       const totals = new Map((report?.daily ?? []).map((item) => [item.work_date, item.total_minutes]));
       const manualTotals = new Map((report?.daily ?? []).map((item) => [item.work_date, item.manual_minutes]));
@@ -129,6 +142,7 @@ export default function TimeManagementReport() {
         const key = format(date, "yyyy-MM-dd");
         const minutes = totals.get(key) ?? 0;
         return {
+          kind: "date",
           day: format(date, "EEE", { locale: ptBR }).replace(".", ""),
           date: format(date, "dd/MM"),
           dateKey: key,
@@ -140,6 +154,7 @@ export default function TimeManagementReport() {
     }
 
     return (report?.analyst_totals ?? []).map((analyst) => ({
+      kind: "analyst",
       userId: analyst.user_id,
       day: shortAnalystName(analyst.user_name || analyst.user_email || "Usuário"),
       fullName: analyst.user_name || analyst.user_email || "Usuário",
@@ -172,12 +187,15 @@ export default function TimeManagementReport() {
     setPeriodView("day");
     setPage(1);
   };
-  const filterByChartPoint = (point?: { dateKey?: string; userId?: string }) => {
-    if (periodView === "week") {
-      filterByChartDate(point?.dateKey);
+  const filterByChartPoint = (point: unknown) => {
+    if (!point || typeof point !== "object" || !("kind" in point)) return;
+    if (point.kind === "date" && "dateKey" in point && typeof point.dateKey === "string") {
+      filterByChartDate(point.dateKey);
       return;
     }
-    filterByChartAnalyst(point?.userId);
+    if (point.kind === "analyst" && "userId" in point && typeof point.userId === "string") {
+      filterByChartAnalyst(point.userId);
+    }
   };
   const toggleGroup = (group: string) => {
     setSelectedGroups((current) => current.includes(group)
@@ -340,11 +358,11 @@ export default function TimeManagementReport() {
                       height={periodView === "day" ? 42 : 24}
                       tick={periodView === "day" ? (
                         <AnalystAxisTick
-                          onSelect={(index) => filterByChartAnalyst(visibleChartData[index]?.userId)}
+                          onSelect={(index) => filterByChartAnalyst(visibleChartData[index]?.kind === "analyst" ? visibleChartData[index].userId : undefined)}
                         />
                       ) : (
                         <WeekdayAxisTick
-                          onSelect={(index) => filterByChartDate(visibleChartData[index]?.dateKey)}
+                          onSelect={(index) => filterByChartDate(visibleChartData[index]?.kind === "date" ? visibleChartData[index].dateKey : undefined)}
                         />
                       )}
                     />

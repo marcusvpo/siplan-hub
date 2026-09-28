@@ -17,6 +17,8 @@ interface AuthContextType {
   permissions: Permission[];
   permissionsLoaded: boolean;
   loading: boolean;
+  authError: string | null;
+  retryAuth: () => Promise<void>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
   hasPermission: (resource: string, action: string) => boolean;

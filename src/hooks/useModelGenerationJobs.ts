@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ModelGenerationJob, ModelType, ModelWorkerStatus } from "@/types/ProjectV2";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const mapJob = (item: any): ModelGenerationJob => ({
   id: item.id,
   projectId: item.project_id,
@@ -24,7 +24,7 @@ const mapJob = (item: any): ModelGenerationJob => ({
   progressUpdatedAt: item.progress_updated_at ?? undefined,
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const mapHeartbeat = (item: any): ModelWorkerStatus => ({
   workerId: item.worker_id,
   status: item.status,

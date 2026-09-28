@@ -62,7 +62,7 @@ async function buildProjectStagesContext(projectIds: string[]): Promise<string> 
       )
       .in("id", ids);
     // O supabase-js nao infere o tipo de selects montados por concatenacao.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const projs = (data ?? []) as any[];
     if (projs.length === 0) return "";
 

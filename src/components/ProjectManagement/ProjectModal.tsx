@@ -115,8 +115,9 @@ export function ProjectModal({
       if (!displayProject?.id) return null;
       const { data, error } = await supabase
         .from("commercial_checklists" as never)
-        .select("*")
+        .select("id, status")
         .eq("project_id", displayProject.id)
+        .returns<{ id: string; status: string }[]>()
         .maybeSingle();
 
       if (error) throw error;
@@ -284,7 +285,7 @@ export function ProjectModal({
                 <DeploymentFormStatusButton
                   projectId={displayProject.id}
                   deploymentForm={projectDeploymentForm}
-                  checklistId={projectChecklist?.id}
+                  checklistId={projectChecklist ? projectChecklist.id : undefined}
                   onCloseModal={() => onOpenChange(false)}
                 />
               </>

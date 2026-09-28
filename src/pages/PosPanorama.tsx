@@ -774,9 +774,12 @@ export function PanoramaBase({ escopo, titulo, descricao }: PanoramaBaseProps) {
                         barSize={16}
                         radius={[0, 4, 4, 0]}
                         className="cursor-pointer"
-                        onClick={(d: { natureza?: string }) =>
-                          d?.natureza && setNatureza(natureza === d.natureza ? "todas" : d.natureza)
-                        }
+                        onClick={(bar) => {
+                          const payload: unknown = bar.payload;
+                          if (payload && typeof payload === "object" && "natureza" in payload && typeof payload.natureza === "string" && payload.natureza) {
+                            setNatureza(natureza === payload.natureza ? "todas" : payload.natureza);
+                          }
+                        }}
                       >
                         <LabelList
                           dataKey="total"

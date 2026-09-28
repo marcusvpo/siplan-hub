@@ -57,12 +57,14 @@ describe("formulário público de NPS", () => {
     expect(
       validateNpsQuestionnaire({
         title: "Pesquisa padrão",
+        description: "",
         questions: DEFAULT_NPS_QUESTIONS,
       }),
     ).toBeNull();
     expect(
       validateNpsQuestionnaire({
         title: "Sem nota",
+        description: "",
         questions: DEFAULT_NPS_QUESTIONS.filter(
           (question) => question.type !== "nps",
         ),

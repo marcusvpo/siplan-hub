@@ -148,7 +148,7 @@ describe("Panorama pós-implantação no mobile", () => {
     const ticketButton = screen.getByRole("button", { name: new RegExp(longTitle) });
     expect(ticketButton).toHaveClass("min-w-0", "text-left");
     const ticketLink = screen.getByRole("link", { name: /Abrir o chamado #80001 no Ellevo/ });
-    const ticketRow = ticketLink.closest("div.w-full");
+    const ticketRow = ticketLink.closest<HTMLElement>("div.w-full");
     expect(ticketRow).not.toBeNull();
     if (!ticketRow) throw new Error("Linha do chamado não encontrada");
     expect(within(ticketRow).getByText(longClient)).toHaveClass("break-words");

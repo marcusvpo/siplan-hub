@@ -72,7 +72,7 @@ export interface KnowledgeVersion {
   author_email?: string | null;
   author_name?: string | null;
   content_size_bytes?: number | null;
-  webhook_sync_status: "pending" | "synced" | "failed";
+  webhook_sync_status: "pending" | "syncing" | "synced" | "failed";
   is_restoration: boolean;
   restored_from_version_id?: string | null;
   metadata?: Record<string, unknown> | null;

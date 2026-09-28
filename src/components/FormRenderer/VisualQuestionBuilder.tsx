@@ -463,7 +463,7 @@ export function convertVisualToJSONSchema(questions: VisualQuestion[], title: st
 
         const isText = q.type === "textarea_adherence";
         const isDate = q.type === "date_adherence";
-        let qKey = `q_${sectionCount}_${Object.keys(currentSectionProps).length + 1}`;
+        const qKey = `q_${sectionCount}_${Object.keys(currentSectionProps).length + 1}`;
 
         if (isText) {
           currentSectionProps[qKey] = {

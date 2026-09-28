@@ -321,7 +321,7 @@ export function ProjectGrid() {
                             `Tem certeza que deseja excluir o projeto "${project.clientName}"?\n\nEsta ação é irreversível e apagará TODOS os dados relacionados a este projeto permanentemente.`,
                           )
                         ) {
-                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
                           (deleteProject as any).mutate(project.id);
                         }
                       } else if (action === "removeFromQueue") {

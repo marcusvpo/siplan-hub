@@ -31,7 +31,7 @@ export function usePosAiProjectSummary(projectId?: string) {
     queryFn: async () => {
       if (!projectId) return null;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const { data, error } = await (supabase.rpc as any)("get_pos_chat_project_summary", {
         p_project_id: projectId,
       });

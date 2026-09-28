@@ -461,7 +461,7 @@ export function useImplementerReport(implementerId: string | null) {
     // Satisfaction
     const satValues = primaryProjects
       .map((p) => p.stages?.post?.clientSatisfaction)
-      .filter((s): s is string => !!s && s in satisfactionMap)
+      .filter((s): s is NonNullable<typeof s> => !!s && s in satisfactionMap)
       .map((s) => satisfactionMap[s]);
     let avgSatisfaction = "—";
     if (satValues.length > 0) {

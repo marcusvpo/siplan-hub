@@ -19,8 +19,8 @@ function SearchIcon() {
 }
 
 export function ListingTools<T extends string>({ versions = false, order, options, search, busy, onOrder, onSearch }: {
-  versions?: boolean; order: T; options: readonly { value: T; label: string }[];
-  search: string; busy: boolean; onOrder: (value: T) => void; onSearch: (value: string) => void;
+  versions?: boolean; order: NoInfer<T>; options: readonly { value: T; label: string }[];
+  search: string; busy: boolean; onOrder: (value: NoInfer<T>) => void; onSearch: (value: string) => void;
 }) {
   const id = useId();
   const [draft, setDraft] = useState(search);
@@ -33,7 +33,10 @@ export function ListingTools<T extends string>({ versions = false, order, option
     <label className="listing-order">
       <span className="listing-sr-only">{versions ? 'Ordenar por' : 'Ordenar por data de publicação'}</span>
       <svg className="listing-order-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 19V5m-4 4 4-4 4 4M16 5v14m-4-4 4 4 4-4" /></svg>
-      <select aria-label={`Ordenar ${subject}`} value={order} onChange={event => onOrder(event.target.value as T)}>
+      <select aria-label={`Ordenar ${subject}`} value={order} onChange={event => {
+        const selected = options.find(option => option.value === event.target.value);
+        if (selected) onOrder(selected.value);
+      }}>
         {options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
       </select>
     </label>

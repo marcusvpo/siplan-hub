@@ -79,7 +79,7 @@ export default function DashboardV2() {
 
 
   const criticalAlerts = projects
-    .filter((p) => p.healthScore === "critical" && p.globalStatus !== "blocked" && p.globalStatus !== "done" && p.globalStatus !== "archived" && p.globalStatus !== "canceled")
+    .filter((p) => p.healthScore === "critical" && !["blocked", "done", "archived", "canceled"].includes(p.globalStatus))
     .slice(0, 5);
 
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);

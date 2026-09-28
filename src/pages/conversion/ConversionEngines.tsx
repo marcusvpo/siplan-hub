@@ -6,6 +6,7 @@ import {
   EngineSpecialty,
   EngineRecordType,
   ConversionEngineItem,
+  CreateConversionEngineInput,
 } from "@/hooks/useConversionEngines";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -233,20 +234,21 @@ export default function ConversionEngines() {
     }
     setEditDevopsUrlError("");
 
-    const identity = editRecordType === "other_tool"
-      ? { recordType: "other_tool" as const, toolName: editToolName }
-      : {
-          recordType: "conversion_engine" as const,
-          sourceSystem: editSourceSystem,
-          targetSystem: editTargetSystem,
-        };
-    const updated = await updateEngine(editItem.id, {
-      ...identity,
+    const common = {
       specialty: editSpecialty,
       status: editStatus,
       devopsUrl: editDevopsUrl,
       notes: editNotes,
-    });
+    };
+    const input: CreateConversionEngineInput = editRecordType === "other_tool"
+      ? { ...common, recordType: "other_tool", toolName: editToolName }
+      : {
+          ...common,
+          recordType: "conversion_engine",
+          sourceSystem: editSourceSystem,
+          targetSystem: editTargetSystem,
+        };
+    const updated = await updateEngine(editItem.id, input);
     if (updated) closeEditDialog();
   };
 
@@ -286,21 +288,22 @@ export default function ConversionEngines() {
     }
     setDevopsUrlError("");
 
-    const identity = createRecordType === "other_tool"
-      ? { recordType: "other_tool" as const, toolName }
+    const common = {
+      specialty: createSpecialty,
+      status: createStatus,
+      devopsUrl,
+      notes: createNotes,
+    };
+    const input: CreateConversionEngineInput = createRecordType === "other_tool"
+      ? { ...common, recordType: "other_tool", toolName }
       : {
-          recordType: "conversion_engine" as const,
+          ...common,
+          recordType: "conversion_engine",
           sourceSystem,
           targetSystem,
         };
     const created = await createEngine(
-      {
-        ...identity,
-        specialty: createSpecialty,
-        status: createStatus,
-        devopsUrl,
-        notes: createNotes,
-      },
+      input,
       fullName || user?.email || "Usuário",
     );
 

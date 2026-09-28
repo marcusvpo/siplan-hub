@@ -40,7 +40,7 @@ import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 // Helper to determine active blockers
 const getBlockers = (projectObj: Project) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const project: any = projectObj;
   const blockers = [];
 
@@ -245,7 +245,7 @@ export default function CommercialBlockers() {
         ? currentTags
         : [...currentTags, "Resolvido por Comercial"];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const updates: any = {
         tags: newTags,
         updated_at: new Date().toISOString(),

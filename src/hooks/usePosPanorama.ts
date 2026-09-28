@@ -144,7 +144,7 @@ export function usePosPanorama(
       // 4. Casa cada chamado com a primeira janela que o contém
       const chamados: ChamadoPanorama[] = [];
       for (const raw of data ?? []) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const r = raw as any;
         if (isNaturezaIgnorada(r.natureza)) continue;
         const c = mapChamado0800(r);
@@ -232,7 +232,7 @@ export function usePanoramaParecer() {
         .order("created_at", { ascending: false })
         .limit(5);
       if (error) throw error;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       return (data ?? []).map((j: any) => ({
         id: j.id,
         status: j.status,

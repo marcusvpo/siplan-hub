@@ -44,10 +44,10 @@ function fmt(sec: number): string {
 
 // Web Speech API para a legenda ao vivo (preview enquanto grava). Best-effort:
 // existe em Chrome/Edge/Android; ausente no iOS Safari/Firefox (la fica so o batch).
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 function getSpeechRecognition(): any {
   if (typeof window === "undefined") return null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const w = window as any;
   return w.SpeechRecognition || w.webkitSpeechRecognition || null;
 }
@@ -84,7 +84,7 @@ export function VoiceDictationButton({
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const cancelledRef = useRef(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const recognitionRef = useRef<any>(null); // instancia do SpeechRecognition
   const liveFinalRef = useRef(""); // trecho ja finalizado da legenda
   const recordingActiveRef = useRef(false); // grava? (para reiniciar o reconhecimento em pausas)
@@ -123,7 +123,7 @@ export function VoiceDictationButton({
       rec.interimResults = true;
       liveFinalRef.current = "";
       setLiveText("");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       rec.onresult = (e: any) => {
         let interim = "";
         for (let i = e.resultIndex; i < e.results.length; i++) {

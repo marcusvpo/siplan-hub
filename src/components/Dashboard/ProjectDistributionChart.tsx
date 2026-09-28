@@ -26,7 +26,7 @@ export const ProjectDistributionChart = ({
   };
 
   projects.forEach((project) => {
-    if (project.systemType === "Modelos TN" || project.globalStatus === "done" || project.globalStatus === "archived" || project.globalStatus === "canceled") {
+    if (project.systemType === "Modelos TN" || ["done", "archived", "canceled"].includes(project.globalStatus)) {
       return;
     }
     if (!project.stages) return;

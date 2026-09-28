@@ -461,11 +461,9 @@ function ManagementApp({ admin, onLogout, accountError }: { admin: { id: number;
   }
 
   async function save(draft: EditorDraft) {
-    try {
-      if (editing === "new") await adminApi.create(draft);
-      else if (editing) await adminApi.update(editing.id, draft);
-      setEditing(null); setError(""); await refresh();
-    } catch (e) { throw e; }
+    if (editing === "new") await adminApi.create(draft);
+    else if (editing) await adminApi.update(editing.id, draft);
+    setEditing(null); setError(""); await refresh();
   }
 
   async function removePost(id: number) {

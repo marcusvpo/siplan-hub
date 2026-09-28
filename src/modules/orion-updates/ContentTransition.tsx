@@ -18,7 +18,9 @@ export function ContentTransition({ pending = false, contentKey, children, label
     if (pending) {
       // O foco não pode permanecer em um botão de resultados antigos.
       if (content.current?.contains(document.activeElement)) region.current?.focus({ preventScroll: true });
+      content.current?.setAttribute('inert', '');
     } else {
+      content.current?.removeAttribute('inert');
       previous.current = children;
       height.current = content.current?.getBoundingClientRect().height ?? 0;
     }
@@ -30,7 +32,7 @@ export function ContentTransition({ pending = false, contentKey, children, label
     lastKey.current = contentKey;
     wasPending.current = false;
     if (!changed || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const animation = content.current?.animate(
+    const animation = content.current?.animate?.(
       [{ opacity: .84, transform: 'translateY(3px)' }, { opacity: 1, transform: 'translateY(0)' }],
       { duration: 180, easing: 'ease-out' },
     );
@@ -39,7 +41,7 @@ export function ContentTransition({ pending = false, contentKey, children, label
 
   return <div ref={region} className="content-transition" tabIndex={-1} aria-busy={pending}
     data-pending={pending} style={pending && height.current ? { minHeight: height.current } : undefined}>
-    <div ref={content} className="content-transition-body" inert={pending ? "true" : undefined} aria-hidden={pending || undefined}>
+    <div ref={content} className="content-transition-body" aria-hidden={pending || undefined}>
       {pending ? (retain && previous.current) || <LoadingPlaceholder /> : children}
     </div>
     {pending && <span className="content-transition-status" role="status"><span aria-hidden="true" />{label}</span>}

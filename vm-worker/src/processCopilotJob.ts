@@ -27,7 +27,7 @@ const CONCLUIDO_RE = /conclu|finaliz|adequ|entregue|ok\b/i;
 const W_CACHE_READ = 0.1;
 const W_CACHE_WRITE = 1.25;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 type AnyObj = any;
 
 // Etapas do projeto (prefixo da coluna -> rotulo curto). Cada etapa expoe

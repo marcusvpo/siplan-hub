@@ -1,0 +1,57 @@
+﻿{
+    "data":  "2026-09-28",
+    "frontend":  {
+                     "newRegressionTests":  71,
+                     "files":  134,
+                     "failed":  0,
+                     "passed":  734
+                 },
+    "typecheck":  {
+                      "worker":  "passed",
+                      "vite":  "passed",
+                      "rootTsc":  "passed",
+                      "application":  "passed"
+                  },
+    "lint":  {
+                 "errors":  0,
+                 "warnings":  38
+             },
+    "worker":  {
+                   "skipReason":  "Smoke opcional do Codex CLI real",
+                   "skipped":  1,
+                   "failed":  0,
+                   "passed":  13
+               },
+    "rls":  {
+                "mode":  "Somente leitura no banco real",
+                "failed":  0,
+                "passed":  7
+            },
+    "build":  {
+                  "precacheEntries":  383,
+                  "jsChunks":  378,
+                  "maxChunkKB":  407.28,
+                  "limitKB":  500,
+                  "passed":  true
+              },
+    "browser":  {
+                    "passed":  16,
+                    "widths":  [
+                                   320,
+                                   390,
+                                   1440
+                               ],
+                    "failed":  0,
+                    "runId":  "2026-09-28T19-46-33-156Z",
+                    "runtimeExceptions":  0,
+                    "offlinePwa":  "Service worker ativo; nova navegação sem rede e com cache HTTP desabilitado",
+                    "externalApiMode":  "Interceptada com dados fictícios"
+                },
+    "publication":  {
+                        "deployed":  false,
+                        "committed":  false,
+                        "remoteMigrationApplied":  false,
+                        "pushed":  false,
+                        "ci":  "Workflow local preparado; proteção da branch depende de publicação e configuração remota"
+                    }
+}

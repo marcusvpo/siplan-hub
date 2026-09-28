@@ -3,7 +3,7 @@
 export type ImplantationType = "new" | "migration_siplan" | "migration_competitor" | "upgrade";
 export type Priority = "critical" | "high" | "normal" | "low";
 export type ProjectType = "new" | "migration" | "upgrade" | "maintenance";
-export type GlobalStatus = "in-progress" | "done" | "blocked" | "archived";
+export type GlobalStatus = "todo" | "in-progress" | "done" | "blocked" | "archived";
 export type HealthScore = "ok" | "warning" | "critical";
 export type StageStatus = "todo" | "in-progress" | "done" | "blocked" | "waiting_adjustment";
 export type ProjectStatus = StageStatus;
@@ -151,6 +151,11 @@ export interface ProjectV2 {
   tramites?: ProjectTramite[];
   timeline?: TimelineEventV2[];
 }
+
+// Um patch pode alterar somente alguns estágios; cada estágio incluído permanece completo.
+export type ProjectUpdate = Omit<Partial<ProjectV2>, "stages"> & {
+  stages?: Partial<ProjectV2["stages"]>;
+};
 
 export interface ServerInfo {
   hostname?: string;

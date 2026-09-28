@@ -4,6 +4,7 @@
 .claude/
 .codex/
 .gemini/
+.maestri/
 
 # Cópia de origem usada somente como entrada da migração do Orion Blog.
 Nova pasta/

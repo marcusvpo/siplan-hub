@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-// @ts-expect-error O utilitário operacional é JavaScript ESM e não publica tipos.
 import { csvCell, matchLegacyUsers } from "../../scripts/lib/cs-cx-user-matching.mjs";
 
 const profiles = [

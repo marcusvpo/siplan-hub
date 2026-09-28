@@ -28,19 +28,28 @@ function createProject(index: number): ProjectV2 {
     clientName: index === 1 ? longProjectName : `Projeto ${index}`,
     systemType: "Orion TN",
     ticketNumber: `71${index}`,
+    implantationType: "new",
+    tags: [],
+    priority: "normal",
+    projectType: "new",
+    overallProgress: 20,
+    projectLeader: "Bruno Fernandes",
+    createdAt: new Date("2026-09-01T12:00:00Z"),
+    isDeleted: false,
+    isArchived: false,
     healthScore: "critical",
     globalStatus: "in-progress",
-    lastUpdatedAt: new Date().toISOString(),
+    lastUpdatedAt: new Date(),
     lastUpdatedBy: "Bruno Fernandes",
     stages: {
       infra: { status: "done" },
-      adherence: { status: "in-progress" },
-      environment: { status: "todo" },
+      adherence: { status: "in-progress", hasProductGap: false, analysisComplete: false },
+      environment: { status: "todo", approvedByInfra: false, testAvailable: false },
       conversion: { status: "todo" },
-      implementation: { status: "todo" },
-      post: { status: "todo" },
+      implementation: { status: "todo", phase1: { status: "todo" }, phase2: { status: "todo" } },
+      post: { status: "todo", followupNeeded: false },
     },
-  } as ProjectV2;
+  };
 }
 
 describe("Dashboard no mobile", () => {

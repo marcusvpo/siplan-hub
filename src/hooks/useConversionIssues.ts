@@ -23,6 +23,11 @@ export interface ConversionIssue {
   resolutionNotes: string | null;
 }
 
+export type CreateConversionIssueInput = Pick<ConversionIssue,
+  "projectId" | "title" | "description" | "status" | "priority" |
+  "ticketNumber0800" | "assignedTo" | "reportedBy"
+>;
+
 export function useConversionIssues(projectId?: string) {
   const queryClient = useQueryClient();
 
@@ -50,7 +55,7 @@ export function useConversionIssues(projectId?: string) {
       if (fetchError) throw fetchError;
 
       // Map DB row to Frontend Interface
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       return (data || []).map((item: any) => ({
         id: item.id,
         projectId: item.project_id,
@@ -88,7 +93,7 @@ export function useConversionIssues(projectId?: string) {
 
   // 2. Mutation: Criar pendência
   const createIssue = useMutation({
-    mutationFn: async (issue: Omit<ConversionIssue, "id" | "createdAt" | "updatedAt" | "resolvedAt" | "resolvedBy" | "resolvedByName" | "resolvedByEmail" | "assignedToName">) => {
+    mutationFn: async (issue: CreateConversionIssueInput) => {
       const { data, error: insertError } = await supabase
         .from("conversion_issues")
         .insert({

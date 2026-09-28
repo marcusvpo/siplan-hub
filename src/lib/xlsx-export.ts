@@ -100,7 +100,7 @@ export async function buildXlsxWorkbook(sheets: XlsxSheet[]): Promise<Uint8Array
 
 export async function downloadXlsxWorkbook(filename: string, sheets: XlsxSheet[]) {
   const bytes = await buildXlsxWorkbook(sheets);
-  const blob = new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const blob = new Blob([new Uint8Array(bytes)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;

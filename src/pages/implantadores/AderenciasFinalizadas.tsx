@@ -11,7 +11,7 @@ import { ProjectFormResponse } from "@/hooks/useProjectFormResponse";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
-interface CompletedFormWithProject extends Omit<ProjectFormResponse, "projects"> {
+interface CompletedFormWithProject extends Pick<ProjectFormResponse, "id" | "project_id" | "status" | "updated_at" | "data" | "filled_by" | "approved_by"> {
   projects: {
     client_name: string;
     ticket_number: string | null;
@@ -66,7 +66,10 @@ export default function AderenciasFinalizadas() {
         .order("updated_at", { ascending: false });
 
       if (error) throw error;
-      setCompletedForms((data as CompletedFormWithProject[]) || []);
+      setCompletedForms((data || []).map((form) => ({
+        ...form,
+        projects: Array.isArray(form.projects) ? form.projects[0] ?? null : form.projects,
+      })));
     } catch (err) {
       console.error("Error loading completed forms:", err);
       toast({

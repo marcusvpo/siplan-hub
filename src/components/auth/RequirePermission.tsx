@@ -5,6 +5,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
 import { ShieldOff } from "lucide-react";
 import { getResourceLabel } from "@/constants/permissions";
+import { AuthLoadError } from "@/components/auth/AuthLoadError";
 
 interface RequirePermissionProps {
   resource: string;
@@ -21,11 +22,13 @@ export function RequirePermission({
   action = "view",
   children,
 }: RequirePermissionProps) {
-  const { permissionsLoaded } = useAuth();
+  const { permissionsLoaded, loading, authError } = useAuth();
   const { hasPermission } = usePermissions();
 
+  if (authError) return <AuthLoadError />;
+
   // Antes das permissões chegarem, negar mostraria um falso "sem acesso".
-  if (!permissionsLoaded) {
+  if (loading || !permissionsLoaded) {
     return (
       <div className="min-h-[50vh] w-full flex items-center justify-center text-muted-foreground">
         Carregando...

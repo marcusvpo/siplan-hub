@@ -55,7 +55,7 @@ export function useConversionPosts(projectId: string | null) {
     if (!projectId) return;
     setLoading(true);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const { data, error } = await (supabase as any)
         .from("conversion_posts")
         .select("*")
@@ -98,7 +98,7 @@ export function useConversionPosts(projectId: string | null) {
           data: { user },
         } = await supabase.auth.getUser();
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const { data, error } = await (supabase as any)
           .from("conversion_posts")
           .insert({
@@ -130,7 +130,7 @@ export function useConversionPosts(projectId: string | null) {
 
   const deletePost = useCallback(async (postId: string) => {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const { error } = await (supabase as any)
         .from("conversion_posts")
         .delete()
@@ -201,7 +201,7 @@ export function usePostCount(projectId: string | null) {
   useEffect(() => {
     if (!projectId) return;
     (async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const { count: c, error } = await (supabase as any)
         .from("conversion_posts")
         .select("*", { count: "exact", head: true })

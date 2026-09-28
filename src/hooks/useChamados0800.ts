@@ -202,7 +202,7 @@ function toIsoDay(value?: Date | string | null): string | undefined {
   return `${y}-${m}-${d}`;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export const mapChamado0800 = (c: any): Chamado0800 => ({
   numeroChamado: c.numero_chamado,
   codigoCliente: c.codigo_cliente ?? undefined,
@@ -288,7 +288,7 @@ export function useChamado0800ByNumber(numeroChamado?: string | null) {
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const mapChamadoTramite = (tramite: any): ChamadoTramite => ({
   sequenciaTramite: Number(tramite.sequencia_tramite),
   numeroTramite: tramite.numero_tramite ?? undefined,
@@ -515,7 +515,7 @@ export async function checkPosCriticosAbertos(
     .is("data_encerramento", null);
 
   const criticos = (data ?? [])
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     .filter((c: any) => {
       const crit = (c.criticidade || "").toLowerCase();
       return (
@@ -525,7 +525,7 @@ export async function checkPosCriticosAbertos(
         !crit.includes("não")
       );
     })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     .map((c: any) => c.numero_chamado as string);
   return { total: criticos.length, numeros: criticos };
 }
@@ -561,7 +561,7 @@ export function useParecerPos(projectId?: string) {
         .order("created_at", { ascending: false })
         .limit(5);
       if (error) throw error;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       return (data ?? []).map((j: any) => ({
         id: j.id,
         status: j.status,

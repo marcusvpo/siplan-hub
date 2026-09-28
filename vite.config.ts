@@ -79,6 +79,7 @@ export default defineConfig(({ mode }) => ({
           "maskable-icon-*.png",
           "assets/KnowledgeEditorPage-*.js",
           "assets/FormRenderer-*.js",
+          "assets/form-validation-*.js",
           "assets/recharts-*.js",
           "assets/BarChart-*.js",
           "assets/PieChart-*.js",
@@ -116,21 +117,40 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     rollupOptions: {
+      onwarn(warning, warn) {
+        if (warning.code === "CIRCULAR_CHUNK") {
+          throw new Error(`Dependência circular entre chunks: ${warning.message}`);
+        }
+        warn(warning);
+      },
       output: {
         manualChunks(id) {
           const normalizedId = id.replaceAll("\\", "/");
-          // Separa recharts para evitar dependências circulares
+          // React e o roteador formam a base compartilhada pelos demais chunks.
           if (
+            normalizedId.includes("commonjsHelpers.js") ||
             normalizedId.includes("/node_modules/react/") ||
             normalizedId.includes("/node_modules/react-dom/") ||
+            normalizedId.includes("/node_modules/react-is/") ||
+            normalizedId.includes("/node_modules/scheduler/") ||
+            normalizedId.includes("/node_modules/@remix-run/router/") ||
             normalizedId.includes("/node_modules/react-router/") ||
             normalizedId.includes("/node_modules/react-router-dom/")
           ) return "vendor";
           // Separa vendors principais para melhor caching
           // Separa @tanstack/react-query (pode ser grande)
-          if (normalizedId.includes("/node_modules/@tanstack/react-query/")) return "query";
+          if (
+            normalizedId.includes("/node_modules/@tanstack/react-query/") ||
+            normalizedId.includes("/node_modules/@tanstack/query-core/")
+          ) return "query";
           // Separa Supabase SDK
           if (normalizedId.includes("/node_modules/@supabase/")) return "supabase";
+          // AJV não importa RJSF e pode ser separado sem dividir o motor/schema.
+          // O adaptador RJSF permanece junto do componente de formulário.
+          if (
+            normalizedId.includes("/node_modules/ajv/") ||
+            normalizedId.includes("/node_modules/ajv-formats/")
+          ) return "form-validation";
           return undefined;
         },
       },

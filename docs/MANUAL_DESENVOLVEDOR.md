@@ -201,6 +201,30 @@ Para rodar os testes existentes:
 npm run test
 ```
 
+### Validação integrada e prevenção de regressões
+
+`npm run check` executa lint, typecheck da aplicação e do Vite, testes, build/PWA,
+regressões no Chrome e validações do worker. O workflow
+`.github/workflows/quality.yml` repete essas etapas em pull requests e pushes na
+branch `main`. A proteção de branch deve exigir esse check no GitHub para impedir
+merge com falha; o arquivo do workflow não configura essa proteção sozinho.
+
+O comando `npx tsc --noEmit` também verifica o frontend: a configuração da raiz
+herda `tsconfig.app.json`. O build do Vite continua separado da análise de tipos.
+`npm run build` verifica ainda o limite de 500 kB por chunk JavaScript, sem
+aumentar o limite do bundler para esconder regressões.
+
+`npm run test:browser` requer Chrome/Chromium e um build atualizado em `dist/`.
+Use `CHROME_PATH` se o navegador estiver em outro local. O script inicia e encerra
+seus próprios processos, usa sessões fictícias e intercepta as APIs externas.
+Verifica recuperação de acesso, manutenção do blog, notificações em 320, 390 e
+1440 px e reabertura do login offline. Relatório e screenshots ficam em
+`node_modules/.cache/browser-regressions/`; o CI os guarda como artefatos.
+
+Os testes RLS usam apenas consultas de leitura no banco quando
+`SUPABASE_DB_URL` está disponível no ambiente ou no `.env`; sem essa variável,
+são ignorados. O smoke test do Codex CLI real permanece opcional no worker.
+
 ### Checklist Visual (QA)
 Antes de abrir um pull request, verifique a conformidade visual descrita em [VISUAL_QA.md](file:///d:/AI/siplan-hub/docs/VISUAL_QA.md):
 * **Tipografia**: Títulos e cabeçalhos devem usar fonte Sans-serif com `tracking-tight`.
@@ -220,4 +244,4 @@ Ao dar manutenção ou implementar novas funcionalidades, consulte também:
 * **[Architecture.md](file:///d:/AI/siplan-hub/docs/Architecture.md)** e **[CalendarContext.md](file:///d:/AI/siplan-hub/docs/CalendarContext.md)**: fluxo de dados e detalhes do calendário.
 
 > [!NOTE]
-> **Pendência conhecida:** `src/integrations/supabase/types.ts` está vazio, o que deixa o data-layer sem tipagem e gera erros de `tsc`. Regenere com `npx supabase gen types typescript --project-id <ref> > src/integrations/supabase/types.ts`. Detalhes em [MODELO_DE_DADOS.md](file:///d:/AI/siplan-hub/docs/MODELO_DE_DADOS.md).
+> **Tipos do banco:** `src/integrations/supabase/types.ts` contém os contratos do Supabase e deve acompanhar migrations de tabelas/colunas. O build não regenera esse arquivo. Consulte [MODELO_DE_DADOS.md](MODELO_DE_DADOS.md) antes de atualizar os tipos.

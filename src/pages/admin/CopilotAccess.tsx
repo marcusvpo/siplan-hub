@@ -53,7 +53,7 @@ export default function CopilotAccess() {
       if (pErr) throw pErr;
       if (aErr) throw aErr;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const byUser = new Map<string, any>();
       (access || []).forEach((a) => byUser.set(a.user_id, a));
 
