@@ -141,6 +141,10 @@ describe("DeploymentsTickets no mobile", () => {
   it("mantém o relatório analítico acessível no mobile e exporta todo o filtro", async () => {
     render(<DeploymentsTickets />);
 
+    const searchInput = within(screen.getByTestId("tickets-keyword-search-mobile")).getByRole("textbox");
+    fireEvent.change(searchInput, { target: { value: "rtf" } });
+    fireEvent.keyDown(searchInput, { key: "Enter" });
+
     expect(screen.getByTestId("tickets-report-actions")).toHaveClass("flex-wrap");
     const reportButton = screen.getByRole("button", { name: "Relatório analítico" });
     expect(reportButton).toHaveClass("h-10", "flex-1", "sm:h-7", "sm:flex-none");
@@ -148,8 +152,16 @@ describe("DeploymentsTickets no mobile", () => {
     fireEvent.click(reportButton);
 
     await waitFor(() => expect(fetchAllChamadosMock).toHaveBeenCalledWith(
-      expect.objectContaining({ ticketNumbers: [] }),
+      expect.objectContaining({
+        catalog: "orion",
+        startDate: expect.any(String),
+        endDate: expect.any(String),
+        searchTerms: ["rtf"],
+        ticketNumbers: null,
+      }),
     ));
+    expect(fetchAllChamadosMock.mock.lastCall?.[0]).not.toHaveProperty("page");
+    expect(fetchAllChamadosMock.mock.lastCall?.[0]).not.toHaveProperty("pageSize");
     expect(fetchChamadosTramitesMock).toHaveBeenCalledWith(["84521"]);
     await waitFor(() => expect(generateChamadosAnalyticalXlsxMock).toHaveBeenCalledWith(
       expect.arrayContaining([expect.objectContaining({ numeroChamado: "84521" })]),

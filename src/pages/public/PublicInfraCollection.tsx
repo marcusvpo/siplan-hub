@@ -524,9 +524,15 @@ export default function PublicInfraCollection() {
 
       if (success) {
         setSubmittedSuccess(true);
+        const hasServers = servers.length > 0;
+        const hasWorkstations = workstations.length > 0;
+        const isPartial = (hasWorkstations && !hasServers) || (hasServers && !hasWorkstations);
+
         toast({
-          title: "Envio Concluído!",
-          description: "As informações da sua infraestrutura foram salvas no Siplan HUB com sucesso.",
+          title: isPartial ? "Envio Parcial Salvo!" : "Envio Concluído!",
+          description: isPartial
+            ? `As informações de ${hasWorkstations ? "estações" : "servidor"} foram salvas. A etapa permanecerá em andamento no Siplan HUB até o envio completo.`
+            : "As informações da sua infraestrutura foram salvas no Siplan HUB com sucesso.",
           className: "bg-emerald-600 text-white border-emerald-700",
         });
       } else {
@@ -600,6 +606,10 @@ export default function PublicInfraCollection() {
   }
 
   if (submittedSuccess) {
+    const hasServers = servers.length > 0;
+    const hasWorkstations = workstations.length > 0;
+    const isPartial = (hasWorkstations && !hasServers) || (hasServers && !hasWorkstations);
+
     return (
       <div className="flex min-h-[100dvh] items-center justify-center bg-slate-50 p-6 text-slate-800">
         <Card className="max-w-lg w-full bg-white border-slate-200 shadow-xl relative overflow-hidden animate-in zoom-in-95 duration-300">
@@ -608,13 +618,49 @@ export default function PublicInfraCollection() {
             <div className="mx-auto w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 mb-4">
               <ShieldCheck className="h-10 w-10" />
             </div>
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Coleta de Infraestrutura Concluída!</h2>
-            <p className="text-sm text-slate-600 leading-relaxed">
-              Obrigado! O inventário dos seus equipamentos (servidores e estações) foi transmitido com sucesso ao time de implantação da Siplan.
-            </p>
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+              {isPartial ? "Envio Parcial Registrado!" : "Coleta de Infraestrutura Concluída!"}
+            </h2>
+            <div className="text-sm text-slate-600 leading-relaxed space-y-3">
+              {isPartial ? (
+                hasWorkstations ? (
+                  <>
+                    <p>
+                      As <strong>estações de trabalho ({workstations.length} coletadas)</strong> foram transmitidas e salvas com sucesso.
+                    </p>
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-xs text-left">
+                      <strong>Atenção:</strong> Ainda faltam as informações do <strong>Servidor</strong>. A etapa de infraestrutura continuará marcada como <strong>Em Andamento</strong> no Siplan HUB até que os dados do servidor também sejam enviados.
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p>
+                      As informações do <strong>Servidor</strong> foram transmitidas e salvas com sucesso.
+                    </p>
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-xs text-left">
+                      <strong>Atenção:</strong> Ainda faltam as informações das <strong>Estações de Trabalho</strong>. A etapa de infraestrutura continuará marcada como <strong>Em Andamento</strong> no Siplan HUB até que as estações também sejam enviadas.
+                    </div>
+                  </>
+                )
+              ) : (
+                <p>
+                  Obrigado! O inventário completo dos seus equipamentos (servidores e estações) foi transmitido com sucesso ao time de implantação da Siplan.
+                </p>
+              )}
+            </div>
             <p className="text-xs text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100 leading-relaxed">
               A análise dinâmica dos requisitos foi salva no Siplan HUB. Nosso time técnico revisará os dados e informará sobre quaisquer adequações necessárias.
             </p>
+            {isPartial && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSubmittedSuccess(false)}
+                className="mt-2 text-xs border-slate-300 text-slate-700 hover:bg-slate-100"
+              >
+                Voltar ao formulário para adicionar {hasWorkstations ? "Servidor" : "Estações"}
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -7,6 +7,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useDebounce } from "@/hooks/use-debounce";
+import { supabase } from "@/integrations/supabase/client";
 import { FormRenderer } from "@/components/FormRenderer/FormRenderer";
 import { RichTextContent } from "@/components/ui/rich-text-content";
 import { AiRichTextField } from "@/components/ui/ai-rich-text-field";
@@ -285,8 +286,15 @@ export default function ProjectAdherenceForm() {
     const isNewResponse = hydratedResponseIdRef.current !== response.id;
 
     if (isNewResponse || !hasLocalChanges) {
-      latestFormDataRef.current = serverData;
-      setLocalFormData(serverData);
+      const normalizedServerData = { ...serverData };
+      if (typeof normalizedServerData.finalNotes === "string") {
+        const raw = normalizedServerData.finalNotes.trim();
+        if (raw.startsWith("{") || raw.includes("<")) {
+          normalizedServerData.finalNotes = richTextToPlainText(raw);
+        }
+      }
+      latestFormDataRef.current = normalizedServerData;
+      setLocalFormData(normalizedServerData);
       setDraftSaveStatus("saved");
     }
 
@@ -493,6 +501,23 @@ export default function ProjectAdherenceForm() {
         data: finalizedData,
         status: statusToSubmit,
       });
+
+      // Replicar o conteúdo de "Justificativa / Parecer Técnico" para "Observações & Detalhes"
+      // na etapa 2 (Análise de Aderência) do projeto
+      if (finalizedData.finalNotes?.trim()) {
+        try {
+          await supabase
+            .from("projects")
+            .update({
+              adherence_observations: finalizedData.finalNotes,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", projectId);
+        } catch (syncError) {
+          console.error("Falha ao replicar parecer técnico para observações do projeto:", syncError);
+        }
+      }
+
       lastSavedDataRef.current = serializeFormData(finalizedData);
       setLastSavedAt(new Date(finalizedResponse.updated_at));
       setDraftSaveStatus("saved");
@@ -632,11 +657,20 @@ export default function ProjectAdherenceForm() {
           : "Rascunho salvo";
   const printSections = getPrintSections(activeTemplate.schema_json, localFormData);
   const printQuestions = printSections.flatMap((section) => section.questions);
-  const printSummary = {
+  const printSummaryRaw = {
     questions: printQuestions.length,
     impacts: printQuestions.filter((question) => question.nivel_impacto === "SIM").length,
     warnings: printQuestions.filter((question) => question.nivel_impacto === "ATENÇÃO").length,
     evidences: printQuestions.reduce((total, question) => total + question.images.length, 0),
+  };
+  const adherentsCount = Math.max(0, printSummaryRaw.questions - printSummaryRaw.impacts - printSummaryRaw.warnings);
+  const adherenceScore = printSummaryRaw.questions > 0
+    ? Math.max(0, Math.min(100, Math.round(((adherentsCount + (printSummaryRaw.warnings * 0.5)) / printSummaryRaw.questions) * 100)))
+    : 100;
+  const printSummary = {
+    ...printSummaryRaw,
+    adherents: adherentsCount,
+    adherenceScore,
   };
   const generalFields = getGeneralFields(
     activeTemplate.schema_json,
@@ -823,11 +857,12 @@ export default function ProjectAdherenceForm() {
               </div>
             </div>
 
-            <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4 print:grid-cols-4">
+            <dl className="grid grid-cols-2 gap-2 sm:grid-cols-5 print:grid-cols-5">
               {[
                 ["Itens do checklist", printSummary.questions],
-                ["Não aderentes", printSummary.impacts],
+                ["Aderentes", printSummary.adherents],
                 ["Pontos de atenção", printSummary.warnings],
+                ["Não aderentes", printSummary.impacts],
                 ["Evidências", printSummary.evidences],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-md border border-slate-200 px-2.5 py-1.5">
@@ -1285,6 +1320,32 @@ export default function ProjectAdherenceForm() {
             </div>
           </div>
         </div>
+
+        {/* Painel de Indicadores de Aderência */}
+        {printSummary.questions > 0 && (
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5">
+            <div className="rounded-lg border bg-card p-2.5 shadow-sm">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">Total de Itens</span>
+              <span className="text-lg font-black text-foreground">{printSummary.questions}</span>
+            </div>
+            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-2.5 shadow-sm">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block">Aderentes</span>
+              <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">{printSummary.adherents}</span>
+            </div>
+            <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-2.5 shadow-sm">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 block">Pontos de Atenção</span>
+              <span className="text-lg font-black text-amber-600 dark:text-amber-400">{printSummary.warnings}</span>
+            </div>
+            <div className="rounded-lg border border-rose-500/20 bg-rose-500/5 p-2.5 shadow-sm">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 block">Não Aderentes</span>
+              <span className="text-lg font-black text-rose-600 dark:text-rose-400">{printSummary.impacts}</span>
+            </div>
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-2.5 shadow-sm">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-primary block">Índice de Aderência</span>
+              <span className="text-lg font-black text-primary">{printSummary.adherenceScore}%</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Main Content Area */}
