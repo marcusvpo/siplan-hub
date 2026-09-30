@@ -5,6 +5,8 @@ const hasPermission = vi.fn();
 const mutation = { mutateAsync: vi.fn(), isPending: false };
 const bulkMutation = { mutateAsync: vi.fn(), isPending: false };
 let includeSecondProductRoutine = false;
+let firstOfficeRoutineAppliedBy = "profile-1";
+let firstOfficeResponsibleProfileIds: string[] = [];
 
 vi.mock("@/hooks/usePermissions", () => ({
   usePermissions: () => ({ hasPermission }),
@@ -30,6 +32,14 @@ vi.mock("@/hooks/useCsCxCore", () => ({
             ? "Miguelópolis - TNPT"
             : `Cartório ${index + 1}`,
       is_analyzed: index === 0,
+      responsibles:
+        index === 0
+          ? firstOfficeResponsibleProfileIds.map((profileId, responsibleIndex) => ({
+              id: `office-1-responsible-${responsibleIndex + 1}`,
+              profile_id: profileId,
+              profile: null,
+            }))
+          : [],
     })),
     toggleOfficeAnalyzed: toggleOfficeAnalyzedMutation,
   }),
@@ -59,7 +69,7 @@ vi.mock("@/hooks/useCsCxRoutines", () => ({
         routine_model_id: `model-${index + 1}`,
         active: true,
         applied_at: "2026-08-01T00:00:00.000Z",
-        applied_by: "profile-1",
+        applied_by: index === 0 ? firstOfficeRoutineAppliedBy : "profile-1",
         notes: null,
         origin: "legacy",
         registry_office: {
@@ -186,9 +196,12 @@ function renderPage(permissions: string[]) {
 describe("CS/CX rotinas — permissões", () => {
   beforeEach(() => {
     includeSecondProductRoutine = false;
+    firstOfficeRoutineAppliedBy = "profile-1";
+    firstOfficeResponsibleProfileIds = [];
     hasPermission.mockReset();
     mutation.mutateAsync.mockReset();
     bulkMutation.mutateAsync.mockReset().mockResolvedValue(1);
+    toggleOfficeAnalyzedMutation.mutateAsync.mockReset().mockResolvedValue(undefined);
   });
 
   it("mantém os dados visíveis sem liberar escrita", () => {
@@ -630,6 +643,59 @@ describe("CS/CX rotinas — permissões", () => {
         is_analyzed: false,
       });
     });
+  });
+
+  it("habilita a análise quando qualquer rotina pertence ao usuário atual", async () => {
+    firstOfficeRoutineAppliedBy = "profile-other";
+    includeSecondProductRoutine = true;
+    renderPage(["cs_cx_rotinas:edit"]);
+
+    const analysisSwitch = screen.getByRole("switch", {
+      name: "Marcar Cartório Central como não analisado",
+    });
+    expect(analysisSwitch).toBeEnabled();
+    fireEvent.click(analysisSwitch);
+
+    await waitFor(() => {
+      expect(toggleOfficeAnalyzedMutation.mutateAsync).toHaveBeenCalledWith({
+        id: "office-1",
+        is_analyzed: false,
+      });
+    });
+  });
+
+  it("habilita a análise para responsável geral do cartório", async () => {
+    firstOfficeRoutineAppliedBy = "profile-other";
+    firstOfficeResponsibleProfileIds = ["profile-1"];
+    renderPage(["cs_cx_rotinas:edit"]);
+
+    const analysisSwitch = screen.getByRole("switch", {
+      name: "Marcar Cartório Central como não analisado",
+    });
+    expect(analysisSwitch).toBeEnabled();
+    fireEvent.click(analysisSwitch);
+
+    await waitFor(() => {
+      expect(toggleOfficeAnalyzedMutation.mutateAsync).toHaveBeenCalledWith({
+        id: "office-1",
+        is_analyzed: false,
+      });
+    });
+  });
+
+  it("mantém cartório sem rotina desabilitado mesmo com manage_others", () => {
+    renderPage(["cs_cx_rotinas:edit", "cs_cx_rotinas:manage_others"]);
+    fireEvent.change(
+      screen.getByPlaceholderText(/buscar cartório, modelo ou observação/i),
+      { target: { value: "miguelopolis" } },
+    );
+
+    expect(
+      screen.getByRole("switch", {
+        name: "Marcar Miguelópolis - TNPT como analisado",
+      }),
+    ).toBeDisabled();
+    expect(toggleOfficeAnalyzedMutation.mutateAsync).not.toHaveBeenCalled();
   });
 });
 
