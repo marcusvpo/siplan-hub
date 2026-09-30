@@ -289,6 +289,7 @@ export default function CsCxRoutines() {
   const [search, setSearch] = useState("");
   const [officeFilter, setOfficeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState("applications");
   const [applicationPage, setApplicationPage] = useState(1);
   const [applicationPageSize, setApplicationPageSize] =
     useState(DEFAULT_PAGE_SIZE);
@@ -542,6 +543,10 @@ export default function CsCxRoutines() {
   const updateStatusFilter = (value: string) => {
     setStatusFilter(value);
     setApplicationPage(1);
+  };
+  const openApplicationsWithStatus = (value: string) => {
+    setActiveTab("applications");
+    updateStatusFilter(value);
   };
   const updateApplicationPageSize = (value: string) => {
     setApplicationPageSize(Number(value));
@@ -831,25 +836,39 @@ export default function CsCxRoutines() {
         </Card>
       )}
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
+      <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 sm:grid-cols-3 min-[360px]:[&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
         <Metric
           icon={Database}
           label="Cartórios com rotinas"
           value={totals.offices}
+          selected={activeTab === "applications" && statusFilter === "all"}
+          onClick={() => openApplicationsWithStatus("all")}
         />
         <Metric
           icon={CheckCircle2}
           label="Analisados"
           value={totals.analyzed}
+          selected={
+            activeTab === "applications" && statusFilter === "analyzed"
+          }
+          onClick={() => openApplicationsWithStatus("analyzed")}
         />
         <Metric
           icon={ClipboardCheck}
           label="Não analisados"
           value={totals.notAnalyzed}
+          selected={
+            activeTab === "applications" && statusFilter === "not_analyzed"
+          }
+          onClick={() => openApplicationsWithStatus("not_analyzed")}
         />
       </div>
 
-      <Tabs defaultValue="applications" className="space-y-3">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-3"
+      >
         <TabsList className="grid h-auto w-full grid-cols-3 py-1 sm:h-9 sm:w-auto">
           <TabsTrigger className="h-7" value="applications">
             Aplicações
@@ -925,6 +944,7 @@ export default function CsCxRoutines() {
                       <div className="flex items-center gap-1.5 shrink-0">
                         <Switch
                           checked={summary.analyzed}
+                          className="data-[state=checked]:bg-emerald-600"
                           onCheckedChange={() => handleToggleAnalyzed(summary.registryOfficeId, summary.analyzed)}
                           disabled={!canEditRecord(summary.routines[0]?.applied_by) || togglingOfficeId === summary.registryOfficeId}
                           aria-label={`Marcar ${summary.registryOfficeName} como ${summary.analyzed ? "não analisado" : "analisado"}`}
@@ -934,7 +954,12 @@ export default function CsCxRoutines() {
                         </Badge>
                       </div>
                     </div>
-                    <div className="mt-3 grid grid-cols-3 gap-2 border-t pt-2 text-center text-xs"><div><strong className="block text-base">{summary.routines.length}</strong><span className="text-[10px] text-muted-foreground">Rotinas</span></div><div><strong className="block text-base text-emerald-700">{summary.activeItems}</strong><span className="text-[10px] text-muted-foreground">Ativos</span></div><div><strong className="block text-base text-rose-700">{summary.inactiveItems}</strong><span className="text-[10px] text-muted-foreground">Inativos</span></div></div>
+                    <div data-testid="cs-cx-routines-mobile-metrics" className="mt-3 grid grid-cols-2 gap-2 border-t pt-2 text-center text-xs">
+                      <div className="min-w-0"><strong className="block text-base">{summary.routines.length}</strong><span className="text-[10px] text-muted-foreground">Rotinas</span></div>
+                      <div className="min-w-0"><strong className="block text-base text-emerald-700">{summary.activeItems}</strong><span className="text-[10px] text-muted-foreground">Ativos</span></div>
+                      <div className="min-w-0"><strong aria-label={`${summary.pendingItems} ${summary.pendingItems === 1 ? "item" : "itens"} para validar em ${summary.registryOfficeName}`} className="block text-base text-amber-700">{summary.pendingItems}</strong><span className="text-[10px] text-muted-foreground">P/ validar</span></div>
+                      <div className="min-w-0"><strong className="block text-base text-rose-700">{summary.inactiveItems}</strong><span className="text-[10px] text-muted-foreground">Inativos</span></div>
+                    </div>
                     <div className="mt-3 flex flex-wrap gap-1.5">{summary.routines.length ? <Button variant="outline" size="sm" className="h-8 flex-1" onClick={() => openOfficeAnalysis(summary.registryOfficeId)}><Eye className="mr-1.5 h-4 w-4" />Analisar</Button> : canCreate && <Button variant="outline" size="sm" className="h-8 flex-1" onClick={() => openApplyRoutine(summary.registryOfficeId)}><Plus className="mr-1.5 h-4 w-4" />Aplicar rotina</Button>}{summary.routines.map((routine) => <div key={routine.id} className="flex"><Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Exportar PDF da rotina ${routine.routine_model?.name ?? "sem nome"}`} disabled={exportingRoutineId === routine.id} onClick={() => handleRoutinePdf(routine)}><FileDown className="h-4 w-4" /></Button>{canDeleteRecord(routine.applied_by) && <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Desvincular rotina ${routine.routine_model?.name ?? "sem nome"}`} onClick={() => setDeleting(routine)}><Trash2 className="h-4 w-4 text-destructive" /></Button>}</div>)}</div>
                   </article>
                 ))}
@@ -951,6 +976,9 @@ export default function CsCxRoutines() {
                       </TableHead>
                       <TableHead className="h-9 px-3 text-center text-xs">
                         Itens ativos
+                      </TableHead>
+                      <TableHead className="h-9 px-3 text-center text-xs">
+                        Itens p/ validar
                       </TableHead>
                       <TableHead className="h-9 px-3 text-center text-xs">
                         Itens inativos
@@ -1013,6 +1041,15 @@ export default function CsCxRoutines() {
                         <TableCell className="px-3 py-2 text-center">
                           <Badge
                             variant="outline"
+                            aria-label={`${summary.pendingItems} ${summary.pendingItems === 1 ? "item" : "itens"} para validar em ${summary.registryOfficeName}`}
+                            className="h-5 min-w-7 justify-center border-amber-200 bg-amber-50 px-1.5 text-[10px] text-amber-700"
+                          >
+                            {summary.pendingItems}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-3 py-2 text-center">
+                          <Badge
+                            variant="outline"
                             className="h-5 min-w-7 justify-center border-rose-200 bg-rose-50 px-1.5 text-[10px] text-rose-700"
                           >
                             {summary.inactiveItems}
@@ -1036,6 +1073,7 @@ export default function CsCxRoutines() {
                           <div className="flex items-center gap-2">
                             <Switch
                               checked={summary.analyzed}
+                              className="data-[state=checked]:bg-emerald-600"
                               onCheckedChange={() =>
                                 handleToggleAnalyzed(
                                   summary.registryOfficeId,
@@ -1069,12 +1107,6 @@ export default function CsCxRoutines() {
                                   : "Não analisado"}
                             </Badge>
                           </div>
-                          {!summary.analyzed && summary.pendingItems > 0 && (
-                            <p className="mt-0.5 text-[10px] text-muted-foreground">
-                              {summary.pendingItems} pendente
-                              {summary.pendingItems === 1 ? "" : "s"}
-                            </p>
-                          )}
                         </TableCell>
                         <TableCell className="whitespace-nowrap px-3 py-2">
                           <div className="flex flex-wrap items-center justify-end gap-1">
@@ -1144,7 +1176,7 @@ export default function CsCxRoutines() {
                     {!filteredOffices.length && (
                       <TableRow>
                         <TableCell
-                          colSpan={7}
+                          colSpan={8}
                           className="h-28 text-center text-sm text-muted-foreground"
                         >
                           Nenhum cartório ou rotina encontrado.
@@ -1965,24 +1997,45 @@ function Metric({
   icon: Icon,
   label,
   value,
+  selected,
+  onClick,
 }: {
   icon: typeof Database;
   label: string;
   value: number;
+  selected: boolean;
+  onClick: () => void;
 }) {
   return (
-    <Card>
-      <CardContent className="flex items-center gap-2.5 px-3 py-2.5">
-        <div className="rounded-lg bg-rose-50 p-1.5 text-rose-600 dark:bg-rose-950/40">
-          <Icon className="h-4 w-4" />
-        </div>
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-            {label}
-          </p>
-          <p className="text-xl font-black leading-6">{value}</p>
-        </div>
-      </CardContent>
+    <Card
+      className={cn(
+        "min-w-0 overflow-hidden transition-colors",
+        selected && "border-primary",
+      )}
+    >
+      <button
+        type="button"
+        aria-pressed={selected}
+        onClick={onClick}
+        className="group w-full min-w-0 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+      >
+        <CardContent className="flex min-w-0 items-center gap-2.5 px-3 py-2.5">
+          <div className="shrink-0 rounded-lg bg-rose-50 p-1.5 text-rose-600 dark:bg-rose-950/40">
+            <Icon aria-hidden="true" className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="break-words text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              {label}
+            </p>
+            <div className="flex flex-wrap items-end justify-between gap-x-2 gap-y-0.5">
+              <p className="text-xl font-black leading-6">{value}</p>
+              <span className="text-[10px] font-semibold text-muted-foreground">
+                {selected ? "Selecionado" : "Ver aplicações"}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </button>
     </Card>
   );
 }

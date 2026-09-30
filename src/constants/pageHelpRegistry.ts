@@ -1796,8 +1796,9 @@ export const pageHelpData: PageHelpInfo[] = [
     moduleName: "CS/CX",
     icon: Building2,
     description:
-      "Ficha de acompanhamento dos cartórios atendidos pelo time de Customer Success. Apresenta o nível de satisfação, contatos principais, histórico de chamados e nível de risco.",
+      "Ficha de acompanhamento dos cartórios atendidos pelo time de Customer Success. Permite cadastrar o nome do tabelião ou tabeliã e apresenta contatos principais, histórico de chamados e nível de risco.",
     keyFeatures: [
+      "Cadastro opcional do nome do tabelião ou tabeliã",
       "Classificação de risco de churn/insatisfação",
       "Histórico consolidado de reuniões, solicitações e pesquisas de NPS",
       "Filtros por analista de CS responsável",
@@ -1889,6 +1890,8 @@ export const pageHelpData: PageHelpInfo[] = [
       "Ferramenta de diagnóstico para avaliar se o cartório está utilizando plenamente as rotinas e recursos do sistema Siplan (ex: selagem automática, rotinas de certidões, livro caixa).",
     keyFeatures: [
       "Matriz de adoção de rotinas por serventia",
+      "Cards métricos clicáveis para abrir e filtrar as aplicações por situação da análise",
+      "Coluna Itens p/ validar para destacar configurações com status Analisar e interruptor verde para cartórios analisados",
       "Identificação de recursos subutilizados para agendamento de recapacitação",
       "Filtros por cartório, busca textual e status de análise ou de itens",
     ],
@@ -1904,7 +1907,7 @@ export const pageHelpData: PageHelpInfo[] = [
         stepNumber: 2,
         title: "Filtre por Status",
         description:
-          "Utilize os seletores de status para visualizar cartórios analisados, não analisados ou sem rotina, assim como itens ativos/inativos na análise.",
+          "Clique nos cards de cartórios com rotinas, analisados ou não analisados para abrir a aba Aplicações com o filtro correspondente. Você também pode usar os seletores de status para refinar a lista e os itens da análise.",
         icon: Filter,
       },
     ],

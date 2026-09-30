@@ -9,6 +9,7 @@ function office(
     id: "office-1",
     legacy_id: null,
     name: "Cartório Central",
+    notary_name: null,
     sap_code: null,
     active: true,
     is_analyzed: false,

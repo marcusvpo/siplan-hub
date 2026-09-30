@@ -285,6 +285,69 @@ export type CsCxContactInsert = {
 
 export type CsCxContactUpdate = Partial<CsCxContactInsert>;
 
+export type CsCxRegistryOfficeRow = {
+  id: string;
+  legacy_id: number | null;
+  name: string;
+  notary_name: string | null;
+  sap_code: string | null;
+  active: boolean;
+  analysis_at: string | null;
+  analysis_notes: string | null;
+  notes: string | null;
+  contact_details: string | null;
+  legacy_analyst_user_id: number | null;
+  analyst_profile_id: string | null;
+  created_at: string | null;
+  updated_at: string;
+  source_hash: string | null;
+  source_present: boolean;
+  last_synced_at: string;
+  origin: "legacy" | "hub";
+  created_by: string | null;
+  is_analyzed: boolean;
+};
+
+export type CsCxRegistryOfficeInsert = {
+  id?: string;
+  legacy_id?: number | null;
+  name: string;
+  notary_name?: string | null;
+  sap_code?: string | null;
+  active?: boolean;
+  analysis_at?: string | null;
+  analysis_notes?: string | null;
+  notes?: string | null;
+  contact_details?: string | null;
+  legacy_analyst_user_id?: number | null;
+  analyst_profile_id?: string | null;
+  created_at?: string | null;
+  updated_at?: string;
+  source_hash?: string | null;
+  source_present?: boolean;
+  last_synced_at?: string;
+  origin?: CsCxRegistryOfficeRow["origin"];
+  created_by?: string | null;
+  is_analyzed?: boolean;
+};
+
+export type CsCxRegistryOfficeUpdate = Partial<CsCxRegistryOfficeInsert>;
+
+export type CsCxSaveRegistryOfficeV5Args = {
+  p_id: string | null;
+  p_name: string;
+  p_sap_code: string | null;
+  p_contact_details: string | null;
+  p_notes: string | null;
+  p_active: boolean;
+  p_products: Json;
+  p_responsibles: Json;
+  p_responsible_profile_ids: string[];
+  p_notary_name: string | null;
+};
+
+export type CsCxSaveRegistryOfficeV5Returns = string;
+
 export type OrionUpdateProductRow = {
   id: number;
   name: string;
@@ -444,6 +507,7 @@ export type Tables<TableName extends string> =
             : TableName extends "my_day_board_columns" ? MyDayBoardColumnRow
               : TableName extends "my_day_board_cards" ? MyDayBoardCardRow
                 : TableName extends "cs_cx_contacts" ? CsCxContactRow
+                  : TableName extends "cs_cx_registry_offices" ? CsCxRegistryOfficeRow
                   : TableName extends "orion_update_products" ? OrionUpdateProductRow
                     : TableName extends "orion_update_versions" ? OrionUpdateVersionRow
                       : TableName extends "orion_update_media" ? OrionUpdateMediaRow
@@ -464,6 +528,7 @@ export type TablesInsert<TableName extends string> =
             : TableName extends "my_day_board_columns" ? MyDayBoardColumnInsert
               : TableName extends "my_day_board_cards" ? MyDayBoardCardInsert
                 : TableName extends "cs_cx_contacts" ? CsCxContactInsert
+                  : TableName extends "cs_cx_registry_offices" ? CsCxRegistryOfficeInsert
                   : TableName extends "orion_update_products" ? OrionUpdateProductInsert
                     : TableName extends "orion_update_versions" ? OrionUpdateVersionInsert
                       : TableName extends "orion_update_media" ? OrionUpdateMediaInsert
@@ -484,6 +549,7 @@ export type TablesUpdate<TableName extends string> =
             : TableName extends "my_day_board_columns" ? MyDayBoardColumnUpdate
               : TableName extends "my_day_board_cards" ? MyDayBoardCardUpdate
                 : TableName extends "cs_cx_contacts" ? CsCxContactUpdate
+                  : TableName extends "cs_cx_registry_offices" ? CsCxRegistryOfficeUpdate
                   : TableName extends "orion_update_products" ? OrionUpdateProductUpdate
                     : TableName extends "orion_update_versions" ? OrionUpdateVersionUpdate
                       : TableName extends "orion_update_media" ? OrionUpdateMediaUpdate

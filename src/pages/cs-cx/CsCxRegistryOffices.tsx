@@ -85,6 +85,7 @@ interface OfficeForm {
   id?: string;
   name: string;
   sap_code: string;
+  notary_name: string;
   contact_details: string;
   notes: string;
   active: boolean;
@@ -96,6 +97,7 @@ interface OfficeForm {
 const emptyForm: OfficeForm = {
   name: "",
   sap_code: "",
+  notary_name: "",
   contact_details: "",
   notes: "",
   active: true,
@@ -315,6 +317,7 @@ export default function CsCxRegistryOffices() {
       id: office.id,
       name: office.name,
       sap_code: office.sap_code ?? "",
+      notary_name: office.notary_name ?? "",
       contact_details: office.contact_details ?? "",
       notes: office.notes ?? "",
       active: office.active,
@@ -803,6 +806,15 @@ export default function CsCxRegistryOffices() {
                 />
               </Field>
             </div>
+            <Field label="Nome do tabelião ou tabeliã">
+              <Input
+                aria-label="Nome do tabelião ou tabeliã"
+                value={form.notary_name}
+                onChange={(event) =>
+                  setForm({ ...form, notary_name: event.target.value })
+                }
+              />
+            </Field>
             <Field label="Responsáveis pelo cartório">
               <CsCxMultiSelect
                 ariaLabel="Responsáveis pelo cartório"
@@ -1044,6 +1056,10 @@ export default function CsCxRegistryOffices() {
                 <ReadOnlyField
                   label="Código SAP"
                   value={viewing.sap_code || "Não informado"}
+                />
+                <ReadOnlyField
+                  label="Tabelião ou tabeliã"
+                  value={viewing.notary_name || "Não informado"}
                 />
                 <ReadOnlyField
                   label="Status"
