@@ -280,6 +280,122 @@ describe("CS/CX rotinas — permissões", () => {
     expect(screen.getByText("Modelo 6")).toBeInTheDocument();
   });
 
+  it("abre todas as aplicações pelo card e reinicia a paginação", () => {
+    renderPage([]);
+    fireEvent.click(
+      screen.getByRole("button", { name: /próxima página de cartórios/i }),
+    );
+    expect(screen.getByText("Cartório 6")).toBeInTheDocument();
+
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Modelos" }), {
+      button: 0,
+      ctrlKey: false,
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: /cartórios com rotinas/i }),
+    );
+
+    expect(screen.getByRole("tab", { name: "Aplicações" })).toHaveAttribute(
+      "data-state",
+      "active",
+    );
+    expect(
+      screen.getByRole("button", { name: /cartórios com rotinas/i }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(
+      screen.getByRole("combobox", {
+        name: /filtrar por status da aplicação/i,
+      }),
+    ).toHaveTextContent("Todos os status");
+    expect(
+      screen.getByLabelText("Mostrando 1 a 5 de 12 cartórios"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Cartório 6")).not.toBeInTheDocument();
+  });
+
+  it("abre as aplicações analisadas pelo card", () => {
+    renderPage([]);
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Histórico" }), {
+      button: 0,
+      ctrlKey: false,
+    });
+    fireEvent.click(screen.getByRole("button", { name: /^analisados/i }));
+
+    expect(screen.getByRole("tab", { name: "Aplicações" })).toHaveAttribute(
+      "data-state",
+      "active",
+    );
+    expect(
+      screen.getByRole("button", { name: /^analisados/i }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(
+      screen.getByRole("combobox", {
+        name: /filtrar por status da aplicação/i,
+      }),
+    ).toHaveTextContent("Analisado");
+    expect(screen.getByText("Cartório Central")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Mostrando 1 a 1 de 1 cartórios"),
+    ).toBeInTheDocument();
+  });
+
+  it("abre as aplicações não analisadas pelo card", () => {
+    renderPage([]);
+    fireEvent.mouseDown(screen.getByRole("tab", { name: "Modelos" }), {
+      button: 0,
+      ctrlKey: false,
+    });
+    fireEvent.click(
+      screen.getByRole("button", { name: /^não analisados/i }),
+    );
+
+    expect(screen.getByRole("tab", { name: "Aplicações" })).toHaveAttribute(
+      "data-state",
+      "active",
+    );
+    expect(
+      screen.getByRole("button", { name: /^não analisados/i }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(
+      screen.getByRole("combobox", {
+        name: /filtrar por status da aplicação/i,
+      }),
+    ).toHaveTextContent("Não analisado");
+    expect(screen.queryByText("Cartório Central")).not.toBeInTheDocument();
+    expect(screen.getByText("Cartório 2")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Mostrando 1 a 5 de 11 cartórios"),
+    ).toBeInTheDocument();
+  });
+
+  it("expõe o card como botão nativo focável e mantém a ativação por clique", () => {
+    renderPage([]);
+    const modelsTab = screen.getByRole("tab", { name: "Modelos" });
+    fireEvent.mouseDown(modelsTab, { button: 0, ctrlKey: false });
+
+    const analyzedCard = screen.getByRole("button", { name: /^analisados/i });
+    expect(analyzedCard.tagName).toBe("BUTTON");
+    expect(analyzedCard).toHaveAttribute("type", "button");
+    analyzedCard.focus();
+    expect(analyzedCard).toHaveFocus();
+    expect(analyzedCard).toHaveClass("focus-visible:ring-inset");
+    expect(analyzedCard).not.toHaveClass("focus-visible:ring-offset-2");
+
+    fireEvent.click(analyzedCard);
+
+    expect(screen.getByRole("tab", { name: "Aplicações" })).toHaveAttribute(
+      "data-state",
+      "active",
+    );
+    expect(analyzedCard).toHaveAttribute("aria-pressed", "true");
+    expect(
+      screen.getByRole("combobox", {
+        name: /filtrar por status da aplicação/i,
+      }),
+    ).toHaveTextContent("Analisado");
+    expect(screen.getByText("Cartório Central")).toBeInTheDocument();
+  });
+
   it("resume análise e itens por cartório", () => {
     renderPage([]);
 
@@ -288,6 +404,9 @@ describe("CS/CX rotinas — permissões", () => {
     expect(screen.getByText("Não analisados")).toBeInTheDocument();
     expect(
       screen.getByRole("columnheader", { name: "Itens ativos" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: "Itens p/ validar" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("columnheader", { name: "Itens inativos" }),
@@ -299,6 +418,17 @@ describe("CS/CX rotinas — permissões", () => {
       screen.getByRole("columnheader", { name: "Status" }),
     ).toBeInTheDocument();
     expect(screen.getByText("18/08/2026")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("1 item para validar em Cartório 3"),
+    ).toHaveTextContent("1");
+    const analyzedSwitch = screen.getByRole("switch", {
+      name: "Marcar Cartório Central como não analisado",
+    });
+    expect(analyzedSwitch).toHaveAttribute("data-state", "checked");
+    expect(analyzedSwitch).toHaveClass(
+      "data-[state=checked]:bg-emerald-600",
+    );
+    expect(analyzedSwitch).toBeDisabled();
   });
 
   it("exibe o histórico detalhado sem exigir permissão de escrita", () => {

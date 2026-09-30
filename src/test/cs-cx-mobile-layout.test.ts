@@ -50,6 +50,17 @@ describe("responsividade das telas do CS/CX", () => {
     expect(routines).toContain('data-testid="cs-cx-routines-history-mobile-list"');
   });
 
+  it("organiza os itens das rotinas em grade 2x2 e destaca analisados", () => {
+    expect(routines).toContain(
+      'data-testid="cs-cx-routines-mobile-metrics"',
+    );
+    expect(routines).toContain("grid grid-cols-2 gap-2");
+    expect(routines).toContain("summary.pendingItems");
+    expect(
+      routines.match(/data-\[state=checked\]:bg-emerald-600/g),
+    ).toHaveLength(2);
+  });
+
   it("oferece uma etapa única no Kanban e uma agenda vertical no celular", () => {
     expect(requests).toContain('data-testid="cs-cx-requests-mobile-status"');
     expect(requests).toContain("statuses.filter((statusConfig) => !isMobile");

@@ -40,6 +40,7 @@ export interface CsCxRegistryOffice {
   id: string;
   legacy_id: number | null;
   name: string;
+  notary_name: string | null;
   sap_code: string | null;
   active: boolean;
   is_analyzed: boolean;
@@ -57,6 +58,7 @@ export interface CsCxRegistryOffice {
 export interface RegistryOfficeInput {
   id?: string;
   name: string;
+  notary_name?: string;
   sap_code?: string;
   contact_details?: string;
   notes?: string;
@@ -243,7 +245,7 @@ export function useCsCxRegistryOffices() {
       const { data, error } = await db
         .from("cs_cx_registry_offices")
         .select(`
-          id, legacy_id, name, sap_code, active, is_analyzed, contact_details, notes,
+          id, legacy_id, name, notary_name, sap_code, active, is_analyzed, contact_details, notes,
           origin, created_at, created_by, analyst_profile_id,
           profiles!cs_cx_registry_offices_analyst_profile_id_fkey (id, full_name, email),
           cs_cx_registry_office_responsibles (
@@ -318,9 +320,10 @@ export function useCsCxRegistryOffices() {
 
   const saveOffice = useMutation({
     mutationFn: async (input: RegistryOfficeInput) => {
-      const { data, error } = await db.rpc("cs_cx_save_registry_office_v4", {
+      const { data, error } = await db.rpc("cs_cx_save_registry_office_v5", {
         p_id: input.id ?? null,
         p_name: input.name,
+        p_notary_name: emptyToNull(input.notary_name),
         p_sap_code: emptyToNull(input.sap_code),
         p_contact_details: emptyToNull(input.contact_details),
         p_notes: emptyToNull(input.notes),
