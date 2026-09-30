@@ -845,8 +845,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useConversionQueue.ts": {
-    "mtime": 1790624205.9566848,
-    "ast_hash": "445b966551518cefda1a671d5f9ee7bc",
+    "mtime": 1790782683.2258527,
+    "ast_hash": "af1d0be8517bfe9fc7a5fa70f2ecb0e9",
     "semantic_hash": ""
   },
   "src/hooks/useDeploymentForms.ts": {
@@ -3145,8 +3145,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useCsCxCore.ts": {
-    "mtime": 1790772266.6594183,
-    "ast_hash": "4d538601c5739137648378abf4ccac88",
+    "mtime": 1790792330.678163,
+    "ast_hash": "f4ac24cb5e83d138583d5a9df2f7f287",
     "semantic_hash": ""
   },
   "src/hooks/useCsCxEngagement.ts": {
@@ -3400,8 +3400,8 @@
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxRoutines.tsx": {
-    "mtime": 1790775771.3260288,
-    "ast_hash": "beb1ae48b1408536113c3e79181e139a",
+    "mtime": 1790784281.1139865,
+    "ast_hash": "777886b5bc0ab8eecc757d6a8b42716d",
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxVisitDetails.tsx": {
@@ -3605,8 +3605,8 @@
     "semantic_hash": ""
   },
   "src/test/cs-cx-routines-permissions.test.tsx": {
-    "mtime": 1790775773.592369,
-    "ast_hash": "03439c8c6a3ea8bf1705c10af7dce974",
+    "mtime": 1790784283.3112693,
+    "ast_hash": "7a0293a9d0141a4d87d734f582e6fbb5",
     "semantic_hash": ""
   },
   "src/test/cs-cx-routines-report.test.ts": {
@@ -4735,8 +4735,8 @@
     "semantic_hash": ""
   },
   "src/constants/pageHelpRegistry.ts": {
-    "mtime": 1790775777.4499311,
-    "ast_hash": "b9e78fa45c755279e71808f716bb3032",
+    "mtime": 1790782683.2194128,
+    "ast_hash": "29ebba6efa702032cd7decb626e18566",
     "semantic_hash": ""
   },
   "src/pages/admin/AdminChangelog.tsx": {
@@ -6340,8 +6340,8 @@
     "semantic_hash": ""
   },
   "src/test/cs-cx-registry-office-notary-migration.test.ts": {
-    "mtime": 1790772266.66934,
-    "ast_hash": "c8539a753e7a64e797757ed039052551",
+    "mtime": 1790781519.3501842,
+    "ast_hash": "08afa0364706c43ab81e16c6044cf3f2",
     "semantic_hash": ""
   },
   "supabase/migrations/20260930100000_add_cs_cx_registry_office_notary_name.sql": {
@@ -6369,19 +6369,59 @@
     "ast_hash": "ab2b40e1c6c84a1fca5263ac38dd4fb8",
     "semantic_hash": ""
   },
-  "novas_solicitacoes/Ajuste menu cartorio_resultado.md": {
-    "mtime": 1790773149.7306693,
-    "ast_hash": "d077a7dc576376ba72bbacd63232778e",
-    "semantic_hash": ""
-  },
   "supabase/migrations/20260930120000_cs_cx_routine_analysis_indicators_changelog.sql": {
     "mtime": 1790775752.0604303,
     "ast_hash": "19fc0918f4257529451ec9973cf9d710",
     "semantic_hash": ""
   },
-  "novas_solicitacoes/Ajuste menu rotinas_resultado.md": {
-    "mtime": 1790775484.101019,
-    "ast_hash": "44fb508e8365418cb47302cec98c889e",
+  "src/test/conversion-queue-project-status-sync.test.ts": {
+    "mtime": 1790782683.2299135,
+    "ast_hash": "b1e7016ff2aa3e915b54aef965aef12f",
+    "semantic_hash": ""
+  },
+  "src/test/conversion-queue-status.test.ts": {
+    "mtime": 1790782683.2339466,
+    "ast_hash": "dbc623ac37222bcf1c4b30a2c5f08aee",
+    "semantic_hash": ""
+  },
+  "src/utils/conversion-queue-status.ts": {
+    "mtime": 1790782683.236536,
+    "ast_hash": "590c3fc8336ab9960b0615fa13384c52",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260930130000_cs_cx_registry_office_schema_compatibility_fix_changelog.sql": {
+    "mtime": 1790780705.2236912,
+    "ast_hash": "6d61fba6c40a7f9f853b6169b2322dac",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260930140000_sync_conversion_queue_project_status.sql": {
+    "mtime": 1790782683.2475407,
+    "ast_hash": "125882610c2e99e596ca4b2afca4fe2d",
+    "semantic_hash": ""
+  },
+  "src/test/cs-cx-routine-analysis-status-cache.test.ts": {
+    "mtime": 1790792335.9740071,
+    "ast_hash": "9a68c4e13fb7650d988f7b571c45602b",
+    "semantic_hash": ""
+  },
+  "src/test/cs-cx-routine-analysis-status-migration.test.ts": {
+    "mtime": 1790783969.828205,
+    "ast_hash": "2a5814a8a0244bdd7d5deb77b2d752dc",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260930150000_cs_cx_routine_analysis_status_fix.sql": {
+    "mtime": 1790783721.7648745,
+    "ast_hash": "d1251acffa25b62cc4cff4e498746687",
+    "semantic_hash": ""
+  },
+  "novas_solicitacoes/Ajuste que sumiu os cadastros dos cart\u00f3rios_resultado.md": {
+    "mtime": 1790782584.6703115,
+    "ast_hash": "09c11813c0f7dda65eeb5130a91b373f",
+    "semantic_hash": ""
+  },
+  "novas_solicitacoes/bug rotinas_resultado.md": {
+    "mtime": 1790785081.6025555,
+    "ast_hash": "c17cf1bc51fd4b457bc2b62af83069b3",
     "semantic_hash": ""
   }
 }

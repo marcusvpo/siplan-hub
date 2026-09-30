@@ -420,6 +420,26 @@ export default function CsCxRoutines() {
     () => includeOfficesWithoutRoutines(appliedOfficeSummaries, offices),
     [appliedOfficeSummaries, offices],
   );
+  const responsibleProfileIdsByOfficeId = useMemo(
+    () =>
+      new Map(
+        offices.map((office) => [
+          office.id,
+          office.responsibles.map((responsible) => responsible.profile_id),
+        ]),
+      ),
+    [offices],
+  );
+  function canToggleAnalysis(summary: CsCxOfficeRoutineSummary) {
+    const responsibleProfileIds =
+      responsibleProfileIdsByOfficeId.get(summary.registryOfficeId) ?? [];
+    return (
+      summary.routines.length > 0 &&
+      summary.routines.some((routine) =>
+        canEditRecord(routine.applied_by, responsibleProfileIds),
+      )
+    );
+  }
   const filteredOffices = useMemo(() => {
     const term = normalizeSearchText(search);
     const candidates =
@@ -946,7 +966,7 @@ export default function CsCxRoutines() {
                           checked={summary.analyzed}
                           className="data-[state=checked]:bg-emerald-600"
                           onCheckedChange={() => handleToggleAnalyzed(summary.registryOfficeId, summary.analyzed)}
-                          disabled={!canEditRecord(summary.routines[0]?.applied_by) || togglingOfficeId === summary.registryOfficeId}
+                          disabled={!canToggleAnalysis(summary) || togglingOfficeId === summary.registryOfficeId}
                           aria-label={`Marcar ${summary.registryOfficeName} como ${summary.analyzed ? "não analisado" : "analisado"}`}
                         />
                         <Badge variant="outline" className={!summary.routines.length ? "border-slate-200 bg-slate-50 text-slate-600" : summary.analyzed ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}>
@@ -1081,7 +1101,7 @@ export default function CsCxRoutines() {
                                 )
                               }
                               disabled={
-                                !canEditRecord(summary.routines[0]?.applied_by) ||
+                                !canToggleAnalysis(summary) ||
                                 togglingOfficeId === summary.registryOfficeId
                               }
                               aria-label={`Marcar ${summary.registryOfficeName} como ${summary.analyzed ? "não analisado" : "analisado"}`}

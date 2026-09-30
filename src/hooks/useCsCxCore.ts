@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 const db = supabase as unknown as SupabaseClient;
+const REGISTRY_OFFICES_QUERY_KEY = ["cs-cx", "registry-offices"] as const;
 
 export interface CsCxProduct {
   id: string;
@@ -53,6 +54,24 @@ export interface CsCxRegistryOffice {
   analyst: CsCxResponsibleProfile | null;
   responsibles: CsCxOfficeResponsible[];
   products: CsCxOfficeProduct[];
+}
+
+export function updateRegistryOfficeAnalysisStatusCache<
+  T extends Pick<CsCxRegistryOffice, "id" | "is_analyzed">,
+>(
+  offices: T[] | undefined,
+  input: { id: string; is_analyzed: boolean },
+) {
+  if (!offices) return offices;
+
+  let changed = false;
+  const updatedOffices = offices.map((office) => {
+    if (office.id !== input.id || office.is_analyzed === input.is_analyzed) return office;
+    changed = true;
+    return { ...office, is_analyzed: input.is_analyzed };
+  });
+
+  return changed ? updatedOffices : offices;
 }
 
 export interface RegistryOfficeInput {
@@ -149,7 +168,11 @@ export interface CsCxRequestInput {
   registry_office_id: string;
 }
 
-interface RawOffice extends Omit<CsCxRegistryOffice, "products" | "analyst" | "responsibles"> {
+interface RawOffice extends Omit<
+  CsCxRegistryOffice,
+  "products" | "analyst" | "responsibles" | "notary_name"
+> {
+  notary_name?: string | null;
   profiles: CsCxResponsibleProfile | null;
   cs_cx_registry_office_responsibles?: Array<{
     id: string;
@@ -184,6 +207,93 @@ interface RawRequestStatusHistoryEntry
   extends Omit<CsCxRequestStatusHistoryEntry, "author"> {
   request_id: string;
   profiles?: CsCxResponsibleProfile | null;
+}
+
+interface PostgrestErrorLike {
+  code?: string;
+  message?: string;
+  details?: string;
+  hint?: string;
+}
+
+const REGISTRY_OFFICE_SELECT = `
+  id, legacy_id, name, notary_name, sap_code, active, is_analyzed, contact_details, notes,
+  origin, created_at, created_by, analyst_profile_id,
+  profiles!cs_cx_registry_offices_analyst_profile_id_fkey (id, full_name, email),
+  cs_cx_registry_office_responsibles (
+    id, profile_id,
+    profiles!cs_cx_registry_office_responsibles_profile_id_fkey (
+      id, full_name, email
+    )
+  ),
+  cs_cx_registry_office_products (
+    id, product_id, implementation_date, source_present,
+    cs_cx_products (id, name, product_code),
+    cs_cx_registry_office_product_responsibles (
+      id, profile_id,
+      profiles!cs_cx_registry_office_product_responsibles_profile_id_fkey (
+        id, full_name, email
+      )
+    )
+  )
+`;
+
+const LEGACY_REGISTRY_OFFICE_SELECT = REGISTRY_OFFICE_SELECT.replace(
+  "name, notary_name, sap_code",
+  "name, sap_code",
+);
+
+function getPostgrestError(error: unknown) {
+  if (!error || typeof error !== "object") return null;
+  const candidate = error as PostgrestErrorLike;
+  const message = [candidate.message, candidate.details, candidate.hint]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  return { code: candidate.code, message };
+}
+
+export function isMissingRegistryOfficeNotaryName(error: unknown) {
+  const candidate = getPostgrestError(error);
+  if (!candidate?.message.includes("notary_name")) return false;
+
+  return (
+    candidate.code === "42703" ||
+    candidate.code === "PGRST204" ||
+    ((candidate.message.includes("column") || candidate.message.includes("schema cache")) &&
+      (candidate.message.includes("does not exist") ||
+        candidate.message.includes("could not find") ||
+        candidate.message.includes("not found")))
+  );
+}
+
+export function isMissingSaveRegistryOfficeV5(error: unknown) {
+  const candidate = getPostgrestError(error);
+  if (
+    !candidate?.message.includes("cs_cx_save_registry_office_v5") ||
+    !candidate.message.includes("schema cache")
+  ) {
+    return false;
+  }
+
+  return candidate.code === "PGRST202" || candidate.message.includes("could not find the function");
+}
+
+export function isMissingSetRegistryOfficeAnalysisStatusRpc(error: unknown) {
+  const candidate = getPostgrestError(error);
+  return (
+    candidate?.code === "PGRST202" &&
+    candidate.message.includes("cs_cx_set_registry_office_analysis_status") &&
+    candidate.message.includes("schema cache")
+  );
+}
+
+function fetchRegistryOffices(select: string) {
+  return db
+    .from("cs_cx_registry_offices")
+    .select(select)
+    .eq("source_present", true)
+    .order("name");
 }
 
 function isMissingRequestStatusHistory(error: unknown) {
@@ -240,37 +350,20 @@ export function useCsCxRegistryOffices() {
   const queryClient = useQueryClient();
 
   const officesQuery = useQuery({
-    queryKey: ["cs-cx", "registry-offices"],
+    queryKey: REGISTRY_OFFICES_QUERY_KEY,
     queryFn: async () => {
-      const { data, error } = await db
-        .from("cs_cx_registry_offices")
-        .select(`
-          id, legacy_id, name, notary_name, sap_code, active, is_analyzed, contact_details, notes,
-          origin, created_at, created_by, analyst_profile_id,
-          profiles!cs_cx_registry_offices_analyst_profile_id_fkey (id, full_name, email),
-          cs_cx_registry_office_responsibles (
-            id, profile_id,
-            profiles!cs_cx_registry_office_responsibles_profile_id_fkey (
-              id, full_name, email
-            )
-          ),
-          cs_cx_registry_office_products (
-            id, product_id, implementation_date, source_present,
-            cs_cx_products (id, name, product_code),
-            cs_cx_registry_office_product_responsibles (
-              id, profile_id,
-              profiles!cs_cx_registry_office_product_responsibles_profile_id_fkey (
-                id, full_name, email
-              )
-            )
-          )
-        `)
-        .eq("source_present", true)
-        .order("name");
-      if (error) throw error;
+      let officesResult = await fetchRegistryOffices(REGISTRY_OFFICE_SELECT);
+      if (officesResult.error) {
+        if (!isMissingRegistryOfficeNotaryName(officesResult.error)) {
+          throw officesResult.error;
+        }
+        officesResult = await fetchRegistryOffices(LEGACY_REGISTRY_OFFICE_SELECT);
+      }
+      if (officesResult.error) throw officesResult.error;
 
-      return ((data ?? []) as unknown as RawOffice[]).map((office) => ({
+      return ((officesResult.data ?? []) as unknown as RawOffice[]).map((office) => ({
         ...office,
+        notary_name: office.notary_name ?? null,
         analyst: office.profiles,
         responsibles: (office.cs_cx_registry_office_responsibles ?? []).map((responsible) => ({
           id: responsible.id,
@@ -320,10 +413,10 @@ export function useCsCxRegistryOffices() {
 
   const saveOffice = useMutation({
     mutationFn: async (input: RegistryOfficeInput) => {
-      const { data, error } = await db.rpc("cs_cx_save_registry_office_v5", {
+      const notaryName = emptyToNull(input.notary_name);
+      const payload = {
         p_id: input.id ?? null,
         p_name: input.name,
-        p_notary_name: emptyToNull(input.notary_name),
         p_sap_code: emptyToNull(input.sap_code),
         p_contact_details: emptyToNull(input.contact_details),
         p_notes: emptyToNull(input.notes),
@@ -339,9 +432,22 @@ export function useCsCxRegistryOffices() {
             profile_id,
           })),
         ),
+      };
+      const saveResult = await db.rpc("cs_cx_save_registry_office_v5", {
+        ...payload,
+        p_notary_name: notaryName,
       });
-      if (error) throw error;
-      return data as string;
+      if (!saveResult.error) return saveResult.data as string;
+      if (!isMissingSaveRegistryOfficeV5(saveResult.error)) throw saveResult.error;
+      if (notaryName) {
+        throw new Error(
+          "O banco ainda não suporta o nome do tabelião ou tabeliã. Aplique a migration de notary_name antes de salvar esse valor.",
+        );
+      }
+
+      const legacyResult = await db.rpc("cs_cx_save_registry_office_v4", payload);
+      if (legacyResult.error) throw legacyResult.error;
+      return legacyResult.data as string;
     },
     onSuccess: () => invalidateCore(queryClient),
   });
@@ -356,17 +462,27 @@ export function useCsCxRegistryOffices() {
 
   const toggleOfficeAnalyzed = useMutation({
     mutationFn: async (input: { id: string; is_analyzed: boolean }) => {
-      const { error } = await db
-        .from("cs_cx_registry_offices")
-        .update({
-          is_analyzed: input.is_analyzed,
-          analysis_at: input.is_analyzed ? new Date().toISOString() : null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", input.id);
-      if (error) throw error;
+      const { error } = await db.rpc("cs_cx_set_registry_office_analysis_status", {
+        p_registry_office_id: input.id,
+        p_is_analyzed: input.is_analyzed,
+      });
+      if (error) {
+        if (isMissingSetRegistryOfficeAnalysisStatusRpc(error)) {
+          throw new Error(
+            "A atualização do status de análise ainda não está disponível no banco. A atualização de banco pendente precisa ser aplicada antes de tentar novamente.",
+          );
+        }
+        throw error;
+      }
+      return input;
     },
-    onSuccess: () => invalidateCore(queryClient),
+    onSuccess: (input) => {
+      queryClient.setQueryData<CsCxRegistryOffice[]>(
+        REGISTRY_OFFICES_QUERY_KEY,
+        (offices) => updateRegistryOfficeAnalysisStatusCache(offices, input),
+      );
+      invalidateCore(queryClient);
+    },
   });
 
   return {
