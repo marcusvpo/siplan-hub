@@ -1162,10 +1162,10 @@ export const pageHelpData: PageHelpInfo[] = [
     moduleName: "Conversão",
     icon: ListChecks,
     description:
-      "Painel de controle de tarefas de conversão divididas por cartório. Permite aos analistas de dados registrar avanços na leitura de registros, mapas de de-para e cargas de teste.",
+      "Painel de controle da fila de conversão e homologação por cartório, sincronizado com o status da etapa de Conversão de Dados de cada projeto.",
     keyFeatures: [
-      "Quadro de tarefas de conversão por fase (Recebimento, Leitura, De-Para, Carga, Validação)",
-      "Registro de horas técnicas aplicadas em cada banco de dados",
+      "Quadro por status: pendente, em andamento, homologação, inconsistências e concluído",
+      "Conclusão sincronizada automaticamente com a etapa de Conversão de Dados do projeto",
       "Atribuição de responsabilidade por analista de conversão",
     ],
     steps: [
@@ -1179,7 +1179,7 @@ export const pageHelpData: PageHelpInfo[] = [
         stepNumber: 2,
         title: "Atualize o Status",
         description:
-          "Marque a atividade como concluída e insira observações técnicas sobre o banco.",
+          "Atualize a atividade durante a execução. Ao finalizar a etapa de Conversão de Dados no projeto, o item será exibido em Concluídos.",
         icon: CheckCircle2,
       },
     ],

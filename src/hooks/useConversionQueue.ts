@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { activityLogger } from "@/services/activityLogger";
 import { toast } from "sonner";
+import { resolveConversionQueueStatus } from "@/utils/conversion-queue-status";
 
 // Types based on actual database schema
 export interface ConversionQueueItem {
@@ -63,6 +64,7 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
             ticket_number,
             system_type,
             legacy_system,
+            conversion_status,
             implementation_phase1
           )
         `)
@@ -82,7 +84,10 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
         sentBy: item.sent_by,
         sentByName: item.sent_by_name,
         sentAt: new Date(item.sent_at),
-        queueStatus: item.queue_status,
+        queueStatus: resolveConversionQueueStatus(
+          item.queue_status,
+          item.projects?.conversion_status,
+        ),
         priority: item.priority,
         assignedTo: item.assigned_to,
         assignedToName: item.assigned_to_name,
