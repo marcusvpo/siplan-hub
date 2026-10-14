@@ -4,6 +4,7 @@ import {
   stripLegacyAdherencePhotoField,
   stripLegacyPhotoFieldFromTemplate,
 } from "@/lib/adherence-template";
+import { normalizeSystemType } from "@/utils/projectSpecialty";
 
 export interface FormTemplate {
   id: string;
@@ -30,8 +31,10 @@ interface NewTemplateInput {
 }
 
 export function useFormTemplates(kind: 'adherence' | 'homologation_checklist' | 'commercial_checklist', systemType?: string) {
+  const normalizedSystem = normalizeSystemType(systemType);
+
   return useQuery<FormTemplate[], Error>({
-    queryKey: ["formTemplates", kind, systemType],
+    queryKey: ["formTemplates", kind, normalizedSystem],
     queryFn: async () => {
       let query = supabase
         .from("form_templates")
@@ -39,8 +42,8 @@ export function useFormTemplates(kind: 'adherence' | 'homologation_checklist' | 
         .eq("kind", kind)
         .order("version", { ascending: false });
 
-      if (systemType) {
-        query = query.eq("system_type", systemType);
+      if (normalizedSystem) {
+        query = query.eq("system_type", normalizedSystem);
       }
 
       const { data, error } = await query;
@@ -76,16 +79,18 @@ export function useFormTemplates(kind: 'adherence' | 'homologation_checklist' | 
 }
 
 export function useActiveTemplate(kind: 'adherence' | 'homologation_checklist' | 'commercial_checklist', systemType: string) {
+  const normalizedSystem = normalizeSystemType(systemType);
+
   return useQuery<FormTemplate | undefined, Error>({
-    queryKey: ["activeTemplate", kind, systemType],
+    queryKey: ["activeTemplate", kind, normalizedSystem],
     queryFn: async () => {
-      if (!systemType) return undefined;
+      if (!normalizedSystem) return undefined;
       
       const { data, error } = await supabase
         .from("form_templates")
         .select("*")
         .eq("kind", kind)
-        .eq("system_type", systemType)
+        .eq("system_type", normalizedSystem)
         .eq("is_active", true)
         .maybeSingle();
 
@@ -96,7 +101,7 @@ export function useActiveTemplate(kind: 'adherence' | 'homologation_checklist' |
         ? stripLegacyPhotoFieldFromTemplate(template)
         : template;
     },
-    enabled: !!systemType,
+    enabled: !!normalizedSystem,
   });
 }
 
@@ -105,13 +110,16 @@ export function usePublishTemplate() {
 
   return useMutation<FormTemplate, Error, NewTemplateInput>({
     mutationFn: async (input) => {
-      let sanitizedInput = input;
+      let sanitizedInput = {
+        ...input,
+        system_type: normalizeSystemType(input.system_type) || input.system_type,
+      };
       if (input.kind === "adherence") {
         const { schema, uiSchema } = stripLegacyAdherencePhotoField(
           input.schema_json,
           input.ui_json,
         );
-        sanitizedInput = { ...input, schema_json: schema, ui_json: uiSchema };
+        sanitizedInput = { ...sanitizedInput, schema_json: schema, ui_json: uiSchema };
       }
 
       // 1. Get current user session

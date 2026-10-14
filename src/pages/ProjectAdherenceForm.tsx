@@ -45,6 +45,7 @@ import {
 import { getPrintEvidenceGridClass } from "@/lib/adherence-print-layout";
 import { cn } from "@/lib/utils";
 import { EllevoTicketLink } from "@/components/EllevoTicketLink";
+import { normalizeSystemType } from "@/utils/projectSpecialty";
 
 
 interface PrintQuestion {
@@ -236,7 +237,7 @@ export default function ProjectAdherenceForm() {
   const { data: response, isLoading: isLoadingResp, refetch: refetchResp } = useProjectFormResponse(projectId || "", "adherence");
   
   // Get active template based on project system type
-  const systemType = project?.systemType || "";
+  const systemType = normalizeSystemType(project?.systemType || "");
   const { data: activeTemplate, isLoading: isLoadingTpl } = useActiveTemplate("adherence", systemType);
 
   // Mutation
