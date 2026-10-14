@@ -12,6 +12,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FileWarning, CheckCircle, ClipboardCheck, ArrowUpRight, AlertTriangle, Printer, AlertCircle } from "lucide-react";
 import { getImpactedItems } from "@/utils/adherence-helpers";
 import { hasRichTextContent } from "@/lib/lexical";
+import { normalizeSystemType } from "@/utils/projectSpecialty";
 
 interface AdherenceStageFormProps {
   projectId: string;
@@ -32,8 +33,10 @@ export function AdherenceStageForm({
   const { isAdmin } = usePermissions();
   const navigate = useNavigate();
   
+  const normalizedSystem = normalizeSystemType(systemType);
+
   // Queries
-  const { data: activeTemplate, isLoading: isLoadingTpl } = useActiveTemplate("adherence", systemType);
+  const { data: activeTemplate, isLoading: isLoadingTpl } = useActiveTemplate("adherence", normalizedSystem);
   const { data: response, isLoading: isLoadingResp } = useProjectFormResponse(projectId, "adherence");
 
   // Mutation
@@ -54,7 +57,7 @@ export function AdherenceStageForm({
         onSuccess: () => {
           toast({
             title: "Formulário Gerado!",
-            description: `Formulário de Aderência para ${systemType} inicializado.`,
+            description: `Formulário de Aderência para ${normalizedSystem || systemType} inicializado.`,
             className: "bg-green-500 text-white border-green-600",
           });
           // Redirect immediately to the full screen page
@@ -89,7 +92,7 @@ export function AdherenceStageForm({
           <div className="space-y-0.5">
             <h4 className="text-xs font-bold text-amber-600">Sem Template de Aderência</h4>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Não há um template de aderência ativo publicado para o sistema <strong>{systemType}</strong>. 
+              Não há um template de aderência ativo publicado para o sistema <strong>{normalizedSystem || systemType}</strong>. 
               Entre em contato com um administrador para publicar um template em <strong>Implantadores &gt; Editor de Aderência</strong>.
             </p>
           </div>

@@ -5,6 +5,7 @@ import {
   SPECIALTY_OPTIONS,
   getSpecialtyForSystem,
   normalizeSpecialty,
+  normalizeSystemType,
 } from "../utils/projectSpecialty";
 
 describe("projectSpecialty utils", () => {
@@ -18,18 +19,69 @@ describe("projectSpecialty utils", () => {
     });
   });
 
+  describe("normalizeSystemType", () => {
+    it("deve normalizar variações de Orion REG para o nome canônico 'Orion REG'", () => {
+      expect(normalizeSystemType("Orion REG (TDPJ)")).toBe("Orion REG");
+      expect(normalizeSystemType("OrionREG (TDPJ)")).toBe("Orion REG");
+      expect(normalizeSystemType("Orion Reg TDPJ")).toBe("Orion REG");
+      expect(normalizeSystemType("Orion Reg (TDPJ)")).toBe("Orion REG");
+      expect(normalizeSystemType("Orion REG TDPJ")).toBe("Orion REG");
+      expect(normalizeSystemType("OrionREG")).toBe("Orion REG");
+      expect(normalizeSystemType("Orion Reg")).toBe("Orion REG");
+      expect(normalizeSystemType("Licenciamento do Software Orion Registro TDPJ")).toBe("Orion REG");
+      expect(normalizeSystemType("Orion REG")).toBe("Orion REG");
+    });
+
+    it("não deve colidir Orion GED com Orion REG", () => {
+      expect(normalizeSystemType("Orion GED")).toBe("Orion GED");
+    });
+
+    it("deve normalizar variações de Orion TN", () => {
+      expect(normalizeSystemType("OrionTN")).toBe("Orion TN");
+      expect(normalizeSystemType("Orion - TN")).toBe("Orion TN");
+      expect(normalizeSystemType("Orion TN")).toBe("Orion TN");
+    });
+
+    it("deve normalizar variações de Orion PRO", () => {
+      expect(normalizeSystemType("OrionPRO")).toBe("Orion PRO");
+      expect(normalizeSystemType("Orion - PRO")).toBe("Orion PRO");
+      expect(normalizeSystemType("Orion PRO")).toBe("Orion PRO");
+    });
+
+    it("deve normalizar variações de Modelos TN", () => {
+      expect(normalizeSystemType("ModelosTN")).toBe("Modelos TN");
+      expect(normalizeSystemType("Modelos TN")).toBe("Modelos TN");
+    });
+
+    it("deve normalizar variações de WebRI", () => {
+      expect(normalizeSystemType("WEBRI")).toBe("WebRI");
+      expect(normalizeSystemType("WEB RI")).toBe("WebRI");
+      expect(normalizeSystemType("WebRI")).toBe("WebRI");
+    });
+
+    it("deve retornar vazio se nulo ou indefinido", () => {
+      expect(normalizeSystemType("")).toBe("");
+      expect(normalizeSystemType(null)).toBe("");
+      expect(normalizeSystemType(undefined)).toBe("");
+    });
+  });
+
   describe("getSpecialtyForSystem", () => {
     it("deve mapear Orion TN para Notas", () => {
       expect(getSpecialtyForSystem("Orion TN")).toBe("Notas");
+      expect(getSpecialtyForSystem("OrionTN")).toBe("Notas");
     });
 
     it("deve mapear Orion PRO para Protesto", () => {
       expect(getSpecialtyForSystem("Orion PRO")).toBe("Protesto");
+      expect(getSpecialtyForSystem("OrionPRO")).toBe("Protesto");
     });
 
-    it("deve mapear Orion REG para TDPJ", () => {
+    it("deve mapear Orion REG e variações para TDPJ", () => {
       expect(getSpecialtyForSystem("Orion REG")).toBe("TDPJ");
       expect(getSpecialtyForSystem("Orion Reg TDPJ")).toBe("TDPJ");
+      expect(getSpecialtyForSystem("Orion REG (TDPJ)")).toBe("TDPJ");
+      expect(getSpecialtyForSystem("OrionREG (TDPJ)")).toBe("TDPJ");
     });
 
     it("deve mapear WEBRI para Registro de Imóveis", () => {

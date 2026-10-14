@@ -445,7 +445,15 @@ for (const item of $input.all()) {
   const isCorrectType = titulo && titulo.toLowerCase().includes('implantação e treinamento');
   if (!isCorrectType) continue;
 
-  systemType = systemType.replace(/Orion\s?(TN|PRO|REG)/i, 'Orion $1');
+  if (/Orion\s?REG/i.test(systemType)) {
+    systemType = 'Orion REG';
+  } else if (/Orion\s?TN/i.test(systemType)) {
+    systemType = 'Orion TN';
+  } else if (/Orion\s?PRO/i.test(systemType)) {
+    systemType = 'Orion PRO';
+  } else if (/Web\s?RI/i.test(systemType)) {
+    systemType = 'WebRI';
+  }
 
   let opNumber = null;
   if (titulo) {

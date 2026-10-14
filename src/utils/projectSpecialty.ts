@@ -23,17 +23,65 @@ export const SYSTEM_SPECIALTY_MAP: Record<string, SpecialtyOption> = {
   "Orion PRO": "Protesto",
   "Orion REG": "TDPJ",
   "Orion Reg TDPJ": "TDPJ",
+  "Orion REG (TDPJ)": "TDPJ",
+  "OrionREG (TDPJ)": "TDPJ",
   "WEBRI": "Registro de Imóveis",
   "WebRI": "Registro de Imóveis",
   "WEB RI": "Registro de Imóveis",
 };
 
 /**
+ * Normaliza qualquer variação de nomenclatura de sistema para o padrão canônico do Siplan HUB.
+ * Ex: "Orion REG (TDPJ)", "Orion Reg TDPJ", "OrionREG (TDPJ)" -> "Orion REG"
+ * Ex: "OrionTN" -> "Orion TN"
+ * Ex: "OrionPRO" -> "Orion PRO"
+ * Ex: "ModelosTN" -> "Modelos TN"
+ * Ex: "WEB RI", "WebRI" -> "WebRI"
+ */
+export function normalizeSystemType(systemType?: string | null): string {
+  if (!systemType) return "";
+  const trimmed = systemType.trim();
+  const lower = trimmed
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  // Orion REG: atende variações como "Orion REG (TDPJ)", "Orion Reg TDPJ", "OrionREG (TDPJ)", etc.
+  // Protege contra falso-positivo com Orion GED
+  if (lower.includes("orion") && (lower.includes("reg") || lower.includes("registro")) && !lower.includes("ged")) {
+    return "Orion REG";
+  }
+
+  // Orion TN
+  if (lower.includes("orion") && (lower.includes("tn") || lower.includes("notas"))) {
+    return "Orion TN";
+  }
+
+  // Orion PRO
+  if (lower.includes("orion") && (lower.includes("pro") || lower.includes("protesto"))) {
+    return "Orion PRO";
+  }
+
+  // Modelos TN
+  if (lower.includes("modelos") && lower.includes("tn")) {
+    return "Modelos TN";
+  }
+
+  // WebRI / WEBRI / WEB RI
+  if (lower.replace(/\s+/g, "") === "webri") {
+    return "WebRI";
+  }
+
+  return trimmed;
+}
+
+/**
  * Retorna a especialidade sugerida/automática com base no sistema principal.
  */
 export function getSpecialtyForSystem(systemType?: string | null): SpecialtyOption | undefined {
   if (!systemType) return undefined;
-  return SYSTEM_SPECIALTY_MAP[systemType.trim()];
+  const normalized = normalizeSystemType(systemType);
+  return SYSTEM_SPECIALTY_MAP[normalized] || SYSTEM_SPECIALTY_MAP[systemType.trim()];
 }
 
 /**

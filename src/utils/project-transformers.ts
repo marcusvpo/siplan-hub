@@ -15,7 +15,7 @@ import {
   AuditEntry,
   ProjectTramite
 } from "@/types/ProjectV2";
-import { normalizeSpecialty } from "./projectSpecialty";
+import { normalizeSpecialty, normalizeSystemType, getSpecialtyForSystem } from "./projectSpecialty";
 
 export function calculateHealthScore(row: Record<string, unknown>): "ok" | "warning" | "critical" {
   const now = new Date();
@@ -90,7 +90,7 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     id: row.id as string,
     clientName: row.client_name as string,
     ticketNumber: row.ticket_number as string,
-    systemType: row.system_type as string,
+    systemType: normalizeSystemType(row.system_type as string),
     implantationType: (row.implantation_type as ProjectV2['implantationType']) || "new",
     projectType: (row.project_type as ProjectV2['projectType']) || "new",
 
@@ -100,7 +100,7 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     soldHours: row.sold_hours as number | undefined,
     workHours: row.work_hours as number | undefined,
     legacySystem: row.legacy_system as string | undefined,
-    specialty: normalizeSpecialty(row.specialty as string | undefined) || undefined,
+    specialty: normalizeSpecialty(row.specialty as string | undefined) || getSpecialtyForSystem(row.system_type as string) || undefined,
     products: (row.products as string[]) || [],
 
     // Integração 0800
@@ -433,7 +433,7 @@ export function transformToDB(project: ProjectUpdate, currentProject?: ProjectV2
   if (project.clientName !== undefined) dbRow.client_name = project.clientName;
   if (project.ticketNumber !== undefined) dbRow.ticket_number = project.ticketNumber;
   if (project.relatedTickets !== undefined) dbRow.related_tickets = project.relatedTickets;
-  if (project.systemType !== undefined) dbRow.system_type = project.systemType;
+  if (project.systemType !== undefined) dbRow.system_type = normalizeSystemType(project.systemType);
   if (project.implantationType !== undefined) dbRow.implantation_type = project.implantationType;
   if (project.projectType !== undefined) dbRow.project_type = project.projectType;
   // Automated Global Status Calculation
@@ -469,7 +469,11 @@ export function transformToDB(project: ProjectUpdate, currentProject?: ProjectV2
   if (project.soldHours !== undefined) dbRow.sold_hours = project.soldHours;
   if (project.workHours !== undefined) dbRow.work_hours = project.workHours;
   if (project.legacySystem !== undefined) dbRow.legacy_system = project.legacySystem;
-  if (project.specialty !== undefined) dbRow.specialty = normalizeSpecialty(project.specialty) || null;
+  if (project.specialty !== undefined) {
+    dbRow.specialty = normalizeSpecialty(project.specialty) || null;
+  } else if (dbRow.system_type) {
+    dbRow.specialty = getSpecialtyForSystem(dbRow.system_type as string) || null;
+  }
   if (project.products !== undefined) dbRow.products = project.products;
 
   // Missing field mappings added
