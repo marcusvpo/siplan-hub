@@ -2377,22 +2377,54 @@ export const pageHelpData: PageHelpInfo[] = [
   {
     route: "/admin/vacations",
     title: "Gestão de Escala e Férias",
-    subtitle: "Planejamento de Ausências da Equipe",
+    subtitle: "Planejamento de Ausências e Férias da Equipe",
     moduleName: "Administração",
     icon: Calendar,
     description:
-      "Controle de escala de plantões, folgas e férias dos analistas. Evita agendamentos de implantação para colaboradores em período de ausência.",
+      "Controle centralizado de férias e ausências dos implantadores. Permite cadastrar, editar e remover múltiplos períodos de descanso para cada colaborador, com sincronização em tempo real na Timeline (/calendar) e prevenção automática de conflitos na Fase 1.",
     keyFeatures: [
-      "Calendário de férias da equipe de campo e suporte",
-      "Bloqueio automático de agendamentos para analistas ausentes",
+      "Múltiplos períodos de férias independentes para cada implantador",
+      "Visão agrupada por colaborador em cards com cálculo dinâmico de dias e atalhos rápidos",
+      "Lista geral cronológica paginada com busca e filtros por status e implantador",
+      "Sincronização 100% em tempo real com as raias da Timeline em /calendar",
+      "Alerta e prevenção de conflito em novos agendamentos da Fase 1 (Treinamento & Acompanhamento)",
+      "Detector em tempo real de sobreposição (overlap) de períodos no mesmo implantador",
     ],
     steps: [
       {
         stepNumber: 1,
-        title: "Registre o Período de Férias",
+        title: "Selecione o Implantador ou use a Visão por Cards",
         description:
-          "Informe o colaborador e as datas de início e término do descanso.",
+          "Na aba 'Por Implantador', localize o card do colaborador desejado e clique em '+ Período' para cadastrar com o membro já pré-selecionado.",
+        icon: Users,
+      },
+      {
+        stepNumber: 2,
+        title: "Defina o Intervalo e Observe a Duração",
+        description:
+          "Preencha as datas de início e término. A plataforma calcula automaticamente a duração em dias corridos e alerta caso haja sobreposição com outro período existente.",
+        icon: Calendar,
+      },
+      {
+        stepNumber: 3,
+        title: "Confirme e Sincronize com o Calendário",
+        description:
+          "Ao salvar, o período entra imediatamente na escala do colaborador, plota na Timeline em /calendar e protege a agenda contra choques de alocação.",
         icon: Plus,
+      },
+    ],
+    tips: [
+      {
+        title: "Fracionamento de Períodos",
+        description:
+          "Você pode fracionar as férias de um mesmo implantador em quantos períodos forem necessários (ex: 15 dias no meio do ano e recesso coletivo em dezembro).",
+        variant: "tip",
+      },
+      {
+        title: "Visão Geral Cronológica",
+        description:
+          "Caso precise consultar o histórico completo ordenado por data e com filtros por status, alterne para a aba 'Lista Geral Cronológica'.",
+        variant: "info",
       },
     ],
   },

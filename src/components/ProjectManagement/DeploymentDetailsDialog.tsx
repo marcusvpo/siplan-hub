@@ -338,6 +338,27 @@ export function DeploymentDetailsDialog({
                   {project.ticketNumber || "N/A"}
                 </EllevoTicketLink>
               </Badge>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9.5px] font-black uppercase shadow-2xs",
+                  isConfirmed
+                    ? "bg-emerald-600 text-white"
+                    : "bg-amber-500/20 text-amber-900 dark:text-amber-200 border border-amber-500/40"
+                )}
+                data-testid="deployment-status-tag"
+              >
+                {isConfirmed ? (
+                  <>
+                    <CheckCircle2 className="h-2.5 w-2.5 text-white" />
+                    ✓ Confirmada
+                  </>
+                ) : (
+                  <>
+                    <Clock className="h-2.5 w-2.5 text-amber-600 dark:text-amber-400" />
+                    ⏳ Prevista
+                  </>
+                )}
+              </span>
               {isSaving && (
                 <span className="text-[10px] text-blue-600 dark:text-blue-400 flex items-center gap-1 font-semibold animate-pulse ml-auto">
                   <Loader2 className="w-3 h-3 animate-spin" />

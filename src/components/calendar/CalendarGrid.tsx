@@ -115,17 +115,33 @@ function getSystemBarClasses(event: CalendarEvent): string {
     return "border-2 border-dashed border-amber-500 bg-amber-50/95 dark:bg-amber-950/75 text-amber-950 dark:text-amber-100 shadow-xs hover:bg-amber-100/95 dark:hover:bg-amber-900/80";
   }
 
+  const isConfirmed = Boolean(event.isConfirmed);
+
+  // Ambas usam 100% de visibilidade e cores sólidas ricas oficiais (SEM transparência ou fundo lavado!)
+  // Diferenciação visual profissional:
+  // - Confirmada = borda sólida clássica escura/densa
+  // - Previsão = borda tracejada branca de alta visibilidade (border-2 border-dashed border-white/80)
   switch (event.systemCategory) {
     case "reg":
-      return "bg-gradient-to-r from-emerald-600 to-emerald-700 text-white border border-emerald-900 shadow-xs hover:brightness-110";
+      return isConfirmed
+        ? "bg-gradient-to-r from-emerald-600 to-emerald-700 text-white border border-emerald-950 shadow-xs hover:brightness-110"
+        : "bg-gradient-to-r from-emerald-600 to-emerald-700 text-white border-2 border-dashed border-white/80 shadow-xs hover:brightness-110";
     case "pro":
-      return "bg-gradient-to-r from-blue-600 to-blue-700 text-white border border-blue-900 shadow-xs hover:brightness-110";
+      return isConfirmed
+        ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white border border-blue-950 shadow-xs hover:brightness-110"
+        : "bg-gradient-to-r from-blue-600 to-blue-700 text-white border-2 border-dashed border-white/80 shadow-xs hover:brightness-110";
     case "tn":
-      return "bg-gradient-to-r from-[#d3123f] to-[#be123c] text-white border border-[#881337] shadow-xs hover:brightness-110";
+      return isConfirmed
+        ? "bg-gradient-to-r from-[#d3123f] to-[#be123c] text-white border border-[#881337] shadow-xs hover:brightness-110"
+        : "bg-gradient-to-r from-[#d3123f] to-[#be123c] text-white border-2 border-dashed border-white/80 shadow-xs hover:brightness-110";
     case "shared":
-      return "bg-gradient-to-r from-violet-600 to-purple-700 text-white border border-violet-950 ring-2 ring-purple-400/35 shadow-xs hover:brightness-110";
+      return isConfirmed
+        ? "bg-gradient-to-r from-violet-600 to-purple-700 text-white border border-violet-950 ring-2 ring-purple-400/40 shadow-xs hover:brightness-110"
+        : "bg-gradient-to-r from-violet-600 to-purple-700 text-white border-2 border-dashed border-white/80 ring-2 ring-purple-400/40 shadow-xs hover:brightness-110";
     default:
-      return "bg-gradient-to-r from-slate-700 to-slate-800 text-white border border-slate-900 shadow-xs hover:brightness-110";
+      return isConfirmed
+        ? "bg-gradient-to-r from-slate-700 to-slate-800 text-white border border-slate-950 shadow-xs hover:brightness-110"
+        : "bg-gradient-to-r from-slate-700 to-slate-800 text-white border-2 border-dashed border-white/80 shadow-xs hover:brightness-110";
   }
 }
 
@@ -906,12 +922,39 @@ export function CalendarGrid({
 
                           {/* Nota de Férias (Admin) ou Botão para Focar 1ª Alocação */}
                           {memberVacations.length > 0 ? (
-                            <div className="flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                            <div
+                              className="flex items-center gap-1 text-[10px] font-bold text-amber-700 dark:text-amber-400"
+                              title={
+                                memberVacations.length > 1
+                                  ? `Períodos de Férias (${memberVacations.length}):\n${memberVacations
+                                      .map(
+                                        (v) =>
+                                          `• ${format(v.start, "dd/MM/yyyy")} a ${format(v.end, "dd/MM/yyyy")}${
+                                            v.notes ? ` (${v.notes})` : ""
+                                          }`
+                                      )
+                                      .join("\n")}`
+                                  : undefined
+                              }
+                            >
                               <Palmtree className="h-3 w-3 shrink-0" />
                               <span className="truncate">
-                                Férias:{" "}
-                                {format(memberVacations[0].start, "dd/MM")} a{" "}
-                                {format(memberVacations[0].end, "dd/MM")}
+                                {memberVacations.length === 1 ? (
+                                  <>
+                                    Férias:{" "}
+                                    {format(memberVacations[0].start, "dd/MM")} a{" "}
+                                    {format(memberVacations[0].end, "dd/MM")}
+                                  </>
+                                ) : (
+                                  <>
+                                    Férias ({memberVacations.length}):{" "}
+                                    {format(memberVacations[0].start, "dd/MM")} a{" "}
+                                    {format(memberVacations[0].end, "dd/MM")}{" "}
+                                    <span className="text-amber-600 dark:text-amber-300">
+                                      (+{memberVacations.length - 1})
+                                    </span>
+                                  </>
+                                )}
                               </span>
                             </div>
                           ) : memberImplCount > 0 ? (
@@ -1249,6 +1292,7 @@ export function CalendarGrid({
                                                     backgroundImage:
                                                       "repeating-linear-gradient(-45deg, rgba(245,158,11,0.08), rgba(245,158,11,0.08) 6px, rgba(245,158,11,0.22) 6px, rgba(245,158,11,0.22) 12px)",
                                                   }
+                                                
                                                 : {}),
                                             }}
                                             className={cn(
@@ -1258,6 +1302,17 @@ export function CalendarGrid({
                                                 "ring-2 ring-amber-400"
                                             )}
                                             data-testid="calendar-gantt-bar"
+                                            data-status={event.isConfirmed ? "confirmed" : "planned"}
+                                            aria-label={`${displayTitle} - ${
+                                              event.isConfirmed
+                                                ? "Implantação Confirmada com o Cliente"
+                                                : "Data Prevista na Agenda"
+                                            }`}
+                                            title={`${displayTitle} • ${
+                                              event.isConfirmed
+                                                ? "Implantação Confirmada"
+                                                : "Data Prevista"
+                                            }`}
                                           >
                                             {/* Linha 1 da Barra: Badge + Confirmado + Alerta Conflito + Nome do Cartório */}
                                             <div className="flex min-w-0 items-center gap-1">
@@ -1272,15 +1327,7 @@ export function CalendarGrid({
                                                 {badgeText}
                                               </span>
 
-                                              {!isVacation &&
-                                                event.isConfirmed && (
-                                                  <span
-                                                    className="inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-white text-[9px] font-extrabold text-emerald-700 shadow-2xs"
-                                                    title="Implantação Confirmada com o Cliente"
-                                                  >
-                                                    ✓
-                                                  </span>
-                                                )}
+
 
                                               {event.hasVacationConflict && (
                                                 <span
@@ -1676,11 +1723,7 @@ export function CalendarGrid({
                                             <span className="rounded bg-black/20 px-1 py-0.2 text-[8.5px] font-extrabold uppercase">
                                               {getSystemShortBadge(evt)}
                                             </span>
-                                            {!isVac && evt.isConfirmed && (
-                                              <span className="rounded bg-white px-1 text-[8px] font-extrabold text-emerald-700">
-                                                ✓ CONF
-                                              </span>
-                                            )}
+
                                           </div>
                                           <div className="text-[11px] font-extrabold leading-snug break-words">
                                             {evt.clientName || evt.title}

@@ -579,9 +579,13 @@ export default function Calendar() {
                   Períodos da <strong>Fase 1 (Treinamento)</strong> e{" "}
                   <strong>Férias (Admin)</strong> •{" "}
                   <strong className="text-emerald-600 dark:text-emerald-400">
-                    ✓ CONF
+                    Borda sólida = Confirmada
                   </strong>{" "}
-                  = Confirmado com cliente
+                  vs{" "}
+                  <strong className="text-amber-600 dark:text-amber-400">
+                    Borda tracejada = Previsão
+                  </strong>{" "}
+                  (tags e detalhes no popup e modal)
                 </span>
               </div>
             )}
