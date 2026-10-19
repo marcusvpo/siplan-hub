@@ -42,21 +42,16 @@ export function CalendarLegend() {
         <span className="text-foreground font-bold">Conjunta (PRO+REG)</span>
       </div>
 
-      {/* Confirmada vs Prevista */}
-      <div className="flex shrink-0 items-center gap-1">
-        <span className="inline-flex h-3.5 items-center gap-0.5 rounded bg-emerald-600 px-1 text-[8px] font-extrabold text-white">
-          <CheckCircle2 className="h-2.5 w-2.5" />
-          CONF
-        </span>
-        <span>Confirmada</span>
+      {/* Distinção Visual: Confirmada vs Previsão */}
+      <div className="flex shrink-0 items-center gap-1.5">
+        <span className="h-3 w-5 shrink-0 rounded bg-gradient-to-r from-emerald-600 to-emerald-700 border border-emerald-950 shadow-2xs" />
+        <span className="text-foreground font-bold">Borda Sólida: Confirmada</span>
       </div>
 
-      <div className="flex shrink-0 items-center gap-1">
-        <span className="inline-flex h-3.5 items-center gap-0.5 rounded border border-border bg-muted px-1 text-[8px] font-bold text-muted-foreground">
-          <Clock className="h-2.5 w-2.5" />
-          PREV
-        </span>
-        <span>Prevista</span>
+      <div className="flex shrink-0 items-center gap-1.5">
+        <span className="h-3 w-5 shrink-0 rounded bg-gradient-to-r from-emerald-600 to-emerald-700 border-2 border-dashed border-white/90 shadow-2xs" />
+        <span className="text-foreground font-bold">Borda Tracejada: Previsão</span>
+        <span className="text-[9px] text-muted-foreground normal-case">(tag no popup/modal)</span>
       </div>
 
       {/* Férias (Admin) = Âmbar Tracejado */}

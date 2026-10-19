@@ -114,8 +114,11 @@ function MobileEventCard({
       className={cn(
         "min-w-0 cursor-pointer space-y-2 rounded-xl border border-border/80 bg-card p-3 shadow-2xs transition-all active:scale-[0.99]",
         getCardLeftBorderClass(event),
-        isVacation &&
-          "bg-amber-50/50 dark:bg-amber-950/20 border-dashed border-amber-400 dark:border-amber-800"
+        isVacation
+          ? "bg-amber-50/50 dark:bg-amber-950/20 border-dashed border-amber-400 dark:border-amber-800"
+          : !event.isConfirmed
+          ? "border-2 border-dashed border-border/90"
+          : "border-border/80"
       )}
       data-testid="calendar-mobile-event"
     >
@@ -184,14 +187,14 @@ function MobileEventCard({
         {!isVacation && (
           <div>
             {event.isConfirmed ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600/15 px-2 py-0.5 text-[9px] font-extrabold uppercase text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600/15 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-700 dark:text-emerald-300 border border-emerald-500/40">
                 <CheckCircle2 className="h-2.5 w-2.5" />
-                Confirmada
+                ✓ Confirmada
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[9px] font-bold uppercase text-amber-800 dark:text-amber-300 border border-amber-500/30">
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[9px] font-black uppercase text-amber-800 dark:text-amber-300 border border-amber-500/40">
                 <Clock className="h-2.5 w-2.5" />
-                Prevista
+                ⏳ Prevista
               </span>
             )}
           </div>

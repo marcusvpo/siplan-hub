@@ -1,6 +1,11 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { normalizeText } from "@/lib/project-calendar-events";
 
 export interface Vacation {
   id: string;
@@ -23,10 +28,14 @@ export interface VacationInput {
 }
 
 export function useVacations() {
-  const queryClient = useQueryClient();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const { data: vacations = [], isLoading, error } = useQuery({
+  const {
+    data: vacations = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["vacations"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -61,10 +70,10 @@ export function useVacations() {
       queryClient.invalidateQueries({ queryKey: ["vacations"] });
       toast({
         title: "Férias cadastradas",
-        description: "As férias foram adicionadas com sucesso.",
+        description: "O período de férias foi adicionado com sucesso.",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Erro ao cadastrar férias",
         description: error.message,
@@ -92,10 +101,10 @@ export function useVacations() {
       queryClient.invalidateQueries({ queryKey: ["vacations"] });
       toast({
         title: "Férias atualizadas",
-        description: "As férias foram atualizadas com sucesso.",
+        description: "O período de férias foi atualizado com sucesso.",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Erro ao atualizar férias",
         description: error.message,
@@ -117,10 +126,10 @@ export function useVacations() {
       queryClient.invalidateQueries({ queryKey: ["vacations"] });
       toast({
         title: "Férias removidas",
-        description: "As férias foram removidas com sucesso.",
+        description: "O período de férias foi removido com sucesso.",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Erro ao remover férias",
         description: error.message,
@@ -129,21 +138,52 @@ export function useVacations() {
     },
   });
 
+  /**
+   * Verifica se uma data ou intervalo de datas colide com qualquer período de férias do implantador
+   */
   const checkVacationConflict = (
-    implantadorId: string | null,
-    date: Date
+    implantadorIdOrName: string | null | undefined,
+    startDate: Date,
+    endDate?: Date
   ): Vacation | null => {
-    if (!implantadorId) return null;
+    if (!implantadorIdOrName || !startDate) return null;
 
-    const dateStr = date.toISOString().split("T")[0];
+    const startStr = startDate.toISOString().split("T")[0];
+    const endStr = (endDate || startDate).toISOString().split("T")[0];
+    const normTarget = normalizeText(implantadorIdOrName);
 
     return (
-      vacations.find(
-        (v) =>
-          v.implantador_id === implantadorId &&
-          dateStr >= v.start_date &&
-          dateStr <= v.end_date
-      ) || null
+      vacations.find((v) => {
+        const matchesId = v.implantador_id === implantadorIdOrName;
+        const matchesName = normalizeText(v.implantador_name) === normTarget;
+        if (!matchesId && !matchesName) return false;
+
+        return v.start_date <= endStr && v.end_date >= startStr;
+      }) || null
+    );
+  };
+
+  /**
+   * Verifica se um novo período a ser cadastrado colide com outro período já existente do mesmo implantador
+   */
+  const checkOverlapWithExisting = (
+    implantadorIdOrName: string | null | undefined,
+    startDate: string,
+    endDate: string,
+    excludeVacationId?: string
+  ): Vacation | null => {
+    if (!implantadorIdOrName || !startDate || !endDate) return null;
+    const normTarget = normalizeText(implantadorIdOrName);
+
+    return (
+      vacations.find((v) => {
+        if (excludeVacationId && v.id === excludeVacationId) return false;
+        const matchesId = v.implantador_id === implantadorIdOrName;
+        const matchesName = normalizeText(v.implantador_name) === normTarget;
+        if (!matchesId && !matchesName) return false;
+
+        return v.start_date <= endDate && v.end_date >= startDate;
+      }) || null
     );
   };
 
@@ -156,8 +196,19 @@ export function useVacations() {
     );
   };
 
-  const getVacationsForImplantador = (implantadorId: string): Vacation[] => {
-    return vacations.filter((v) => v.implantador_id === implantadorId);
+  const getVacationsForImplantador = (
+    implantadorIdOrName: string | null | undefined
+  ): Vacation[] => {
+    if (!implantadorIdOrName) return [];
+    const normTarget = normalizeText(implantadorIdOrName);
+
+    return vacations
+      .filter(
+        (v) =>
+          v.implantador_id === implantadorIdOrName ||
+          normalizeText(v.implantador_name) === normTarget
+      )
+      .sort((a, b) => a.start_date.localeCompare(b.start_date));
   };
 
   return {
@@ -168,6 +219,7 @@ export function useVacations() {
     updateVacation,
     deleteVacation,
     checkVacationConflict,
+    checkOverlapWithExisting,
     getVacationsForDateRange,
     getVacationsForImplantador,
   };
