@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { menuItems } from "@/constants/menuItems";
 
 /**
  * O incidente de 15/07/2026: o perfil 'user' tinha menu_implantadores.view mas
@@ -15,6 +17,14 @@ const hasPermission = vi.fn();
 
 vi.mock("@/hooks/usePermissions", () => ({
   usePermissions: () => ({ hasPermission, isAdmin: false }),
+}));
+
+vi.mock("@/hooks/useProjectsV2", () => ({
+  useProjectsV2: () => ({ projects: [], isLoading: false }),
+}));
+
+vi.mock("@/hooks/useVacations", () => ({
+  useVacations: () => ({ vacations: [], isLoading: false }),
 }));
 
 import Home from "@/pages/Home";
@@ -75,4 +85,49 @@ describe("Home — grupo sem subitem acessível", () => {
     expect(screen.queryByText("Comercial")).not.toBeInTheDocument();
     expect(screen.queryByText("Conversão")).not.toBeInTheDocument();
   });
+
+  it("posiciona Calendário de Projetos em Implantação (entre Gerenciar Projetos e Relatórios) e mantém apenas Agenda dos Analistas em Calendário", () => {
+    const implantacao = menuItems.find((item) => item.title === "Implantação");
+    const calendario = menuItems.find((item) => item.title === "Calendário");
+
+    expect(implantacao?.subItems?.map((sub) => sub.title)).toEqual([
+      "Gerenciar Projetos",
+      "Calendário de Projetos",
+      "Relatórios",
+      "Próx. Implantações",
+      "Últimas Implantações",
+    ]);
+    expect(calendario?.subItems?.map((sub) => sub.title)).toEqual([
+      "Agenda dos Analistas",
+    ]);
+  });
+
+  it("exibe os 6 cards de KPIs do Calendário de Projetos na Home quando o usuário possui permissão", () => {
+    hasPermission.mockImplementation((resource: string, action: string) =>
+      ["calendar_projects:view", "menu_implantacao:view"].includes(
+        `${resource}:${action}`,
+      ),
+    );
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <Home />
+          <CurrentPath />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(screen.getByTestId("home-calendar-kpi-strip")).toBeInTheDocument();
+    expect(screen.getByText("Alocações Fase 1")).toBeInTheDocument();
+    expect(screen.getByText("Orion REG")).toBeInTheDocument();
+    expect(screen.getByText("Orion PRO")).toBeInTheDocument();
+    expect(screen.getByText("Orion TN")).toBeInTheDocument();
+    expect(screen.getByText("Confirmadas ✓")).toBeInTheDocument();
+    expect(screen.getByText("Fila Sem Data & Férias")).toBeInTheDocument();
+  });
 });
+

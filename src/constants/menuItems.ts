@@ -141,6 +141,13 @@ export const menuItems: MenuItem[] = [
                 permissionKey: "projects",
             },
             {
+                title: "Calendário de Projetos",
+                path: "/calendar",
+                icon: Calendar,
+                description: "Cronograma de atividades e prazos",
+                permissionKey: "calendar_projects",
+            },
+            {
                 title: "Relatórios",
                 path: "/reports",
                 icon: BarChart3,
@@ -170,13 +177,6 @@ export const menuItems: MenuItem[] = [
         description: "Visão cronológica de atividades e prazos",
         permissionKey: "menu_calendario",
         subItems: [
-            {
-                title: "Calendário de Projetos",
-                path: "/calendar",
-                icon: Calendar,
-                description: "Cronograma de atividades e prazos",
-                permissionKey: "calendar_projects",
-            },
             {
                 title: "Agenda dos Analistas",
                 path: "/agenda-analistas",

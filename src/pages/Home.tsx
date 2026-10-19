@@ -7,6 +7,7 @@ import { menuItems, MenuItem } from "@/constants/menuItems";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/hooks/use-theme";
 import { usePermissions } from "@/hooks/usePermissions";
+import { HomeCalendarKpiStrip } from "@/components/calendar/HomeCalendarKpiStrip";
 import {
     Dialog,
     DialogContent,
@@ -21,6 +22,7 @@ export default function Home() {
     const navigate = useNavigate();
     const { theme } = useTheme();
     const { hasPermission, isAdmin } = usePermissions();
+    const canViewCalendarKpis = isAdmin || hasPermission("calendar_projects", "view");
 
     // Filter menu items the user has permission to see.
     // Ter o menu não basta: um grupo cujos subitens estão todos bloqueados
@@ -187,6 +189,9 @@ export default function Home() {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* KPIs do Calendário de Projetos (Fase 1 & Férias) */}
+            {canViewCalendarKpis && !search && <HomeCalendarKpiStrip />}
 
             {/* Categories Grid (only show if not searching or if search returns categories) */}
             <div className="space-y-3">
