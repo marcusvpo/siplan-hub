@@ -62,4 +62,14 @@ describe("breadcrumbs das visões gerais", () => {
       "truncate",
     );
   });
+
+  it("inclui Calendário de Projetos (/calendar) dentro do módulo de Implantação", () => {
+    renderBreadcrumbs("/calendar");
+
+    expect(screen.getByRole("link", { name: "Implantação" })).toHaveAttribute(
+      "href",
+      "/implantacao",
+    );
+    expect(screen.getByText("Calendário de Projetos")).toBeInTheDocument();
+  });
 });

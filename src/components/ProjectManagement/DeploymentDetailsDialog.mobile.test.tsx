@@ -17,6 +17,14 @@ vi.mock("@/hooks/useTeamMembers", () => ({
   useTeamMembers: () => ({ members: [] }),
 }));
 
+vi.mock("@/hooks/useVacations", () => ({
+  useVacations: () => ({
+    vacations: [],
+    isLoading: false,
+    checkVacationConflict: () => ({ hasConflict: false }),
+  }),
+}));
+
 vi.mock("react-router-dom", async (importOriginal) => {
   const original = await importOriginal<typeof import("react-router-dom")>();
   return { ...original, useNavigate: () => vi.fn() };

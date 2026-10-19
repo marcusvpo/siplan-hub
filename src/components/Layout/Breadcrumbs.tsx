@@ -71,6 +71,7 @@ export function Breadcrumbs() {
     if (
       location.pathname === "/projects" ||
       location.pathname.startsWith("/projects/") ||
+      location.pathname === "/calendar" ||
       location.pathname === "/reports" ||
       location.pathname === "/deployments" ||
       location.pathname === "/deployments/latest"
@@ -78,10 +79,7 @@ export function Breadcrumbs() {
       return { value: "implantacao", to: "/implantacao", name: "Implantação" };
     }
 
-    if (
-      location.pathname === "/calendar" ||
-      location.pathname === "/agenda-analistas"
-    ) {
+    if (location.pathname === "/agenda-analistas") {
       return { value: "calendario", to: "/calendario", name: "Calendário" };
     }
 

@@ -81,13 +81,13 @@ export function AppSidebar() {
   const [isImplantacaoOpen, setIsImplantacaoOpen] = useState(
     location.pathname === "/implantacao" ||
       location.pathname === "/projects" ||
+      location.pathname === "/calendar" ||
       location.pathname === "/reports" ||
       location.pathname === "/deployments" ||
       location.pathname === "/deployments/latest",
   );
   const [isCalendarioOpen, setIsCalendarioOpen] = useState(
     location.pathname === "/calendario" ||
-      location.pathname === "/calendar" ||
       location.pathname === "/agenda-analistas",
   );
   const [isOrionTNModelsOpen, setIsOrionTNModelsOpen] = useState(
@@ -157,12 +157,12 @@ export function AppSidebar() {
   );
   const rotaImplantacao = primeiraRota(
     ["projects", "/projects"],
+    ["calendar_projects", "/calendar"],
     ["reports", "/reports"],
     ["deployments_next", "/deployments"],
     ["deployments_latest", "/deployments/latest"],
   );
   const rotaCalendario = primeiraRota(
-    ["calendar_projects", "/calendar"],
     ["calendar_analysts", "/agenda-analistas"],
   );
   const rotaComercial = primeiraRota(
@@ -533,6 +533,18 @@ export function AppSidebar() {
                     </Button>
                   </Link>
                   )}
+                  {can("calendar_projects") && (
+                  <Link to="/calendar">
+                    <Button
+                      variant={isActive("/calendar") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <CalendarIcon className="h-4 w-4" />
+                      <span>Calendário de Projetos</span>
+                    </Button>
+                  </Link>
+                  )}
                   {can("reports") && (
                   <Link to="/reports">
                     <Button
@@ -578,6 +590,7 @@ export function AppSidebar() {
                   variant={
                     isActive("/implantacao") ||
                       isActive("/projects") ||
+                      isActive("/calendar") ||
                       isActive("/reports") ||
                       isActive("/deployments") ||
                       isActive("/deployments/latest")
@@ -637,18 +650,6 @@ export function AppSidebar() {
                   <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pl-4 mb-2 block">
                     Cronogramas
                   </span>
-                  {can("calendar_projects") && (
-                  <Link to="/calendar">
-                    <Button
-                      variant={isActive("/calendar") ? "secondary" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start gap-3 h-9"
-                    >
-                      <CalendarIcon className="h-4 w-4" />
-                      <span>Calendário de Projetos</span>
-                    </Button>
-                  </Link>
-                  )}
                   {can("calendar_analysts") && (
                   <Link to="/agenda-analistas">
                     <Button
@@ -668,10 +669,10 @@ export function AppSidebar() {
             <Link to="/calendario">
               <Button
                 variant={
-                  isActive("/calendario") || isActive("/calendar") || isActive("/agenda-analistas") ? "secondary" : "ghost"
+                  isActive("/calendario") || isActive("/agenda-analistas") ? "secondary" : "ghost"
                 }
                 className="w-full justify-center px-0"
-                title="Calendário (Projetos e Agenda)"
+                title="Calendário (Agenda dos Analistas)"
                 onClick={() => setIsCalendarioOpen(true)}
               >
                 <CalendarIcon className="h-5 w-5" />

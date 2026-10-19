@@ -6,7 +6,8 @@ import {
   isMissingSaveRegistryOfficeV5,
 } from "@/hooks/useCsCxCore";
 
-const readSource = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8");
+const readSource = (path: string) =>
+  readFileSync(resolve(process.cwd(), path), "utf8").replace(/\r\n/g, "\n");
 
 const migration = readSource(
   "supabase/migrations/20260930100000_add_cs_cx_registry_office_notary_name.sql",

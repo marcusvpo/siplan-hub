@@ -33,16 +33,18 @@ export function useVacations() {
         .from("implantador_vacations")
         .select("*")
         .order("start_date", { ascending: true });
-      
+
       if (error) throw error;
-      return data as Vacation[];
+      return (data ?? []) as Vacation[];
     },
   });
 
   const addVacation = useMutation({
     mutationFn: async (input: VacationInput) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       const { data, error } = await supabase
         .from("implantador_vacations")
         .insert({
@@ -51,7 +53,7 @@ export function useVacations() {
         })
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -82,7 +84,7 @@ export function useVacations() {
         .eq("id", id)
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },
@@ -108,7 +110,7 @@ export function useVacations() {
         .from("implantador_vacations")
         .delete()
         .eq("id", id);
-      
+
       if (error) throw error;
     },
     onSuccess: () => {
@@ -127,29 +129,35 @@ export function useVacations() {
     },
   });
 
-  const checkVacationConflict = (implantadorId: string | null, date: Date): Vacation | null => {
+  const checkVacationConflict = (
+    implantadorId: string | null,
+    date: Date
+  ): Vacation | null => {
     if (!implantadorId) return null;
-    
+
     const dateStr = date.toISOString().split("T")[0];
-    
-    return vacations.find(v => 
-      v.implantador_id === implantadorId &&
-      dateStr >= v.start_date &&
-      dateStr <= v.end_date
-    ) || null;
+
+    return (
+      vacations.find(
+        (v) =>
+          v.implantador_id === implantadorId &&
+          dateStr >= v.start_date &&
+          dateStr <= v.end_date
+      ) || null
+    );
   };
 
   const getVacationsForDateRange = (start: Date, end: Date): Vacation[] => {
     const startStr = start.toISOString().split("T")[0];
     const endStr = end.toISOString().split("T")[0];
-    
-    return vacations.filter(v =>
-      (v.start_date <= endStr && v.end_date >= startStr)
+
+    return vacations.filter(
+      (v) => v.start_date <= endStr && v.end_date >= startStr
     );
   };
 
   const getVacationsForImplantador = (implantadorId: string): Vacation[] => {
-    return vacations.filter(v => v.implantador_id === implantadorId);
+    return vacations.filter((v) => v.implantador_id === implantadorId);
   };
 
   return {

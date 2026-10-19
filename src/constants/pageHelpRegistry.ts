@@ -627,6 +627,7 @@ export const pageHelpData: PageHelpInfo[] = [
     ],
     quickLinks: [
       { label: "Gerenciar Projetos", path: "/projects" },
+      { label: "Calendário de Projetos", path: "/calendar" },
       { label: "Relatórios", path: "/reports" },
       { label: "Próximas Implantações", path: "/deployments" },
     ],
@@ -830,37 +831,73 @@ export const pageHelpData: PageHelpInfo[] = [
       },
     ],
     quickLinks: [
-      { label: "Calendário de Projetos", path: "/calendar" },
       { label: "Agenda dos Analistas", path: "/agenda-analistas" },
     ],
   },
   {
     route: "/calendar",
-    title: "Calendário de Projetos",
-    subtitle: "Marcos e Agendamentos de Implantação",
-    moduleName: "Calendário",
+    title: "Timeline Executiva de Implantações",
+    subtitle: "Cronograma Gantt da Fase 1, Capacidade e Férias por Implantador",
+    moduleName: "Implantação",
     icon: Calendar,
     description:
-      "Visão em linha do tempo de todos os eventos de implantação nos cartórios (Treinamento, Virada de Chave, Alinhamento Técnico, Validação).",
+      "Visão executiva em estilo Gantt de todas as implantações e treinamentos nos cartórios. Todos os agendamentos, datas, status e responsáveis são sincronizados automaticamente a partir da etapa 'Fase 1 — Treinamento & Acompanhamento' dos projetos, agrupados por Implantador e Sistema (Orion REG, Orion PRO, Orion TN e implantações compartilhadas) e integrados aos períodos de Férias cadastrados no HUB.",
     keyFeatures: [
-      "Visualização por Mês, Semana e Dia",
-      "Código de cores por tipo de evento e nível de prioridade",
-      "Criação rápida de novos compromissos vinculados a projetos",
+      "Sincronização automática com a etapa 'Fase 1 — Treinamento & Acompanhamento' dos projetos",
+      "Visualização executiva em estilo Gantt por Implantador e Sistema (Orion REG, Orion PRO, Orion TN e implantações compartilhadas)",
+      "Exibição integrada dos períodos de Férias dos implantadores cadastrados no HUB",
+      "Alternância entre Trimestres do Ano (1º ao 4º Trimestre), Ano Completo (12 Meses com scroll horizontal), Mês e Mapa de Simultaneidade Semanal",
+      "Seção dedicada ao Pipeline Fase 1 (Sem Data Definida) para alocação rápida de projetos pendentes",
+      "KPIs clicáveis para filtro rápido, busca por cartório/chamado, Hover Card com 100% das observações da Fase 1 e edição direta ao clicar na barra",
     ],
     steps: [
       {
         stepNumber: 1,
-        title: "Filtre os Eventos",
+        title: "Escolha o Horizonte Temporal",
         description:
-          "Selecione o projeto desejado nos filtros superiores para destacar seus marcos.",
-        icon: Sliders,
+          "Alterne entre a visão por Trimestres (1º ao 4º Trimestre), Ano Completo (12 Meses com rolagem horizontal), Mês específico ou Mapa de Simultaneidade Semanal.",
+        icon: Calendar,
       },
       {
         stepNumber: 2,
-        title: "Agende um Compromisso",
+        title: "Aplique Filtros Rápidos e KPIs",
         description:
-          "Clique no botão '+ Novo Agendamento' ou diretamente sobre um dia no calendário.",
-        icon: Plus,
+          "Clique nos cards de KPI no topo, selecione sistemas (Orion REG, PRO, TN) ou pesquise pelo nome do cartório/número do chamado para refinar a timeline.",
+        icon: Filter,
+      },
+      {
+        stepNumber: 3,
+        title: "Inspecione Detalhes e Férias",
+        description:
+          "Passe o mouse sobre qualquer barra de implantação para abrir o Hover Card com 100% das observações da Fase 1 e verifique os blocos de férias da equipe.",
+        icon: Eye,
+      },
+      {
+        stepNumber: 4,
+        title: "Edite Diretamente na Timeline ou Pipeline",
+        description:
+          "Clique sobre a barra do projeto (ou em um card do Pipeline Sem Data Definida) para abrir o modal da Fase 1 e atualizar datas, responsável, status e confirmação pelo cliente.",
+        icon: FileEdit,
+      },
+    ],
+    tips: [
+      {
+        title: "Sincronização Automática com a Fase 1",
+        description:
+          "Qualquer alteração de data, implantador, status ou confirmação feita pelo modal da timeline reflete imediatamente na aba 'Fase 1 — Treinamento & Acompanhamento' do projeto.",
+        variant: "info",
+      },
+      {
+        title: "Controle de Simultaneidade e Férias",
+        description:
+          "Utilize o Mapa de Simultaneidade Semanal e os indicadores de férias na linha do implantador para evitar sobrecarga ou conflitos de agenda.",
+        variant: "tip",
+      },
+      {
+        title: "Pipeline Fase 1 (Sem Data Definida)",
+        description:
+          "Projetos que já possuem responsável ou estão na Fase 1 mas ainda não têm datas de treinamento aparecem no Pipeline inferior; basta clicar neles para definir o cronograma.",
+        variant: "warning",
       },
     ],
   },
