@@ -88,6 +88,7 @@ import {
 import { useCsCxRecordPermissions } from "@/hooks/useCsCxRecordPermissions";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { getErrorMessage } from "@/lib/error-message";
 import { generateCsCxRoutinePdf } from "@/lib/cs-cx-routines-report";
 import {
   decodeRoutineObservations,
@@ -2509,5 +2510,5 @@ function formatObservationHistory(before: string[], after: string[]) {
 }
 
 function messageOf(error: unknown) {
-  return error instanceof Error ? error.message : "Erro inesperado.";
+  return getErrorMessage(error, "Erro inesperado.");
 }

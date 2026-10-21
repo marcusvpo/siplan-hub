@@ -27,7 +27,7 @@ const migrations = [
   ...new Set(
     [
       ...runner.matchAll(
-        /["'](202608\d+_cs_cx_[^"']+\.sql)["']/g,
+        /["'](2026\d+_cs_cx_[^"']+\.sql)["']/g,
       ),
     ].map((match) => match[1]),
   ),
@@ -35,7 +35,7 @@ const migrations = [
 
 describe("preflight do schema CS/CX", () => {
   it("mantém uma lista explícita e existente de migrations", () => {
-    expect(migrations).toHaveLength(22);
+    expect(migrations).toHaveLength(25);
     expect(new Set(migrations).size).toBe(migrations.length);
     for (const migration of migrations) {
       expect(
@@ -228,6 +228,21 @@ describe("preflight do schema CS/CX", () => {
     expect(migration).toContain("JOIN public.cs_cx_office_routines");
     expect(migration).toContain("INSERT INTO public.cs_cx_routine_history");
     expect(migration).toContain("public.has_permission(auth.uid(), 'cs_cx_rotinas', 'edit')");
+  });
+
+  it("detecta e prepara o controle de análise dos cartórios", () => {
+    expect(runner).toContain(
+      "20260824130000_cs_cx_multiple_office_responsibles.sql",
+    );
+    expect(runner).toContain("20260904120000_cs_cx_office_is_analyzed.sql");
+    expect(runner).toContain(
+      "20260930150000_cs_cx_routine_analysis_status_fix.sql",
+    );
+    expect(runner).toContain(
+      "public.cs_cx_set_registry_office_analysis_status(uuid,boolean)",
+    );
+    expect(runner).toContain("cs_cx routine analysis status");
+    expect(runner).toContain("cs_cx multiple office responsibles");
   });
 
   it("isola usuários e perfis de acesso do CS/CX", () => {

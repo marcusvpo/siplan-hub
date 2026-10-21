@@ -2975,8 +2975,8 @@
     "semantic_hash": ""
   },
   "scripts/prepare-cs-cx-schema.mjs": {
-    "mtime": 1787930496.2002206,
-    "ast_hash": "57aa72a1063f3bd0f8a2bc05e8b2843f",
+    "mtime": 1792586557.2933648,
+    "ast_hash": "c1cedc0bcb9732e3078713e6ba234067",
     "semantic_hash": ""
   },
   "src/components/Admin/PosAiChatLinksManager.tsx": {
@@ -3400,8 +3400,8 @@
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxRoutines.tsx": {
-    "mtime": 1790784281.1139865,
-    "ast_hash": "777886b5bc0ab8eecc757d6a8b42716d",
+    "mtime": 1792586468.2609117,
+    "ast_hash": "c3ba202d13cf16a8b33b3f07b2f61d31",
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxVisitDetails.tsx": {
@@ -3605,8 +3605,8 @@
     "semantic_hash": ""
   },
   "src/test/cs-cx-routines-permissions.test.tsx": {
-    "mtime": 1790784283.3112693,
-    "ast_hash": "7a0293a9d0141a4d87d734f582e6fbb5",
+    "mtime": 1792586468.2836113,
+    "ast_hash": "711a4529d32fff95382d94d3a96517bf",
     "semantic_hash": ""
   },
   "src/test/cs-cx-routines-report.test.ts": {
@@ -3615,8 +3615,8 @@
     "semantic_hash": ""
   },
   "src/test/cs-cx-schema-preflight.test.ts": {
-    "mtime": 1787930496.2968707,
-    "ast_hash": "fec5a14c124469489ce1d7dcabc512f9",
+    "mtime": 1792586557.2948706,
+    "ast_hash": "8ba84f6e85f7f9281e96d3828c5afc6f",
     "semantic_hash": ""
   },
   "src/test/cs-cx-user-matching.test.ts": {
@@ -4085,8 +4085,8 @@
     "semantic_hash": ""
   },
   "docs/cs-cx/DATA_MIGRATION.md": {
-    "mtime": 1787147936.4997337,
-    "ast_hash": "0be5ebeeb738c65052f84e8c80c23fdb",
+    "mtime": 1792586557.295378,
+    "ast_hash": "93aae2ff53bcb66eb157bdb9ca5212d3",
     "semantic_hash": ""
   },
   "docs/cs-cx/HOMOLOGATION.md": {
@@ -6414,14 +6414,9 @@
     "ast_hash": "d1251acffa25b62cc4cff4e498746687",
     "semantic_hash": ""
   },
-  "novas_solicitacoes/Ajuste que sumiu os cadastros dos cart\u00f3rios_resultado.md": {
-    "mtime": 1790782584.6703115,
-    "ast_hash": "09c11813c0f7dda65eeb5130a91b373f",
-    "semantic_hash": ""
-  },
-  "novas_solicitacoes/bug rotinas_resultado.md": {
-    "mtime": 1790785081.6025555,
-    "ast_hash": "c17cf1bc51fd4b457bc2b62af83069b3",
+  "novas_solicitacoes/bug rotinas_2_resultado.md": {
+    "mtime": 1790793366.214561,
+    "ast_hash": "e89a99811cba55b72dfb855651420c88",
     "semantic_hash": ""
   }
 }

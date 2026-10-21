@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 const hasPermission = vi.fn();
+const toast = vi.fn();
 const mutation = { mutateAsync: vi.fn(), isPending: false };
 const bulkMutation = { mutateAsync: vi.fn(), isPending: false };
 let includeSecondProductRoutine = false;
@@ -16,7 +17,7 @@ vi.mock("@/hooks/useAuth", () => ({
 }));
 
 vi.mock("@/hooks/use-toast", () => ({
-  useToast: () => ({ toast: vi.fn() }),
+  useToast: () => ({ toast }),
 }));
 
 const toggleOfficeAnalyzedMutation = { mutateAsync: vi.fn(), isPending: false };
@@ -199,6 +200,7 @@ describe("CS/CX rotinas — permissões", () => {
     firstOfficeRoutineAppliedBy = "profile-1";
     firstOfficeResponsibleProfileIds = [];
     hasPermission.mockReset();
+    toast.mockReset();
     mutation.mutateAsync.mockReset();
     bulkMutation.mutateAsync.mockReset().mockResolvedValue(1);
     toggleOfficeAnalyzedMutation.mutateAsync.mockReset().mockResolvedValue(undefined);
@@ -643,6 +645,30 @@ describe("CS/CX rotinas — permissões", () => {
         is_analyzed: false,
       });
     });
+  });
+
+  it("exibe a mensagem retornada pelo Supabase quando a alteração falha", async () => {
+    toggleOfficeAnalyzedMutation.mutateAsync.mockRejectedValueOnce({
+      code: "PGRST202",
+      message:
+        "Could not find the function public.cs_cx_set_registry_office_analysis_status in the schema cache",
+    });
+    renderPage(["cs_cx_rotinas:edit"]);
+
+    const analysisSwitch = screen.getByRole("switch", {
+      name: "Marcar Cartório Central como não analisado",
+    });
+    fireEvent.click(analysisSwitch);
+
+    await waitFor(() => {
+      expect(toast).toHaveBeenCalledWith({
+        title: "Não foi possível atualizar a situação da análise",
+        description:
+          "Could not find the function public.cs_cx_set_registry_office_analysis_status in the schema cache",
+        variant: "destructive",
+      });
+    });
+    expect(analysisSwitch).toBeEnabled();
   });
 
   it("habilita a análise quando qualquer rotina pertence ao usuário atual", async () => {

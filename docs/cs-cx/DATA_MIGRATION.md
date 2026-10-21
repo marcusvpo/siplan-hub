@@ -40,6 +40,17 @@ O pacote controlado contém, nesta ordem:
 12. `20260812106000_cs_cx_routine_history_context.sql`
 13. `20260812107000_cs_cx_user_mapping_exceptions.sql`
 14. `20260812108000_cs_cx_nps_public_surveys.sql`
+15. `20260812109000_cs_cx_nps_response_immutability.sql`
+16. `20260812110000_cs_cx_nps_questionnaire_themes.sql`
+17. `20260817130000_cs_cx_customer_relationships.sql`
+18. `20260818130000_cs_cx_operational_review.sql`
+19. `20260818181000_cs_cx_bulk_routine_analysis.sql`
+20. `20260818190000_cs_cx_scoped_access.sql`
+21. `20260818200000_cs_cx_request_update_editing.sql`
+22. `20260824130000_cs_cx_multiple_office_responsibles.sql`
+23. `20260826170000_cs_cx_request_status_history.sql`
+24. `20260904120000_cs_cx_office_is_analyzed.sql`
+25. `20260930150000_cs_cx_routine_analysis_status_fix.sql`
 
 O histórico global de migrations do Supabase ainda não possui baseline confiável.
 Por isso, não use `supabase db push`: ele pode tentar reaplicar migrations antigas do
