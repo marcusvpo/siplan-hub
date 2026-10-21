@@ -25,7 +25,10 @@ const MIGRATIONS = [
   "20260818181000_cs_cx_bulk_routine_analysis.sql",
   "20260818190000_cs_cx_scoped_access.sql",
   "20260818200000_cs_cx_request_update_editing.sql",
+  "20260824130000_cs_cx_multiple_office_responsibles.sql",
   "20260826170000_cs_cx_request_status_history.sql",
+  "20260904120000_cs_cx_office_is_analyzed.sql",
+  "20260930150000_cs_cx_routine_analysis_status_fix.sql",
 ];
 const FEATURE_MIGRATIONS = new Map([
   ["cs_cx_user_map.mapping_ignored", "20260812107000_cs_cx_user_mapping_exceptions.sql"],
@@ -37,7 +40,10 @@ const FEATURE_MIGRATIONS = new Map([
   ["cs_cx bulk routine analysis", "20260818181000_cs_cx_bulk_routine_analysis.sql"],
   ["cs_cx scoped access", "20260818190000_cs_cx_scoped_access.sql"],
   ["cs_cx request update editing", "20260818200000_cs_cx_request_update_editing.sql"],
+  ["cs_cx multiple office responsibles", "20260824130000_cs_cx_multiple_office_responsibles.sql"],
   ["cs_cx request status history", "20260826170000_cs_cx_request_status_history.sql"],
+  ["cs_cx registry office analysis column", "20260904120000_cs_cx_office_is_analyzed.sql"],
+  ["cs_cx routine analysis status", "20260930150000_cs_cx_routine_analysis_status_fix.sql"],
 ]);
 const EXPECTED_TABLES = [
   "cs_cx_user_map",
@@ -75,6 +81,7 @@ const EXPECTED_TABLES = [
   "cs_cx_access_profiles",
   "cs_cx_access_profile_permissions",
   "cs_cx_user_access",
+  "cs_cx_registry_office_responsibles",
 ];
 const BASE_TABLES = EXPECTED_TABLES.slice(0, 25);
 const EXPECTED_RESOURCES = [
@@ -282,9 +289,22 @@ async function getMissingFeatures() {
           AND cmd = 'UPDATE'
           AND ('authenticated' = ANY(roles) OR 'public' = ANY(roles))
       ) AS request_update_editing
+    ,to_regclass('public.cs_cx_registry_office_responsibles') IS NOT NULL
+      AND to_regprocedure(
+        'public.cs_cx_can_manage_office_record(text,text,uuid,uuid)'
+      ) IS NOT NULL AS multiple_office_responsibles
     ,to_regclass('public.cs_cx_request_status_history') IS NOT NULL
       AND to_regprocedure('public.cs_cx_update_request_status(uuid,text)') IS NOT NULL
       AS request_status_history
+    ,EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'cs_cx_registry_offices'
+        AND column_name = 'is_analyzed'
+    ) AS registry_office_analysis_column
+    ,to_regprocedure(
+      'public.cs_cx_set_registry_office_analysis_status(uuid,boolean)'
+    ) IS NOT NULL AS routine_analysis_status
   `);
   const missing = [];
   if (!result.rows[0].mapping_ignored)
@@ -305,8 +325,14 @@ async function getMissingFeatures() {
     missing.push("cs_cx scoped access");
   if (!result.rows[0].request_update_editing)
     missing.push("cs_cx request update editing");
+  if (!result.rows[0].multiple_office_responsibles)
+    missing.push("cs_cx multiple office responsibles");
   if (!result.rows[0].request_status_history)
     missing.push("cs_cx request status history");
+  if (!result.rows[0].registry_office_analysis_column)
+    missing.push("cs_cx registry office analysis column");
+  if (!result.rows[0].routine_analysis_status)
+    missing.push("cs_cx routine analysis status");
   return missing;
 }
 
