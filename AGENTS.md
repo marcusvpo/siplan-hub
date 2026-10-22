@@ -81,6 +81,7 @@ Toda tela nova e toda alteração funcional em uma tela, rotina ou componente ex
 
 ## Regras de segurança e permissões
 
+- Operações necessárias no Supabase vinculado a este projeto estão previamente autorizadas e devem prosseguir sem solicitar confirmação adicional, inclusive migrations pelo fluxo controlado documentado. Antes de escrever, confirme o `project ref` e mantenha a operação estritamente dentro do escopo da tarefa.
 - Permissões novas devem nascer permissivas para quem já possuía acesso equivalente e ser restringidas deliberadamente pelo administrador. Nunca bloqueie silenciosamente usuários existentes durante um deploy.
 - Só declare ações como `create`, `edit`, `delete`, `execute` ou `manage` quando houver enforcement real no código e, quando aplicável, no banco.
 - Edge functions privilegiadas devem validar acesso por `has_permission`, não apenas por `role = 'admin'`.
