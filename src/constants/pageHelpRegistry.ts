@@ -695,7 +695,8 @@ export const pageHelpData: PageHelpInfo[] = [
     keyFeatures: [
       "Relatórios de desvios e cumprimento de prazos",
       "Filtros por intervalo de datas, produto e analista",
-      "Exportação para formatos de impressão e planilha",
+      "Relatório Andamento Infra: auditoria de Etapa 1 e cronograma da Fase 1",
+      "Exportação em PDF e download de HTML preenchido com anotações salvas",
     ],
     steps: [
       {

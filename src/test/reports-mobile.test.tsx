@@ -37,6 +37,9 @@ vi.mock("@/components/Reports/Individual/IndividualProjectReport", () => ({
 vi.mock("@/components/Reports/Implementers/ImplementerReportTab", () => ({
   ImplementerReportTab: () => <div>Relatório da equipe mobile</div>,
 }));
+vi.mock("@/components/Reports/InfraProgress/InfraProgressReportTab", () => ({
+  InfraProgressReportTab: () => <div>Relatório andamento infra mobile</div>,
+}));
 
 const longClientName =
   "Cartório com nome muito extenso que precisa permanecer legível no celular";
@@ -76,7 +79,7 @@ const createInvolvement = (index: number) => ({
 }) as unknown as DetailedInvolvement;
 
 describe("relatórios no mobile", () => {
-  it("mantém a rota dentro da largura e oferece as três visões sem rolagem lateral", () => {
+  it("mantém a rota dentro da largura e oferece as quatro visões sem rolagem lateral", () => {
     render(<Reports />);
 
     expect(screen.getByTestId("reports-page")).toHaveClass(
@@ -87,7 +90,7 @@ describe("relatórios no mobile", () => {
     const tabsList = screen.getByText("Geral").closest('[role="tablist"]');
     expect(tabsList).toHaveClass(
       "grid",
-      "grid-cols-3",
+      "grid-cols-2",
       "w-full",
       "overflow-x-hidden",
       "sm:w-auto",
@@ -104,6 +107,12 @@ describe("relatórios no mobile", () => {
       ctrlKey: false,
     });
     expect(screen.getByText("Relatório da equipe mobile")).toBeVisible();
+
+    fireEvent.mouseDown(screen.getByText("Andamento Infra").closest("button")!, {
+      button: 0,
+      ctrlKey: false,
+    });
+    expect(screen.getByText("Relatório andamento infra mobile")).toBeVisible();
   });
 
   it("substitui a tabela consolidada por cartões legíveis no celular", () => {
