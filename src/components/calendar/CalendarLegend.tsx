@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, Clock, Palmtree, Sparkles } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Palmtree } from "lucide-react";
 
 /**
  * Legenda executiva da Timeline de Implantações (Fase 1 & Férias Admin).
@@ -6,7 +6,6 @@ import { AlertTriangle, CheckCircle2, Clock, Palmtree, Sparkles } from "lucide-r
  * - Orion REG = Verde (Emerald)
  * - Orion PRO = Azul (Blue)
  * - Orion TN = Vermelho (Bordô Siplan / Rose)
- * - Conjunta (PRO+REG) = Roxo (Violet)
  * - Férias (Admin) = Âmbar/Laranja tracejado
  * - Feriado em Dia Útil (Seg–Sex) = Destaque Âmbar
  */
@@ -32,14 +31,6 @@ export function CalendarLegend() {
       <div className="flex shrink-0 items-center gap-1.5">
         <span className="h-3 w-4 shrink-0 rounded bg-gradient-to-r from-[#d3123f] to-[#be123c] border border-[#881337] shadow-2xs" />
         <span className="text-foreground font-bold">Orion TN</span>
-      </div>
-
-      {/* Atuação Conjunta PRO + REG = Roxo */}
-      <div className="flex shrink-0 items-center gap-1.5">
-        <span className="h-3 w-4 shrink-0 rounded bg-gradient-to-r from-violet-600 to-purple-700 border border-violet-900 flex items-center justify-center shadow-2xs">
-          <Sparkles className="h-2 w-2 text-white" />
-        </span>
-        <span className="text-foreground font-bold">Conjunta (PRO+REG)</span>
       </div>
 
       {/* Distinção Visual: Confirmada vs Previsão */}
