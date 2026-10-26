@@ -2,7 +2,7 @@ import type { ProjectV2 } from "@/types/ProjectV2";
 
 export type CalendarViewMode = "quarter" | "year" | "month" | "week" | "day";
 
-export type CalendarSystemCategory = "reg" | "pro" | "tn" | "shared" | "other";
+export type CalendarSystemCategory = "reg" | "pro" | "tn" | "other";
 
 export type CalendarDisplayTab = "timeline" | "concurrency" | "backlog";
 
@@ -18,6 +18,7 @@ export type CalendarStatusFilter =
 export interface CalendarMember {
   id: string;
   name: string;
+  shortName?: string; // Nome falado no dia a dia / viva voz (ex: Mizuno, Brites)
   initials?: string;
   avatar?: string;
   role: string;
@@ -59,6 +60,10 @@ export interface CalendarEvent {
   hasVacationConflict?: boolean;
   vacationConflictText?: string;
   vacationId?: string;
+  isSupport?: boolean;
+  assignmentId?: string;
+  primaryResponsible?: string;
+  role?: string;
 }
 
 export interface UnscheduledPhase1Project {
@@ -87,6 +92,7 @@ export const CALENDAR_MEMBERS: CalendarMember[] = [
   {
     id: "julio-araujo",
     name: "Julio Araujo",
+    shortName: "Julio",
     initials: "JA",
     role: "Especialista Orion REG",
     color: "bg-emerald-600",
@@ -95,6 +101,7 @@ export const CALENDAR_MEMBERS: CalendarMember[] = [
   {
     id: "rodrigo-mizuno",
     name: "Rodrigo Mizuno",
+    shortName: "Mizuno",
     initials: "RM",
     role: "Especialista Orion PRO",
     color: "bg-blue-600",
@@ -103,6 +110,7 @@ export const CALENDAR_MEMBERS: CalendarMember[] = [
   {
     id: "rodrigo-brites",
     name: "Rodrigo Brites",
+    shortName: "Brites",
     initials: "RB",
     role: "Especialista Orion PRO & TN",
     color: "bg-blue-700",
@@ -111,6 +119,7 @@ export const CALENDAR_MEMBERS: CalendarMember[] = [
   {
     id: "ricardo-vieira",
     name: "Ricardo Vieira",
+    shortName: "Ricardo",
     initials: "RV",
     role: "Especialista Orion TN",
     color: "bg-[#d3123f]",
@@ -119,9 +128,34 @@ export const CALENDAR_MEMBERS: CalendarMember[] = [
   {
     id: "erik-marques",
     name: "Erik Marques",
+    shortName: "Erik",
     initials: "EM",
     role: "Especialista Orion TN",
     color: "bg-rose-600",
     defaultSystem: "Orion TN",
   },
 ];
+
+/**
+ * Retorna o nome de exibição no padrão 'viva voz' (ex: "Mizuno" e "Brites" para distinguir os dois Rodrigos)
+ */
+export function getMemberShortName(
+  member:
+    | CalendarMember
+    | { name?: string; shortName?: string }
+    | string
+    | null
+    | undefined
+): string {
+  if (!member) return "";
+  if (typeof member === "string") {
+    if (/mizuno/i.test(member)) return "Mizuno";
+    if (/brites/i.test(member)) return "Brites";
+    return member.split(" ")[0];
+  }
+  if (member.shortName) return member.shortName;
+  const name = member.name || "";
+  if (/mizuno/i.test(name)) return "Mizuno";
+  if (/brites/i.test(name)) return "Brites";
+  return name.split(" ")[0];
+}

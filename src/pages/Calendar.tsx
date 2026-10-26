@@ -273,7 +273,6 @@ export default function Calendar() {
     let regCount = 0;
     let proCount = 0;
     let tnCount = 0;
-    let sharedCount = 0;
     let confirmedCount = 0;
     let plannedCount = 0;
 
@@ -283,11 +282,7 @@ export default function Calendar() {
       if (uniqueProjectIds.has(pKey)) continue;
       uniqueProjectIds.add(pKey);
 
-      if (evt.systemCategory === "shared") {
-        sharedCount += 1;
-        regCount += 1;
-        proCount += 1;
-      } else if (evt.systemCategory === "reg") {
+      if (evt.systemCategory === "reg") {
         regCount += 1;
       } else if (evt.systemCategory === "pro") {
         proCount += 1;
@@ -320,7 +315,6 @@ export default function Calendar() {
       regCount,
       proCount,
       tnCount,
-      sharedCount,
       confirmedCount,
       plannedCount,
       vacationsCount: vacEvents.length,

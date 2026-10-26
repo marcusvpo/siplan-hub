@@ -1,6 +1,7 @@
-import { ImplementationStageV2, ImplementationPhase, StageStatus } from "@/types/ProjectV2";
+import { ImplementationStageV2, ImplementationPhase, StageStatus, Phase1ResponsibleAssignment } from "@/types/ProjectV2";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -10,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Rocket, CheckCircle2, Power, GraduationCap, Calendar } from "lucide-react";
+import { Rocket, CheckCircle2, Power, GraduationCap, Calendar, Plus, Users, User, Trash2 } from "lucide-react";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { convertBlocksToTiptap } from "@/lib/editor-utils";
@@ -49,6 +50,35 @@ function ImplementationPhaseForm({
   glowColor,
   themeColor,
 }: PhaseFormProps) {
+  const additionalResponsibles = phase?.additionalResponsibles || [];
+
+  const handleAddAdditionalResponsible = () => {
+    const newItem: Phase1ResponsibleAssignment = {
+      id: crypto.randomUUID(),
+      responsible: "",
+      startDate: phase?.startDate,
+      endDate: phase?.endDate,
+      role: "Apoio",
+    };
+    onUpdatePhase(phaseKey, {
+      additionalResponsibles: [...additionalResponsibles, newItem],
+    });
+  };
+
+  const handleUpdateAdditionalResponsible = (
+    index: number,
+    updates: Partial<Phase1ResponsibleAssignment>
+  ) => {
+    const nextList = [...additionalResponsibles];
+    nextList[index] = { ...nextList[index], ...updates };
+    onUpdatePhase(phaseKey, { additionalResponsibles: nextList });
+  };
+
+  const handleRemoveAdditionalResponsible = (index: number) => {
+    const nextList = additionalResponsibles.filter((_, i) => i !== index);
+    onUpdatePhase(phaseKey, { additionalResponsibles: nextList });
+  };
+
   const getPhaseContent = () => {
     if (!phase?.observations) return "";
     try {
@@ -158,14 +188,28 @@ function ImplementationPhaseForm({
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-            <Rocket className="h-3 w-3 text-muted-foreground" />
-            Responsável
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+              <Rocket className="h-3 w-3 text-muted-foreground" />
+              Responsável {phaseKey === "phase1" ? "Principal" : ""}
+            </Label>
+            {phaseKey === "phase1" && canEditProjects && (
+              <button
+                type="button"
+                onClick={handleAddAdditionalResponsible}
+                title="Adicionar mais um implantador/responsável com datas específicas de atuação"
+                className="inline-flex items-center gap-1 text-[10px] font-bold text-primary hover:text-primary/80 transition-colors cursor-pointer bg-primary/10 hover:bg-primary/20 px-1.5 py-0.5 rounded"
+              >
+                <Plus className="h-2.5 w-2.5" />
+                <span>+ Implantador</span>
+              </button>
+            )}
+          </div>
           <AutocompleteInput
             value={phase?.responsible || ""}
             onChange={(v) => onUpdatePhase(phaseKey, { responsible: v })}
             disabled={!canEditProjects}
+            placeholder={phaseKey === "phase1" ? "Responsável principal..." : "Selecione o responsável..."}
             className="h-9 border border-input bg-background text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 focus-visible:ring-1 focus-visible:ring-ring text-xs"
           />
         </div>
@@ -216,6 +260,117 @@ function ImplementationPhaseForm({
           />
         </div>
       </div>
+
+      {/* Implantadores Adicionais / Co-responsáveis com datas próprias */}
+      {phaseKey === "phase1" && additionalResponsibles.length > 0 && (
+        <div className="mb-3.5 space-y-2.5 rounded-xl border border-dashed border-primary/30 bg-primary/5 p-3 text-left">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-primary flex items-center gap-1.5">
+              <Users className="h-3.5 w-3.5" />
+              Implantadores Adicionais / Apoio ({additionalResponsibles.length})
+            </span>
+            {canEditProjects && (
+              <button
+                type="button"
+                onClick={handleAddAdditionalResponsible}
+                className="inline-flex items-center gap-1 text-[10px] font-bold text-primary hover:underline cursor-pointer"
+              >
+                <Plus className="h-3 w-3" />
+                Adicionar mais um
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            {additionalResponsibles.map((assign, index) => (
+              <div
+                key={assign.id || index}
+                className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center rounded-lg border border-border bg-background p-2.5 shadow-2xs"
+              >
+                {/* Nome do Implantador de Apoio */}
+                <div className="sm:col-span-5 space-y-1">
+                  <Label className="text-[9.5px] font-bold text-muted-foreground uppercase flex items-center gap-1">
+                    <User className="h-3 w-3 text-primary" />
+                    Implantador de Apoio #{index + 1}
+                  </Label>
+                  <AutocompleteInput
+                    value={assign.responsible || ""}
+                    onChange={(val) => handleUpdateAdditionalResponsible(index, { responsible: val })}
+                    disabled={!canEditProjects}
+                    placeholder="Selecione o implantador..."
+                    className="h-8 text-xs bg-background"
+                  />
+                </div>
+
+                {/* Data Início do Apoio */}
+                <div className="sm:col-span-3 space-y-1">
+                  <Label className="text-[9.5px] font-bold text-muted-foreground uppercase">
+                    Início
+                  </Label>
+                  <Input
+                    type="date"
+                    value={
+                      assign.startDate
+                        ? new Date(assign.startDate).toISOString().split("T")[0]
+                        : ""
+                    }
+                    onChange={(e) =>
+                      handleUpdateAdditionalResponsible(index, {
+                        startDate: e.target.value
+                          ? new Date(e.target.value + "T12:00:00")
+                          : undefined,
+                      })
+                    }
+                    disabled={!canEditProjects}
+                    className="h-8 text-xs font-medium bg-background"
+                  />
+                </div>
+
+                {/* Data Término do Apoio */}
+                <div className="sm:col-span-3 space-y-1">
+                  <Label className="text-[9.5px] font-bold text-muted-foreground uppercase">
+                    Término
+                  </Label>
+                  <Input
+                    type="date"
+                    value={
+                      assign.endDate
+                        ? new Date(assign.endDate).toISOString().split("T")[0]
+                        : ""
+                    }
+                    onChange={(e) =>
+                      handleUpdateAdditionalResponsible(index, {
+                        endDate: e.target.value
+                          ? new Date(e.target.value + "T12:00:00")
+                          : undefined,
+                      })
+                    }
+                    disabled={!canEditProjects}
+                    className="h-8 text-xs font-medium bg-background"
+                  />
+                </div>
+
+                {/* Botão Remover */}
+                <div className="sm:col-span-1 flex items-end justify-center pt-2 sm:pt-4">
+                  {canEditProjects && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveAdditionalResponsible(index)}
+                      className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      title="Remover este responsável de apoio"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="space-y-2 relative text-left">
         <div className="flex items-center gap-2">
           <div className="h-0.5 w-6 rounded-full bg-neutral-300 dark:bg-neutral-700" />

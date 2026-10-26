@@ -151,7 +151,24 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
         screenshots: (row.custom_fields as any)?.environment_screenshots || [],
       },
       conversion: createStage<ConversionStageV2>('conversion'),
-      implementation: createStage<ImplementationStageV2>('implementation'),
+      implementation: (() => {
+        const impl = createStage<ImplementationStageV2>('implementation');
+        if (impl && typeof impl === 'object') {
+          const rawP1 = (impl as any).phase1;
+          if (rawP1 && typeof rawP1 === 'object') {
+            if (rawP1.startDate && !(rawP1.startDate instanceof Date)) rawP1.startDate = new Date(rawP1.startDate);
+            if (rawP1.endDate && !(rawP1.endDate instanceof Date)) rawP1.endDate = new Date(rawP1.endDate);
+            if (Array.isArray(rawP1.additionalResponsibles)) {
+              rawP1.additionalResponsibles = rawP1.additionalResponsibles.map((item) => ({
+                ...item,
+                startDate: item.startDate && !(item.startDate instanceof Date) ? new Date(item.startDate) : item.startDate,
+                endDate: item.endDate && !(item.endDate instanceof Date) ? new Date(item.endDate) : item.endDate,
+              }));
+            }
+          }
+        }
+        return impl;
+      })(),
       modelosEditor: createStage<ModelosEditorStageV2>('modelos_editor'),
       post: createStage<PostStageV2>('post'),
     },

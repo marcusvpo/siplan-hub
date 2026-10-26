@@ -405,11 +405,21 @@ export interface ModelWorkerStatus {
   note?: string;
 }
 
+export interface Phase1ResponsibleAssignment {
+  id: string;
+  responsible: string;
+  startDate?: Date;
+  endDate?: Date;
+  role?: string;
+  notes?: string;
+}
+
 export interface ImplementationPhase {
   status: StageStatus;
   responsible?: string;
   startDate?: Date;
   endDate?: Date;
+  additionalResponsibles?: Phase1ResponsibleAssignment[];
   remoteInstallDate?: Date;
   switchType?: string;
   switchStartTime?: string;
