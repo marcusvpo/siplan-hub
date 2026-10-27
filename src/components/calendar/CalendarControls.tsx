@@ -210,7 +210,6 @@ export function CalendarControls({
     let regCount = 0;
     let proCount = 0;
     let tnCount = 0;
-    let sharedCount = 0;
     let confirmedCount = 0;
     let plannedCount = 0;
 

@@ -25,7 +25,9 @@ export default function Reports() {
         if (tab === "individual") return "individual";
         if (tab === "implementers") return "implementers";
       }
-    } catch {}
+    } catch {
+      // Ignora erro de acesso a location/URL em ambientes restritos
+    }
     return "overview";
   };
 
@@ -50,7 +52,9 @@ export default function Reports() {
         url.searchParams.set("tab", val);
         window.history.replaceState({}, "", url.toString());
       }
-    } catch {}
+    } catch {
+      // Ignora erro de acesso a location/URL em ambientes restritos
+    }
   };
 
   if (isLoading) {
