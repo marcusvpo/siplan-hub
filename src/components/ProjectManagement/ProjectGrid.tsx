@@ -18,6 +18,7 @@ import {
 import { AdvancedFilters } from "./AdvancedFilters";
 import { useFilterStore } from "@/stores/filterStore";
 import { cn, normalizeText } from "@/lib/utils";
+import { MAIN_SYSTEMS } from "@/utils/projectSpecialty";
 
 export function ProjectGrid() {
   const {
@@ -109,7 +110,7 @@ export function ProjectGrid() {
   }, [projects]);
 
   const uniqueSystemTypes = useMemo(() => {
-    const types = new Set<string>(["Orion TN", "Orion PRO", "Orion REG", "Modelos TN"]);
+    const types = new Set<string>(MAIN_SYSTEMS);
     projects.forEach((p) => {
       if (p.systemType) types.add(p.systemType);
     });

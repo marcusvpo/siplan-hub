@@ -49,7 +49,7 @@ const EMPTY_FORM: DeploymentFormData = {
   module_other: false,
 };
 
-const SYSTEMS = ["Orion TN", "Orion PRO", "Orion REG", "WEB RI", "Outro"];
+const SYSTEMS = ["Orion TN", "Orion PRO", "Orion REG", "WEB RI", "WEB RC", "Outro"];
 
 const URGENCY_CONFIG = {
   critical: { label: "Crítica", variant: "destructive" as const, icon: "🔴" },

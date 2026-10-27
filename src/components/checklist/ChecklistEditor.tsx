@@ -13,7 +13,7 @@ import { ArrowLeft, Save, History, Settings, Sparkles, FileEdit, Eye, Maximize2,
 import { Link } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-const SYSTEM_TYPES = ["Orion TN", "Orion PRO", "Orion REG", "Modelos TN", "WebRI"];
+const SYSTEM_TYPES = ["Orion TN", "Orion PRO", "Orion REG", "Modelos TN", "WebRI", "WEB RC"];
 
 interface ChecklistEditorProps {
   kind: "adherence" | "commercial_checklist" | "homologation_checklist";

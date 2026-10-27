@@ -3,6 +3,7 @@ export const MAIN_SYSTEMS = [
   "Orion PRO",
   "Orion REG",
   "WEBRI",
+  "WEB RC",
   "Modelos TN",
 ] as const;
 
@@ -28,6 +29,9 @@ export const SYSTEM_SPECIALTY_MAP: Record<string, SpecialtyOption> = {
   "WEBRI": "Registro de Imóveis",
   "WebRI": "Registro de Imóveis",
   "WEB RI": "Registro de Imóveis",
+  "WEB RC": "Registro Civil",
+  "WebRC": "Registro Civil",
+  "WEBRC": "Registro Civil",
 };
 
 /**
@@ -37,6 +41,7 @@ export const SYSTEM_SPECIALTY_MAP: Record<string, SpecialtyOption> = {
  * Ex: "OrionPRO" -> "Orion PRO"
  * Ex: "ModelosTN" -> "Modelos TN"
  * Ex: "WEB RI", "WebRI" -> "WebRI"
+ * Ex: "WEB RC", "WebRC", "WEBRC" -> "WEB RC"
  */
 export function normalizeSystemType(systemType?: string | null): string {
   if (!systemType) return "";
@@ -70,6 +75,11 @@ export function normalizeSystemType(systemType?: string | null): string {
   // WebRI / WEBRI / WEB RI
   if (lower.replace(/\s+/g, "") === "webri") {
     return "WebRI";
+  }
+
+  // WebRC / WEBRC / WEB RC
+  if (lower.replace(/\s+/g, "") === "webrc") {
+    return "WEB RC";
   }
 
   return trimmed;
