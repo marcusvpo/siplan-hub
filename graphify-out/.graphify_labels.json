@@ -225,6 +225,7 @@
   "223": "3. Banco de dados",
   "224": "3. Dashboard — Modelos Editor",
   "225": "8. Editor de Perguntas do Checklist",
+  "226": "package.json",
   "227": "Q: Tem como ele ser integrado com a agenda dos usuários? Tipo ele cria automaticamente quando tem algo na agenda, ou não faz sentido?",
   "228": "sidebar-empty-groups.test.tsx",
   "229": "🗄️ Configuração Local do Supabase (Ambiente de Desenvolvimento)",
@@ -243,14 +244,12 @@
   "242": "useDebounce",
   "243": "pos-chat-history-sidebar.test.tsx",
   "244": "2. Dashboard (Visão Geral)",
-  "245": "5. Detalhes do Projeto",
   "246": "3. Dashboard — Modelos Editor",
   "247": "4. Projetos OrionTN",
   "248": "AdherenceGapCard.tsx",
   "251": "Central de Atualizações Orion",
   "252": "useVoiceNoteJobs.ts",
   "253": "adherence-replication-to-observations.test.ts",
-  "255": "ImplementerInvolvement",
   "257": "cs-cx-registry-office-notary-migration.test.ts",
   "258": "useAiTextImprovement.ts",
   "259": "cs-cx-routine-analysis-status-migration.test.ts",
@@ -328,6 +327,5 @@
   "398": "run Skill.test",
   "405": "04 implantadores",
   "406": "commercial contacts permissions.test",
-  "412": "sd time import.test",
-  "419": "use Cs Cx Access"
+  "412": "sd time import.test"
 }
