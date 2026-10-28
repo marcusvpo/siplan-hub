@@ -606,5 +606,47 @@ describe("project-transformers", () => {
       expect(result.stages.adherence.observations).toBe("Adh obs");
       expect(result.stages.adherence.hasProductGap).toBe(true);
     });
+
+    it("should preserve environment osCredentials with serverName and serverIp in transformToDB and transformToProjectV3", () => {
+      const osCredentials = [
+        {
+          id: "cred-1",
+          serverName: "Servidor Orion BD",
+          serverIp: "192.168.1.50",
+          osType: "Linux",
+          login: "root",
+          password: "db-secret-password",
+        },
+        {
+          id: "cred-2",
+          serverName: "Servidor TS / APP",
+          serverIp: "192.168.1.51",
+          osType: "Windows",
+          login: "Administrator",
+          password: "win-secret-password",
+        },
+      ];
+
+      const project: any = {
+        clientName: "Cartorio Central",
+        stages: {
+          environment: {
+            status: "in-progress",
+            osCredentials,
+          },
+        },
+      };
+
+      const dbRow = transformToDB(project);
+      expect((dbRow.custom_fields as any)?.environment_os_credentials).toEqual(osCredentials);
+
+      const reconstituted = transformToProjectV3({
+        id: "proj-1",
+        client_name: "Cartorio Central",
+        custom_fields: dbRow.custom_fields,
+      });
+
+      expect(reconstituted.stages.environment.osCredentials).toEqual(osCredentials);
+    });
   });
 });

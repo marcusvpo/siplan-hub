@@ -52,7 +52,7 @@ import {
   LabelList,
 } from "recharts";
 
-const PRODUTOS = ["todos", "Orion TN", "Orion PRO", "Orion REG", "WEB RI"] as const;
+const PRODUTOS = ["todos", "Orion TN", "Orion PRO", "Orion REG", "WEB RI", "WEB RC"] as const;
 
 const PERIODOS = [
   { valor: "30", rotulo: "Últimos 30 dias" },

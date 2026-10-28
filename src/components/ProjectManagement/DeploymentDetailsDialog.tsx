@@ -22,8 +22,9 @@ import {
   ImplementationPhase,
   ImplementationStageV2,
   StageStatus,
+  Phase1ResponsibleAssignment,
 } from "@/types/ProjectV2";
-import { CALENDAR_MEMBERS } from "@/types/calendar";
+import { CALENDAR_MEMBERS, getMemberShortName } from "@/types/calendar";
 import { resolveCalendarMembersForResponsible } from "@/lib/project-calendar-events";
 import {
   getWeekdayHolidaysInRange,
@@ -43,8 +44,10 @@ import {
   MapPin,
   Monitor,
   Palmtree,
+  Plus,
   Rocket,
   Tag,
+  Trash2,
   User,
   Users,
 } from "lucide-react";
@@ -99,6 +102,7 @@ export function DeploymentDetailsDialog({
   const [endDateStr, setEndDateStr] = useState<string>("");
   const [isConfirmed, setIsConfirmed] = useState<boolean>(false);
   const [trainingLocation, setTrainingLocation] = useState<string>("");
+  const [additionalResponsibles, setAdditionalResponsibles] = useState<Phase1ResponsibleAssignment[]>([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   // Estado para segunda confirmação quando o usuário seleciona período com feriado em dia útil (2026/2027)
@@ -128,35 +132,98 @@ export function DeploymentDetailsDialog({
       );
       setIsConfirmed(!!phase1?.isConfirmed);
       setTrainingLocation(phase1?.trainingLocation || "");
+      setAdditionalResponsibles(
+        (phase1?.additionalResponsibles || []).map((item) => ({
+          id: item.id || crypto.randomUUID(),
+          responsible: item.responsible || "",
+          startDate: item.startDate ? new Date(item.startDate) : undefined,
+          endDate: item.endDate ? new Date(item.endDate) : undefined,
+          role: item.role || "Apoio",
+        }))
+      );
       setPendingHolidayConfirmation(null);
     }
   }, [project, open]);
 
-  // Detector de conflito em tempo real com as férias cadastradas no Admin
-  const vacationConflict = useMemo(() => {
-    if (!startDateStr && !endDateStr) return null;
-    const checkStart = startDateStr || endDateStr;
-    const checkEnd = endDateStr || startDateStr;
-    if (!checkStart || !checkEnd) return null;
+  // Detector de conflito em tempo real com as férias cadastradas no Admin (titular e apoios)
+  const vacationConflicts = useMemo(() => {
+    const list: Array<{
+      implantador_name: string;
+      start_date: string;
+      end_date: string;
+      description?: string | null;
+      isSupport?: boolean;
+    }> = [];
 
-    const resolvedMembers = resolveCalendarMembersForResponsible(responsible);
-    if (resolvedMembers.length === 0) return null;
+    // 1. Checa responsável principal
+    if (responsible && (startDateStr || endDateStr)) {
+      const checkStart = startDateStr || endDateStr;
+      const checkEnd = endDateStr || startDateStr;
+      const resolvedMembers = resolveCalendarMembersForResponsible(responsible);
+      if (resolvedMembers.length > 0) {
+        const memberIds = new Set(resolvedMembers.map((m) => m.id));
+        const memberNamesLower = new Set(
+          resolvedMembers.map((m) => m.name.toLowerCase())
+        );
+        const match = vacations.find((v) => {
+          const matchesMember =
+            (v.implantador_id && memberIds.has(v.implantador_id)) ||
+            memberNamesLower.has((v.implantador_name || "").toLowerCase());
+          if (!matchesMember) return false;
+          return v.start_date <= checkEnd && v.end_date >= checkStart;
+        });
+        if (match) {
+          list.push({
+            implantador_name: match.implantador_name,
+            start_date: match.start_date,
+            end_date: match.end_date,
+            description: match.description,
+            isSupport: false,
+          });
+        }
+      }
+    }
 
-    const memberIds = new Set(resolvedMembers.map((m) => m.id));
-    const memberNamesLower = new Set(
-      resolvedMembers.map((m) => m.name.toLowerCase())
-    );
+    // 2. Checa apoios adicionais
+    additionalResponsibles.forEach((assign) => {
+      if (!assign.responsible) return;
+      const aStart = assign.startDate
+        ? format(new Date(assign.startDate), "yyyy-MM-dd")
+        : startDateStr;
+      const aEnd = assign.endDate
+        ? format(new Date(assign.endDate), "yyyy-MM-dd")
+        : endDateStr;
+      if (!aStart && !aEnd) return;
+      const checkStart = aStart || aEnd;
+      const checkEnd = aEnd || aStart;
 
-    return (
-      vacations.find((v) => {
-        const matchesMember =
-          (v.implantador_id && memberIds.has(v.implantador_id)) ||
-          memberNamesLower.has((v.implantador_name || "").toLowerCase());
-        if (!matchesMember) return false;
-        return v.start_date <= checkEnd && v.end_date >= checkStart;
-      }) || null
-    );
-  }, [startDateStr, endDateStr, responsible, vacations]);
+      const resolvedMembers = resolveCalendarMembersForResponsible(assign.responsible);
+      if (resolvedMembers.length > 0) {
+        const memberIds = new Set(resolvedMembers.map((m) => m.id));
+        const memberNamesLower = new Set(
+          resolvedMembers.map((m) => m.name.toLowerCase())
+        );
+        const match = vacations.find((v) => {
+          const matchesMember =
+            (v.implantador_id && memberIds.has(v.implantador_id)) ||
+            memberNamesLower.has((v.implantador_name || "").toLowerCase());
+          if (!matchesMember) return false;
+          return v.start_date <= checkEnd && v.end_date >= checkStart;
+        });
+        if (match) {
+          list.push({
+            implantador_name: match.implantador_name,
+            start_date: match.start_date,
+            end_date: match.end_date,
+            description: match.description,
+            isSupport: true,
+          });
+        }
+      }
+    });
+
+    return list;
+  }, [startDateStr, endDateStr, responsible, additionalResponsibles, vacations]);
 
   // Detector de feriados em dias úteis (Segunda a Sexta) de 2026 e 2027 dentro do período agendado
   const holidaysInSelectedRange = useMemo(
@@ -180,6 +247,7 @@ export function DeploymentDetailsDialog({
     endDateStr?: string;
     isConfirmed?: boolean;
     trainingLocation?: string;
+    additionalResponsibles?: Phase1ResponsibleAssignment[];
   }) => {
     if (!project) return;
 
@@ -196,6 +264,10 @@ export function DeploymentDetailsDialog({
       updates.trainingLocation !== undefined
         ? updates.trainingLocation
         : trainingLocation;
+    const newAdditional =
+      updates.additionalResponsibles !== undefined
+        ? updates.additionalResponsibles
+        : additionalResponsibles;
 
     // Local UI update
     if (updates.status !== undefined) setStatus(newStatus);
@@ -205,6 +277,8 @@ export function DeploymentDetailsDialog({
     if (updates.isConfirmed !== undefined) setIsConfirmed(newConfirmed);
     if (updates.trainingLocation !== undefined)
       setTrainingLocation(newLocation);
+    if (updates.additionalResponsibles !== undefined)
+      setAdditionalResponsibles(newAdditional);
 
     const parsedStart = newStartStr
       ? new Date(newStartStr + "T12:00:00")
@@ -231,6 +305,7 @@ export function DeploymentDetailsDialog({
       endDate: parsedEnd,
       isConfirmed: newConfirmed,
       trainingLocation: newLocation || undefined,
+      additionalResponsibles: newAdditional,
     };
 
     const updatedImplementation = {
@@ -277,6 +352,34 @@ export function DeploymentDetailsDialog({
     }
 
     void handleUpdatePhase1(updates);
+  };
+
+  const handleAddAdditionalResponsible = () => {
+    const defaultStart = startDateStr ? new Date(startDateStr + "T12:00:00") : undefined;
+    const defaultEnd = endDateStr ? new Date(endDateStr + "T12:00:00") : undefined;
+    const newItem: Phase1ResponsibleAssignment = {
+      id: crypto.randomUUID(),
+      responsible: "",
+      startDate: defaultStart,
+      endDate: defaultEnd,
+      role: "Apoio",
+    };
+    const nextList = [...additionalResponsibles, newItem];
+    void handleUpdatePhase1({ additionalResponsibles: nextList });
+  };
+
+  const handleUpdateAdditionalResponsible = (
+    index: number,
+    itemUpdates: Partial<Phase1ResponsibleAssignment>
+  ) => {
+    const nextList = [...additionalResponsibles];
+    nextList[index] = { ...nextList[index], ...itemUpdates };
+    void handleUpdatePhase1({ additionalResponsibles: nextList });
+  };
+
+  const handleRemoveAdditionalResponsible = (index: number) => {
+    const nextList = additionalResponsibles.filter((_, i) => i !== index);
+    void handleUpdatePhase1({ additionalResponsibles: nextList });
   };
 
   // Padronização Oficial de Cores:
@@ -376,15 +479,15 @@ export function DeploymentDetailsDialog({
           </DialogHeader>
 
           {/* Alerta em Tempo Real se houver conflito com Férias cadastradas no Admin */}
-          {vacationConflict && (
+          {vacationConflicts.length > 0 && (
             <div
-              className="flex min-w-0 flex-col gap-1.5 rounded-xl border border-amber-500/50 bg-amber-50/90 dark:bg-amber-950/40 p-3 text-left text-xs text-amber-950 dark:text-amber-200"
+              className="flex min-w-0 flex-col gap-2 rounded-xl border border-amber-500/50 bg-amber-50/90 dark:bg-amber-950/40 p-3 text-left text-xs text-amber-950 dark:text-amber-200"
               data-testid="deployment-vacation-conflict-alert"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="flex items-center gap-1.5 font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-300">
                   <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
-                  Conflito com Férias Cadastradas no Admin
+                  Conflito com Férias Cadastradas no Admin ({vacationConflicts.length})
                 </span>
                 <Button
                   type="button"
@@ -400,28 +503,28 @@ export function DeploymentDetailsDialog({
                   Ver Férias (Admin)
                 </Button>
               </div>
-              <p className="text-[11px] leading-snug">
-                O implantador{" "}
-                <strong>{vacationConflict.implantador_name}</strong> possui
-                férias registradas de{" "}
-                <strong>
-                  {format(
-                    new Date(vacationConflict.start_date + "T12:00:00"),
-                    "dd/MM/yyyy"
-                  )}
-                </strong>{" "}
-                a{" "}
-                <strong>
-                  {format(
-                    new Date(vacationConflict.end_date + "T12:00:00"),
-                    "dd/MM/yyyy"
-                  )}
-                </strong>
-                {vacationConflict.description
-                  ? ` (${vacationConflict.description})`
-                  : ""}
-                .
-              </p>
+              <div className="space-y-1">
+                {vacationConflicts.map((c, idx) => (
+                  <p key={idx} className="text-[11px] leading-snug">
+                    O implantador{c.isSupport ? " de apoio" : ""}{" "}
+                    <strong>{c.implantador_name}</strong> possui férias de{" "}
+                    <strong>
+                      {format(
+                        new Date(c.start_date + "T12:00:00"),
+                        "dd/MM/yyyy"
+                      )}
+                    </strong>{" "}
+                    a{" "}
+                    <strong>
+                      {format(
+                        new Date(c.end_date + "T12:00:00"),
+                        "dd/MM/yyyy"
+                      )}
+                    </strong>
+                    {c.description ? ` (${c.description})` : ""}.
+                  </p>
+                ))}
+              </div>
             </div>
           )}
 
@@ -552,12 +655,25 @@ export function DeploymentDetailsDialog({
                 </Select>
               </div>
 
-              {/* Responsável + Chips Rápidos dos 5 Implantadores Oficiais */}
+              {/* Responsável Principal + Botão + Apoio */}
               <div className="space-y-1">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-                  <User className="h-3 w-3 text-muted-foreground" />
-                  Responsável
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                    <User className="h-3 w-3 text-muted-foreground" />
+                    Responsável {additionalResponsibles.length > 0 ? "Principal" : ""}
+                  </Label>
+                  {canEditProjects && (
+                    <button
+                      type="button"
+                      onClick={handleAddAdditionalResponsible}
+                      title="Adicionar mais um implantador com datas específicas para esta implantação"
+                      className="inline-flex items-center gap-1 text-[10px] font-bold text-primary hover:text-primary/80 transition-colors cursor-pointer bg-primary/10 hover:bg-primary/20 px-1.5 py-0.5 rounded"
+                    >
+                      <Plus className="h-2.5 w-2.5" />
+                      <span>Apoio</span>
+                    </button>
+                  )}
+                </div>
                 <AutocompleteInput
                   value={responsible}
                   onChange={(v) => handleUpdatePhase1({ responsible: v })}
@@ -568,9 +684,13 @@ export function DeploymentDetailsDialog({
                 {canEditProjects && (
                   <div className="flex flex-wrap gap-1 pt-1">
                     {CALENDAR_MEMBERS.map((member) => {
-                      const isSelected = responsible
-                        .toLowerCase()
-                        .includes(member.name.toLowerCase());
+                      const memberLabel = member.shortName || getMemberShortName(member);
+                      const isSelected = Boolean(
+                        responsible &&
+                          (responsible.toLowerCase().includes(member.name.toLowerCase()) ||
+                            responsible.toLowerCase().includes(memberLabel.toLowerCase()) ||
+                            member.name.toLowerCase().includes(responsible.toLowerCase()))
+                      );
                       return (
                         <button
                           key={member.id}
@@ -591,7 +711,7 @@ export function DeploymentDetailsDialog({
                               member.color || "bg-blue-600"
                             )}
                           />
-                          <span>{member.name.split(" ")[0]}</span>
+                          <span>{memberLabel}</span>
                         </button>
                       );
                     })}
@@ -632,6 +752,178 @@ export function DeploymentDetailsDialog({
                   className="h-8 text-xs font-medium bg-background border-border"
                 />
               </div>
+
+              {/* Implantadores de Apoio Adicionais */}
+              {additionalResponsibles.length > 0 && (
+                <div className="sm:col-span-2 space-y-2 rounded-xl border border-dashed border-primary/40 bg-primary/5 p-3 text-left">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                      <Users className="h-3.5 w-3.5" />
+                      Implantadores de Apoio Adicionais ({additionalResponsibles.length})
+                    </span>
+                    {canEditProjects && (
+                      <button
+                        type="button"
+                        onClick={handleAddAdditionalResponsible}
+                        className="inline-flex items-center gap-1 text-[10px] font-bold text-primary hover:underline cursor-pointer"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Adicionar mais um
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    {additionalResponsibles.map((assign, index) => {
+                      const aStartStr = assign.startDate
+                        ? format(new Date(assign.startDate), "yyyy-MM-dd")
+                        : "";
+                      const aEndStr = assign.endDate
+                        ? format(new Date(assign.endDate), "yyyy-MM-dd")
+                        : "";
+                      const assignHolidays = getWeekdayHolidaysInRange(aStartStr, aEndStr);
+
+                      return (
+                        <div
+                          key={assign.id || index}
+                          className="flex flex-col gap-2 rounded-lg border border-border bg-background p-2.5 shadow-2xs"
+                        >
+                          <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                            {/* Nome do Implantador de Apoio */}
+                            <div className="sm:col-span-5 space-y-1">
+                              <Label className="text-[9.5px] font-bold text-muted-foreground uppercase flex items-center gap-1">
+                                <User className="h-3 w-3 text-primary" />
+                                Implantador de Apoio #{index + 1}
+                              </Label>
+                              <AutocompleteInput
+                                value={assign.responsible || ""}
+                                onChange={(val) =>
+                                  handleUpdateAdditionalResponsible(index, { responsible: val })
+                                }
+                                disabled={!canEditProjects}
+                                placeholder="Selecione o implantador..."
+                                className="h-8 text-xs bg-background border-border"
+                              />
+                            </div>
+
+                            {/* Data Início do Apoio */}
+                            <div className="sm:col-span-3 space-y-1">
+                              <Label className="text-[9.5px] font-bold text-muted-foreground uppercase">
+                                Início
+                              </Label>
+                              <Input
+                                type="date"
+                                value={aStartStr}
+                                onChange={(e) => {
+                                  const nextVal = e.target.value
+                                    ? new Date(e.target.value + "T12:00:00")
+                                    : undefined;
+                                  handleUpdateAdditionalResponsible(index, {
+                                    startDate: nextVal,
+                                  });
+                                }}
+                                disabled={!canEditProjects}
+                                className="h-8 text-xs font-medium bg-background border-border"
+                              />
+                            </div>
+
+                            {/* Data Término do Apoio */}
+                            <div className="sm:col-span-3 space-y-1">
+                              <Label className="text-[9.5px] font-bold text-muted-foreground uppercase">
+                                Término
+                              </Label>
+                              <Input
+                                type="date"
+                                value={aEndStr}
+                                onChange={(e) => {
+                                  const nextVal = e.target.value
+                                    ? new Date(e.target.value + "T12:00:00")
+                                    : undefined;
+                                  handleUpdateAdditionalResponsible(index, {
+                                    endDate: nextVal,
+                                  });
+                                }}
+                                disabled={!canEditProjects}
+                                className="h-8 text-xs font-medium bg-background border-border"
+                              />
+                            </div>
+
+                            {/* Botão Remover */}
+                            <div className="sm:col-span-1 flex items-end justify-center pt-2 sm:pt-4">
+                              {canEditProjects && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleRemoveAdditionalResponsible(index)}
+                                  className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                  title="Remover este responsável de apoio"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Chips Rápidos dos Membros para o Apoio */}
+                          {canEditProjects && (
+                            <div className="flex flex-wrap gap-1">
+                              {CALENDAR_MEMBERS.map((member) => {
+                                const memberLabel = member.shortName || getMemberShortName(member);
+                                const currentResp = assign.responsible || "";
+                                const isSelected = Boolean(
+                                  currentResp &&
+                                    (currentResp.toLowerCase().includes(member.name.toLowerCase()) ||
+                                      currentResp.toLowerCase().includes(memberLabel.toLowerCase()) ||
+                                      member.name.toLowerCase().includes(currentResp.toLowerCase()))
+                                );
+                                return (
+                                  <button
+                                    key={member.id}
+                                    type="button"
+                                    onClick={() =>
+                                      handleUpdateAdditionalResponsible(index, {
+                                        responsible: member.name,
+                                      })
+                                    }
+                                    className={cn(
+                                      "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold transition-colors",
+                                      isSelected
+                                        ? "border-primary bg-primary text-primary-foreground"
+                                        : "border-border bg-background text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                                    )}
+                                  >
+                                    <span
+                                      className={cn(
+                                        "h-1.5 w-1.5 rounded-full",
+                                        member.color || "bg-blue-600"
+                                      )}
+                                    />
+                                    <span>{memberLabel}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* Aviso se a data do apoio contiver feriado */}
+                          {assignHolidays.length > 0 && (
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-500/10 px-2 py-1 rounded">
+                              <AlertTriangle className="h-3 w-3 shrink-0 text-amber-600" />
+                              <span>
+                                Período deste apoio inclui feriado:{" "}
+                                {assignHolidays
+                                  .map((h) => `${h.shortDate} (${h.name})`)
+                                  .join(", ")}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Modalidade / Local do Treinamento */}
               <div className="space-y-1 sm:col-span-2">

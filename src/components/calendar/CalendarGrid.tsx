@@ -107,7 +107,6 @@ const DENSITY_WEEK_WIDTH: Record<TimelineDensity, number> = {
  * - Orion REG = Verde (Emerald)
  * - Orion PRO = Azul (Blue)
  * - Orion TN = Vermelho (Bordô Siplan / Rose)
- * - Conjunta (PRO+REG) = Roxo (Violet)
  * - Férias (Admin) = Âmbar/Laranja Tracejado
  */
 function getSystemBarClasses(event: CalendarEvent): string {
@@ -134,10 +133,6 @@ function getSystemBarClasses(event: CalendarEvent): string {
       return isConfirmed
         ? "bg-gradient-to-r from-[#d3123f] to-[#be123c] text-white border border-[#881337] shadow-xs hover:brightness-110"
         : "bg-gradient-to-r from-[#d3123f] to-[#be123c] text-white border-2 border-dashed border-white/80 shadow-xs hover:brightness-110";
-    case "shared":
-      return isConfirmed
-        ? "bg-gradient-to-r from-violet-600 to-purple-700 text-white border border-violet-950 ring-2 ring-purple-400/40 shadow-xs hover:brightness-110"
-        : "bg-gradient-to-r from-violet-600 to-purple-700 text-white border-2 border-dashed border-white/80 ring-2 ring-purple-400/40 shadow-xs hover:brightness-110";
     default:
       return isConfirmed
         ? "bg-gradient-to-r from-slate-700 to-slate-800 text-white border border-slate-950 shadow-xs hover:brightness-110"
@@ -154,8 +149,6 @@ function getSystemShortBadge(event: CalendarEvent): string {
       return "PRO";
     case "tn":
       return "TN";
-    case "shared":
-      return "PRO+REG";
     default:
       return event.systemType?.slice(0, 6).toUpperCase() || "FASE 1";
   }
@@ -229,11 +222,11 @@ function matchesEventFilters(
 
   if (systemFilter !== "all") {
     if (systemFilter === "reg") {
-      if (event.systemCategory !== "reg" && event.systemCategory !== "shared") {
+      if (event.systemCategory !== "reg") {
         return false;
       }
     } else if (systemFilter === "pro") {
-      if (event.systemCategory !== "pro" && event.systemCategory !== "shared") {
+      if (event.systemCategory !== "pro") {
         return false;
       }
     } else if (systemFilter === "tn") {
@@ -284,11 +277,9 @@ function matchesBacklogFilters(
 
   if (systemFilter !== "all") {
     if (systemFilter === "reg") {
-      if (item.systemCategory !== "reg" && item.systemCategory !== "shared")
-        return false;
+      if (item.systemCategory !== "reg") return false;
     } else if (systemFilter === "pro") {
-      if (item.systemCategory !== "pro" && item.systemCategory !== "shared")
-        return false;
+      if (item.systemCategory !== "pro") return false;
     } else if (systemFilter === "tn") {
       if (item.systemCategory !== "tn") return false;
     }
@@ -1326,6 +1317,14 @@ export function CalendarGrid({
                                               >
                                                 {badgeText}
                                               </span>
+                                              {event.isSupport && (
+                                                <span
+                                                  className="shrink-0 rounded bg-white/35 text-white px-1 py-0.2 text-[8px] font-black uppercase tracking-wider shadow-2xs"
+                                                  title={`Implantador de Apoio (Titular: ${event.primaryResponsible || "Principal"})`}
+                                                >
+                                                  APOIO
+                                                </span>
+                                              )}
 
 
 
@@ -1346,24 +1345,11 @@ export function CalendarGrid({
                                               </span>
                                             </div>
 
-                                            {/* Linha 2 da Barra: #Chamado + Período + Indicador de Feriado na Semana */}
+                                            {/* Linha 2 da Barra: #Chamado + Período */}
                                             <div className="mt-0.5 flex min-w-0 items-center justify-between gap-1 text-[9.5px] font-semibold opacity-95">
                                               <span className="truncate">
                                                 {subtitleParts.join(" • ")}
                                               </span>
-                                              {eventHolidays.length > 0 && (
-                                                <span
-                                                  className="inline-flex shrink-0 items-center gap-0.5 rounded bg-amber-400/95 px-1 text-[8px] font-extrabold text-slate-950"
-                                                  title={`Semana com feriado em dia útil: ${eventHolidays
-                                                    .map(
-                                                      (h) =>
-                                                        `${h.shortDate} (${h.name})`
-                                                    )
-                                                    .join(", ")}`}
-                                                >
-                                                  ⚠️ FERIADO
-                                                </span>
-                                              )}
                                             </div>
                                           </button>
                                         </TooltipTrigger>
@@ -1377,6 +1363,11 @@ export function CalendarGrid({
                                           <div className="space-y-2.5">
                                             {/* Badges Superiores */}
                                             <div className="flex flex-wrap items-center justify-between gap-1.5">
+                                              {event.isSupport && (
+                                                <span className="w-full rounded border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10.5px] font-bold text-primary">
+                                                  🤝 Implantador de Apoio • Titular: <strong>{event.primaryResponsible || "Principal"}</strong>
+                                                </span>
+                                              )}
                                               <div className="flex flex-wrap items-center gap-1.5">
                                                 {event.ticketNumber && (
                                                   <span className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-extrabold text-foreground">
@@ -1394,10 +1385,7 @@ export function CalendarGrid({
                                                         : event.systemCategory ===
                                                             "pro"
                                                           ? "bg-blue-600"
-                                                          : event.systemCategory ===
-                                                              "shared"
-                                                            ? "bg-violet-600"
-                                                            : "bg-[#d3123f]"
+                                                          : "bg-[#d3123f]"
                                                   )}
                                                 >
                                                   {isVacation
@@ -1723,6 +1711,11 @@ export function CalendarGrid({
                                             <span className="rounded bg-black/20 px-1 py-0.2 text-[8.5px] font-extrabold uppercase">
                                               {getSystemShortBadge(evt)}
                                             </span>
+                                            {evt.isSupport && (
+                                              <span className="rounded bg-white/30 text-white px-1 py-0.2 text-[8px] font-black uppercase">
+                                                APOIO
+                                              </span>
+                                            )}
 
                                           </div>
                                           <div className="text-[11px] font-extrabold leading-snug break-words">

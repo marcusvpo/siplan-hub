@@ -56,7 +56,6 @@ export interface CalendarKpiSummary {
   regCount: number;
   proCount: number;
   tnCount: number;
-  sharedCount: number;
   confirmedCount: number;
   plannedCount: number;
   vacationsCount: number;
@@ -211,7 +210,6 @@ export function CalendarControls({
     let regCount = 0;
     let proCount = 0;
     let tnCount = 0;
-    let sharedCount = 0;
     let confirmedCount = 0;
     let plannedCount = 0;
 
@@ -221,11 +219,7 @@ export function CalendarControls({
       if (uniqueProjectIds.has(key)) continue;
       uniqueProjectIds.add(key);
 
-      if (evt.systemCategory === "shared") {
-        sharedCount += 1;
-        regCount += 1;
-        proCount += 1;
-      } else if (evt.systemCategory === "reg") {
+      if (evt.systemCategory === "reg") {
         regCount += 1;
       } else if (evt.systemCategory === "pro") {
         proCount += 1;
@@ -246,7 +240,6 @@ export function CalendarControls({
       regCount,
       proCount,
       tnCount,
-      sharedCount,
       confirmedCount,
       plannedCount,
       vacationsCount: vacEvents.length,
@@ -489,10 +482,7 @@ export function CalendarControls({
             </span>
           </div>
           <div className="truncate text-[10px] font-medium text-muted-foreground">
-            {computedKpis.uniqueClients} cartórios •{" "}
-            {computedKpis.sharedCount > 0
-              ? `${computedKpis.sharedCount} conjunta(s)`
-              : "Clique p/ ver todos"}
+            {computedKpis.uniqueClients} cartórios • Clique p/ ver todos
           </div>
         </button>
 

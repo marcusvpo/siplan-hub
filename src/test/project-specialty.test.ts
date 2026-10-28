@@ -10,11 +10,12 @@ import {
 
 describe("projectSpecialty utils", () => {
   describe("MAIN_SYSTEMS", () => {
-    it("deve conter os sistemas principais esperados incluindo WEBRI", () => {
+    it("deve conter os sistemas principais esperados incluindo WEBRI e WEB RC", () => {
       expect(MAIN_SYSTEMS).toContain("Orion TN");
       expect(MAIN_SYSTEMS).toContain("Orion PRO");
       expect(MAIN_SYSTEMS).toContain("Orion REG");
       expect(MAIN_SYSTEMS).toContain("WEBRI");
+      expect(MAIN_SYSTEMS).toContain("WEB RC");
       expect(MAIN_SYSTEMS).toContain("Modelos TN");
     });
   });
@@ -59,6 +60,12 @@ describe("projectSpecialty utils", () => {
       expect(normalizeSystemType("WebRI")).toBe("WebRI");
     });
 
+    it("deve normalizar variações de WEB RC", () => {
+      expect(normalizeSystemType("WEBRC")).toBe("WEB RC");
+      expect(normalizeSystemType("WEB RC")).toBe("WEB RC");
+      expect(normalizeSystemType("WebRC")).toBe("WEB RC");
+    });
+
     it("deve retornar vazio se nulo ou indefinido", () => {
       expect(normalizeSystemType("")).toBe("");
       expect(normalizeSystemType(null)).toBe("");
@@ -88,6 +95,12 @@ describe("projectSpecialty utils", () => {
       expect(getSpecialtyForSystem("WEBRI")).toBe("Registro de Imóveis");
       expect(getSpecialtyForSystem("WebRI")).toBe("Registro de Imóveis");
       expect(getSpecialtyForSystem("WEB RI")).toBe("Registro de Imóveis");
+    });
+
+    it("deve mapear WEB RC para Registro Civil", () => {
+      expect(getSpecialtyForSystem("WEB RC")).toBe("Registro Civil");
+      expect(getSpecialtyForSystem("WebRC")).toBe("Registro Civil");
+      expect(getSpecialtyForSystem("WEBRC")).toBe("Registro Civil");
     });
 
     it("deve retornar undefined para sistemas sem mapeamento ou vazios", () => {
