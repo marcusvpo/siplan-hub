@@ -235,14 +235,24 @@ export interface RemoteAccessItem {
   password?: string;
 }
 
-// Credencial de acesso ao SO na etapa 4 (Preparacao de Ambiente). Suporta
-// multiplos SOs por projeto (ex: um servidor Windows e outro Linux), cada um
-// com seu tipo, usuario e senha.
+export interface OsCredentialField {
+  id: string;
+  label: string; // Ex: "Host", "Porta", "IP", "Usuário", "Senha"
+  value: string;
+}
+
+// Bloco de credenciais de acesso / servidor na etapa 4 (Preparação de Ambiente).
+// Suporta múltiplos blocos (ex: "Servidor Linux", "Servidor Windows", "VM08", etc.)
+// com linhas dinâmicas de rótulo e valor personalizáveis.
 export interface OsCredential {
   id: string;
+  title?: string; // Título do Bloco (ex: "Servidor Linux", "Servidor Windows")
+  serverName?: string;
+  serverIp?: string;
   osType?: string; // "Windows" | "Linux"
   login?: string;
   password?: string;
+  fields?: OsCredentialField[];
 }
 
 // Print de tela anexado na etapa 4 (Preparacao de Ambiente). O binario fica no
@@ -405,11 +415,21 @@ export interface ModelWorkerStatus {
   note?: string;
 }
 
+export interface Phase1ResponsibleAssignment {
+  id: string;
+  responsible: string;
+  startDate?: Date;
+  endDate?: Date;
+  role?: string;
+  notes?: string;
+}
+
 export interface ImplementationPhase {
   status: StageStatus;
   responsible?: string;
   startDate?: Date;
   endDate?: Date;
+  additionalResponsibles?: Phase1ResponsibleAssignment[];
   remoteInstallDate?: Date;
   switchType?: string;
   switchStartTime?: string;

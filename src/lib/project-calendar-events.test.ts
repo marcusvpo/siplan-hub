@@ -261,13 +261,11 @@ describe("project-calendar-events", () => {
   });
 
   describe("classifySystemCategory", () => {
-    it("classifica corretamente REG, PRO, TN, SHARED e OTHER", () => {
+    it("classifica estritamente REG, PRO, TN e OTHER conforme o sistema único do projeto", () => {
       expect(classifySystemCategory("Orion REG")).toBe("reg");
       expect(classifySystemCategory("Orion PRO")).toBe("pro");
       expect(classifySystemCategory("Orion TN")).toBe("tn");
       expect(classifySystemCategory("Modelos / Notas")).toBe("tn");
-      expect(classifySystemCategory("Orion PRO e Orion REG")).toBe("shared");
-      expect(classifySystemCategory("Orion REG", true)).toBe("shared");
       expect(classifySystemCategory("Financeiro")).toBe("other");
     });
   });
@@ -365,11 +363,11 @@ describe("project-calendar-events", () => {
       expect(members.some((m) => m.id === "luan-caldeira")).toBe(false);
     });
 
-    it("gera eventos compartilhados para múltiplos responsáveis na Fase 1", () => {
+    it("gera eventos na timeline para múltiplos responsáveis na Fase 1 mantendo a categoria do sistema", () => {
       const project = createMockProject({
         id: "proj-shared",
         clientName: "Cartório Integrado de Santos",
-        systemType: "Orion PRO & REG",
+        systemType: "Orion PRO",
         implementation: {
           status: "in-progress",
           phase1: {
@@ -389,8 +387,8 @@ describe("project-calendar-events", () => {
         "julio-araujo",
         "rodrigo-mizuno",
       ]);
-      expect(events[0].isShared).toBe(true);
-      expect(events[0].systemCategory).toBe("shared");
+      expect(events[0].systemCategory).toBe("pro");
+      expect(events[1].systemCategory).toBe("pro");
       expect(events[0].allResponsibles).toEqual([
         "Julio Araujo",
         "Rodrigo Mizuno",

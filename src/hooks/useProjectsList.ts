@@ -115,6 +115,23 @@ interface ProjectRow {
 
 import { differenceInDays } from "date-fns";
 
+function parsePhase1FromDb(rawPhase: unknown): ImplementationStageV2['phase1'] | undefined {
+  if (!rawPhase || typeof rawPhase !== 'object') return undefined;
+  const p = rawPhase as any;
+  return {
+    ...p,
+    startDate: p.startDate ? new Date(p.startDate) : undefined,
+    endDate: p.endDate ? new Date(p.endDate) : undefined,
+    additionalResponsibles: Array.isArray(p.additionalResponsibles)
+      ? p.additionalResponsibles.map((a: any) => ({
+          ...a,
+          startDate: a.startDate ? new Date(a.startDate) : undefined,
+          endDate: a.endDate ? new Date(a.endDate) : undefined,
+        }))
+      : [],
+  };
+}
+
 function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
     const lastUpdatedAt = new Date(row.updated_at);
     const daysSinceUpdate = differenceInDays(new Date(), lastUpdatedAt);
@@ -188,7 +205,7 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
                 startDate: row.implementation_start_date ? new Date(row.implementation_start_date as string) : undefined,
                 endDate: row.implementation_end_date ? new Date(row.implementation_end_date as string) : undefined,
                 responsible: row.implementation_responsible as string | undefined,
-                phase1: (row.implementation_phase1 as ImplementationStageV2['phase1']) || undefined
+                phase1: parsePhase1FromDb(row.implementation_phase1)
             } as ImplementationStageV2,
             post: { 
                 status: row.post_status || 'todo',

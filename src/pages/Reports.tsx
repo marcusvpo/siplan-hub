@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { GlobalMetrics } from "@/components/Reports/GlobalMetrics";
 import { TimePerStageChart } from "@/components/Reports/TimePerStageChart";
@@ -9,13 +9,53 @@ import { ReportsFilters } from "@/components/Reports/ReportsFilters";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { IndividualProjectReport } from "@/components/Reports/Individual/IndividualProjectReport";
 import { ImplementerReportTab } from "@/components/Reports/Implementers/ImplementerReportTab";
-import { Loader2, LayoutDashboard, Search, Users } from "lucide-react";
+import { InfraProgressReportTab } from "@/components/Reports/InfraProgress/InfraProgressReportTab";
+import { Loader2, LayoutDashboard, Search, Users, Server } from "lucide-react";
 
 export default function Reports() {
   const { projects, isLoading } = useProjectsV2();
+
+  // Safely extract tab from URL without requiring a strict Router context
+  const getInitialTab = () => {
+    try {
+      if (typeof window !== "undefined" && window.location) {
+        const params = new URLSearchParams(window.location.search);
+        const tab = params.get("tab");
+        if (tab === "infra" || tab === "infra-progress") return "infra-progress";
+        if (tab === "individual") return "individual";
+        if (tab === "implementers") return "implementers";
+      }
+    } catch {
+      // Ignora erro de acesso a location/URL em ambientes restritos
+    }
+    return "overview";
+  };
+
+  const [activeTab, setActiveTab] = useState(getInitialTab);
   const [systemFilter, setSystemFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState<Date | undefined>();
-  const [activeTab, setActiveTab] = useState("overview");
+
+  // Synchronize on popstate or URL changes
+  useEffect(() => {
+    const handlePopState = () => {
+      setActiveTab(getInitialTab());
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const handleTabChange = (val: string) => {
+    setActiveTab(val);
+    try {
+      if (typeof window !== "undefined" && window.history) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("tab", val);
+        window.history.replaceState({}, "", url.toString());
+      }
+    } catch {
+      // Ignora erro de acesso a location/URL em ambientes restritos
+    }
+  };
 
   if (isLoading) {
     return (
@@ -31,7 +71,7 @@ export default function Reports() {
     new Set(projectsWithoutModelosTN.map((p) => p.systemType).filter(Boolean))
   ).sort();
 
-  // Apply filters
+  // Apply filters for the Overview tab
   const filteredProjects = projectsWithoutModelosTN.filter((project) => {
     const matchesSystem =
       systemFilter === "all" || project.systemType === systemFilter;
@@ -39,7 +79,6 @@ export default function Reports() {
     let matchesDate = true;
     if (dateFilter) {
       const projectDate = new Date(project.createdAt);
-      // Simple check: project created after or on the selected date
       matchesDate = projectDate >= dateFilter;
     }
 
@@ -52,11 +91,11 @@ export default function Reports() {
       data-testid="reports-page"
     >
       <Tabs
-        defaultValue="overview"
+        value={activeTab}
         className="min-w-0 space-y-4"
-        onValueChange={setActiveTab}
+        onValueChange={handleTabChange}
       >
-        <div className="flex min-w-0 flex-col justify-between gap-3 border-b border-border pb-3 md:flex-row md:items-end">
+        <div className="flex min-w-0 flex-col justify-between gap-3 border-b border-border pb-3 lg:flex-row lg:items-end">
           <div className="min-w-0 space-y-0.5">
             <div className="flex items-center gap-1.5 mb-0.5">
               <div className="h-3.5 w-0.75 bg-primary rounded-full" />
@@ -70,10 +109,10 @@ export default function Reports() {
             </p>
           </div>
 
-          <TabsList className="grid h-auto w-full grid-cols-3 gap-1 self-start overflow-x-hidden rounded-lg border border-border bg-muted/50 p-1 shadow-sm backdrop-blur-md sm:flex sm:h-9 sm:w-auto sm:gap-0 sm:overflow-x-auto sm:p-0.5 md:self-center">
+          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 self-start overflow-x-hidden rounded-lg border border-border bg-muted/50 p-1 shadow-sm backdrop-blur-md sm:flex sm:h-9 sm:w-auto sm:gap-0 sm:overflow-x-auto sm:p-0.5 lg:self-center">
             <TabsTrigger 
               value="overview" 
-              className="h-10 min-w-0 gap-1 px-1 py-1 text-[10px] font-bold uppercase tracking-wide transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm sm:h-8 sm:gap-1.5 sm:px-3 sm:tracking-wider"
+              className="h-9 min-w-0 gap-1 px-1.5 py-1 text-[10px] font-bold uppercase tracking-wide transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm sm:h-8 sm:gap-1.5 sm:px-3 sm:tracking-wider cursor-pointer"
             >
               <LayoutDashboard className="h-3 w-3" />
               <span className="sm:hidden">Geral</span>
@@ -81,7 +120,7 @@ export default function Reports() {
             </TabsTrigger>
             <TabsTrigger 
               value="individual" 
-              className="h-10 min-w-0 gap-1 px-1 py-1 text-[10px] font-bold uppercase tracking-wide transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm sm:h-8 sm:gap-1.5 sm:px-3 sm:tracking-wider"
+              className="h-9 min-w-0 gap-1 px-1.5 py-1 text-[10px] font-bold uppercase tracking-wide transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm sm:h-8 sm:gap-1.5 sm:px-3 sm:tracking-wider cursor-pointer"
             >
               <Search className="h-3 w-3" />
               <span className="sm:hidden">Individual</span>
@@ -89,11 +128,19 @@ export default function Reports() {
             </TabsTrigger>
             <TabsTrigger 
               value="implementers" 
-              className="h-10 min-w-0 gap-1 px-1 py-1 text-[10px] font-bold uppercase tracking-wide transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm sm:h-8 sm:gap-1.5 sm:px-3 sm:tracking-wider"
+              className="h-9 min-w-0 gap-1 px-1.5 py-1 text-[10px] font-bold uppercase tracking-wide transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm sm:h-8 sm:gap-1.5 sm:px-3 sm:tracking-wider cursor-pointer"
             >
               <Users className="h-3 w-3" />
               <span className="sm:hidden">Equipe</span>
               <span className="hidden sm:inline">Implantadores</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="infra-progress" 
+              className="h-9 min-w-0 gap-1 px-1.5 py-1 text-[10px] font-bold uppercase tracking-wide transition-all data-[state=active]:bg-background data-[state=active]:shadow-sm sm:h-8 sm:gap-1.5 sm:px-3 sm:tracking-wider cursor-pointer"
+            >
+              <Server className="h-3 w-3 text-primary" />
+              <span className="sm:hidden">Andamento Infra</span>
+              <span className="hidden sm:inline">Relatório Andamento Infra</span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -129,6 +176,11 @@ export default function Reports() {
 
         <TabsContent value="implementers" className="m-0 min-w-0 animate-in fade-in slide-in-from-right-4 duration-500">
           <ImplementerReportTab />
+        </TabsContent>
+
+        {/* NOVA ABA: RELATÓRIO ANDAMENTO INFRAESTRUTURA */}
+        <TabsContent value="infra-progress" className="m-0 min-w-0 animate-in fade-in slide-in-from-right-4 duration-500">
+          <InfraProgressReportTab projects={projects} />
         </TabsContent>
       </Tabs>
     </div>

@@ -616,6 +616,22 @@ const App = () => (
                             }
                           />
                           <Route
+                            path="/reports/infra"
+                            element={
+                              <RequirePermission resource="reports">
+                                <Navigate to="/reports?tab=infra-progress" replace />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/reports/infra-status"
+                            element={
+                              <RequirePermission resource="reports">
+                                <Navigate to="/reports?tab=infra-progress" replace />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
                             path="/analytics"
                             element={
                               <RequirePermission resource="analytics">

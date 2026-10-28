@@ -30,7 +30,7 @@ function stages(): ProjectV2["stages"] {
       postgresVersion: "16",
       osType: "Windows",
       osVersion: "Server 2022",
-      osCredentials: [{ id: "os-1", osType: "Linux", login: "suporte", password: "outra-senha-de-teste" }],
+      osCredentials: [{ id: "os-1", serverName: "SRV-PRODUCAO", serverIp: "192.168.1.15", osType: "Linux", login: "suporte", password: "outra-senha-de-teste" }],
       remoteAccessList: [{ system: "AnyDesk", id: "123456" }],
       screenshots: [{ path: "project/ambiente.webp", name: "Ambiente" }],
     },

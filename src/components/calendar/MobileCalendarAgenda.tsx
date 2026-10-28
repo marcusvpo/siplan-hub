@@ -63,8 +63,6 @@ function getSystemBadgeClasses(category?: CalendarEvent["systemCategory"]) {
       return "bg-blue-600 text-white border-blue-800";
     case "tn":
       return "bg-[#d3123f] text-white border-[#881337]";
-    case "shared":
-      return "bg-violet-600 text-white border-violet-900";
     default:
       return "bg-muted text-foreground border-border";
   }
@@ -79,8 +77,6 @@ function getCardLeftBorderClass(event: CalendarEvent) {
       return "border-l-4 border-l-blue-600";
     case "tn":
       return "border-l-4 border-l-[#d3123f]";
-    case "shared":
-      return "border-l-4 border-l-violet-600";
     default:
       return "border-l-4 border-l-primary";
   }
@@ -162,9 +158,6 @@ function MobileEventCard({
                 getSystemBadgeClasses(event.systemCategory)
               )}
             >
-              {event.systemCategory === "shared" && (
-                <Sparkles className="mr-1 h-2.5 w-2.5" />
-              )}
               {event.systemType || "Implantação"}
             </Badge>
           )}

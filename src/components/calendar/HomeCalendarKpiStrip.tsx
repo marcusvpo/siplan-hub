@@ -80,7 +80,6 @@ function HomeCalendarKpiStripContent() {
         regCount: 0,
         proCount: 0,
         tnCount: 0,
-        sharedCount: 0,
         confirmedCount: 0,
         plannedCount: 0,
         vacationsCount: 0,
@@ -144,7 +143,6 @@ function HomeCalendarKpiStripContent() {
     let regCount = 0;
     let proCount = 0;
     let tnCount = 0;
-    let sharedCount = 0;
     let confirmedCount = 0;
     let plannedCount = 0;
 
@@ -154,11 +152,7 @@ function HomeCalendarKpiStripContent() {
       if (uniqueProjectIds.has(key)) return;
       uniqueProjectIds.add(key);
 
-      if (evt.systemCategory === "shared") {
-        sharedCount += 1;
-        regCount += 1;
-        proCount += 1;
-      } else if (evt.systemCategory === "reg") {
+      if (evt.systemCategory === "reg") {
         regCount += 1;
       } else if (evt.systemCategory === "pro") {
         proCount += 1;
@@ -181,7 +175,6 @@ function HomeCalendarKpiStripContent() {
       regCount,
       proCount,
       tnCount,
-      sharedCount,
       confirmedCount,
       plannedCount,
       vacationsCount: vacEvents.length,
@@ -241,10 +234,7 @@ function HomeCalendarKpiStripContent() {
             </span>
           </div>
           <div className="truncate text-[10px] font-medium text-muted-foreground">
-            {kpis.uniqueClients} cartórios •{" "}
-            {kpis.sharedCount > 0
-              ? `${kpis.sharedCount} conjunta(s)`
-              : "Ver timeline"}
+            {kpis.uniqueClients} cartórios • Ver timeline
           </div>
         </button>
 
