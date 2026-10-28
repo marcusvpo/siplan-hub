@@ -240,6 +240,8 @@ export interface RemoteAccessItem {
 // com seu tipo, usuario e senha.
 export interface OsCredential {
   id: string;
+  serverName?: string;
+  serverIp?: string;
   osType?: string; // "Windows" | "Linux"
   login?: string;
   password?: string;
