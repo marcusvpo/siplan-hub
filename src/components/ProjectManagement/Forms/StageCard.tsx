@@ -409,7 +409,7 @@ export function StageCard({
             <div
               className={cn(
                 "relative p-4 rounded-lg border border-dashed grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4",
-                collapsibleSpecificFields
+                collapsibleSpecificFields && !specificOpen
                   ? "border-primary/40 bg-primary/5 dark:bg-primary/10"
                   : "bg-neutral-50/30 border-neutral-200 dark:bg-neutral-950/20 dark:border-neutral-800",
               )}
@@ -419,25 +419,54 @@ export function StageCard({
                   <button
                     type="button"
                     onClick={() => setSpecificOpen((v) => !v)}
-                    className="group flex min-h-11 w-full items-center justify-between gap-3 rounded-md px-2 text-left transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:focus-visible:ring-offset-neutral-950"
+                    className={cn(
+                      "group flex min-h-11 w-full items-center justify-between gap-3 rounded-md px-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-neutral-950",
+                      specificOpen
+                        ? "hover:bg-neutral-100/80 focus-visible:ring-ring dark:hover:bg-neutral-900/60"
+                        : "hover:bg-primary/10 focus-visible:ring-primary",
+                    )}
                     title={specificOpen ? "Recolher" : "Expandir"}
                     aria-label={specificOpen ? "Recolher campos específicos" : "Expandir campos específicos"}
                     aria-expanded={specificOpen}
                   >
                     <span className="flex min-w-0 items-center gap-2.5">
-                      <span className="flex size-7 items-center justify-center rounded-full bg-primary/15 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                      <span
+                        className={cn(
+                          "flex size-7 items-center justify-center rounded-full transition-colors",
+                          specificOpen
+                            ? "bg-neutral-100 text-neutral-500 group-hover:bg-neutral-200 group-hover:text-foreground dark:bg-neutral-800 dark:text-neutral-400 dark:group-hover:bg-neutral-700"
+                            : "bg-primary/15 text-primary group-hover:bg-primary group-hover:text-primary-foreground",
+                        )}
+                      >
                         {specificOpen ? (
                           <ChevronDown className="size-4" />
                         ) : (
                           <ChevronRight className="size-4" />
                         )}
                       </span>
-                      <h4 className="flex min-w-0 items-center gap-2 text-sm font-extrabold uppercase tracking-wide text-primary">
-                        <span className="h-1 w-5 rounded-full bg-primary" />
+                      <h4
+                        className={cn(
+                          "flex min-w-0 items-center gap-2 text-sm font-extrabold uppercase tracking-wide",
+                          specificOpen
+                            ? "text-neutral-500 dark:text-neutral-400"
+                            : "text-primary",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "h-1 w-5 rounded-full",
+                            specificOpen ? "bg-neutral-400 dark:bg-neutral-650" : "bg-primary",
+                          )}
+                        />
                         {specificFieldsTitle}
                       </h4>
                     </span>
-                    <span className="hidden shrink-0 text-[11px] font-semibold text-primary sm:inline">
+                    <span
+                      className={cn(
+                        "hidden shrink-0 text-[11px] font-semibold sm:inline",
+                        specificOpen ? "text-muted-foreground" : "text-primary",
+                      )}
+                    >
                       {specificOpen ? "Clique para recolher" : "Clique para expandir"}
                     </span>
                   </button>

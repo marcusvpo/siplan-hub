@@ -290,8 +290,8 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/StageCard.tsx": {
-    "mtime": 1793219097.392252,
-    "ast_hash": "eb617c8e0039ad795d7eaae91decd5b2",
+    "mtime": 1793220314.3870707,
+    "ast_hash": "ef4ef4e471e4c5bf157632b006d1e3ed",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/StageForms/AdherenceStageForm.tsx": {
@@ -2555,7 +2555,7 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/EnvironmentScreenshots.tsx": {
-    "mtime": 1793219365.811596,
+    "mtime": 1793220240.3400862,
     "ast_hash": "574f0d3038916f740ad51c7e4348581d",
     "semantic_hash": ""
   },
@@ -2590,8 +2590,8 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/CollapsibleFieldSection.tsx": {
-    "mtime": 1793219097.3912535,
-    "ast_hash": "446d55f41f453cb4486f2dbd34bdf254",
+    "mtime": 1793220314.3931437,
+    "ast_hash": "2df72b35fdce330701b1acb75d8f7e4b",
     "semantic_hash": ""
   },
   "src/components/auth/RequirePermission.tsx": {
@@ -6560,8 +6560,8 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/CollapsibleFieldSection.test.tsx": {
-    "mtime": 1793219097.3912535,
-    "ast_hash": "b249aa74313fc49ba546205519aa3f09",
+    "mtime": 1793220314.3931437,
+    "ast_hash": "253419496bb90f7cca286e8f964b5c75",
     "semantic_hash": ""
   },
   "supabase/migrations/20261028120000_project_environment_collapsible_sections_changelog.sql": {
@@ -6570,13 +6570,18 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/EnvironmentScreenshots.test.tsx": {
-    "mtime": 1793219365.811596,
-    "ast_hash": "b9270da60a29ffaec89ece26e3e1fcfd",
+    "mtime": 1793220240.3390875,
+    "ast_hash": "a2ef0bfaa8574fd1ab4353d4dcedf909",
     "semantic_hash": ""
   },
   "supabase/migrations/20261028123000_environment_gallery_default_open_changelog.sql": {
-    "mtime": 1793219365.8146026,
-    "ast_hash": "cb68a4d7684fa7e7dfbd824f30313d7d",
+    "mtime": 1793220240.3420868,
+    "ast_hash": "59fef3abf5b031e55c30ae2afc9d4694",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20261028124000_environment_collapsible_sections_open_style_changelog.sql": {
+    "mtime": 1793220314.3986752,
+    "ast_hash": "ff1835be08498b3e918e561900d9c53a",
     "semantic_hash": ""
   }
 }
