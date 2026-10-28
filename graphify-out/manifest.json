@@ -290,7 +290,7 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/StageCard.tsx": {
-    "mtime": 1793218083.8161457,
+    "mtime": 1793219097.392252,
     "ast_hash": "eb617c8e0039ad795d7eaae91decd5b2",
     "semantic_hash": ""
   },
@@ -2555,8 +2555,8 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/EnvironmentScreenshots.tsx": {
-    "mtime": 1784032926.410564,
-    "ast_hash": "22e123f425bbfb39c58d77db7c570143",
+    "mtime": 1793219365.811596,
+    "ast_hash": "574f0d3038916f740ad51c7e4348581d",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/ObservationsWithAI.tsx": {
@@ -2590,7 +2590,7 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/CollapsibleFieldSection.tsx": {
-    "mtime": 1793218083.8161457,
+    "mtime": 1793219097.3912535,
     "ast_hash": "446d55f41f453cb4486f2dbd34bdf254",
     "semantic_hash": ""
   },
@@ -6560,13 +6560,23 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/CollapsibleFieldSection.test.tsx": {
-    "mtime": 1793218064.0682135,
-    "ast_hash": "da5f67ed5a370a00ec76c31ff3ad1175",
+    "mtime": 1793219097.3912535,
+    "ast_hash": "b249aa74313fc49ba546205519aa3f09",
     "semantic_hash": ""
   },
   "supabase/migrations/20261028120000_project_environment_collapsible_sections_changelog.sql": {
-    "mtime": 1793218083.818164,
-    "ast_hash": "1270a0756bb3b6eb1ca6a2dd1e083b13",
+    "mtime": 1793219097.3942478,
+    "ast_hash": "49309a45992905b70aef0018b0c958c2",
+    "semantic_hash": ""
+  },
+  "src/components/ProjectManagement/Forms/EnvironmentScreenshots.test.tsx": {
+    "mtime": 1793219365.811596,
+    "ast_hash": "b9270da60a29ffaec89ece26e3e1fcfd",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20261028123000_environment_gallery_default_open_changelog.sql": {
+    "mtime": 1793219365.8146026,
+    "ast_hash": "cb68a4d7684fa7e7dfbd824f30313d7d",
     "semantic_hash": ""
   }
 }

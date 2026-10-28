@@ -136,7 +136,7 @@ export function EnvironmentScreenshots({
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState(false);
   const [lightbox, setLightbox] = useState<EnvironmentScreenshot | null>(null);
-  const [open, setOpen] = useState(false); // card recolhido por padrao
+  const [open, setOpen] = useState(true); // galeria aberta por padrão
   const [dragOver, setDragOver] = useState(false); // arrastando arquivos do SO
   const inputRef = useRef<HTMLInputElement>(null);
 
