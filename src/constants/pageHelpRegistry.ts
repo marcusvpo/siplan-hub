@@ -641,7 +641,7 @@ export const pageHelpData: PageHelpInfo[] = [
     description:
       "Tela operacional central da Implantação. Permite filtrar todos os cartórios cadastrados, monitorar Health Score, criar novos projetos e atualizar os formulários dos estágios V2.",
     keyFeatures: [
-      "Filtros avançados por status, Health Score, sistema e analista",
+      "Filtros avançados por etapa, status da etapa, Health Score, sistema e analista",
       "Barra de pesquisa rápida com busca por serventia e CNS",
       "Modal de detalhes com abas organizadas por Estágios, Notas e Histórico",
       "Recurso de Autosave automático com salvamento contínuo em segundo plano",
@@ -651,7 +651,7 @@ export const pageHelpData: PageHelpInfo[] = [
         stepNumber: 1,
         title: "Localize a Serventia",
         description:
-          "Digite o nome do cartório ou CNS na barra de busca ou filtre por status.",
+          "Digite o nome do cartório ou CNS na barra de busca. Nos filtros avançados, selecione uma etapa para escolher também o status específico dela.",
         icon: Search,
       },
       {

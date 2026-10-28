@@ -73,4 +73,22 @@ describe("ProjectCardV3 no mobile", () => {
       screen.getByRole("button", { name: `Ações do projeto ${project.clientName}` }),
     ).toHaveClass("h-10", "w-10", "md:h-7", "md:w-7");
   });
+
+  it("oculta etapas não aplicáveis em projetos exclusivos de Modelos TN", () => {
+    render(
+      <ProjectCardV3
+        project={{ ...project, systemType: "ModelosTN" }}
+        onClick={vi.fn()}
+        onAction={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByText("Infra")).not.toBeInTheDocument();
+    expect(screen.queryByText("Aderência")).not.toBeInTheDocument();
+    expect(screen.queryByText("Conversão")).not.toBeInTheDocument();
+    expect(screen.queryByText("Ambiente")).not.toBeInTheDocument();
+    expect(screen.queryByText("Pós")).not.toBeInTheDocument();
+    expect(screen.getAllByText("Modelos").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Implantação").length).toBeGreaterThan(0);
+  });
 });

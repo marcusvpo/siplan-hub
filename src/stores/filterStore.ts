@@ -1,10 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { StageStatus } from '@/types/ProjectV2';
 
 export type SortOrder = 'alpha-asc' | 'alpha-desc' | 'uat-asc' | 'uat-desc' | 'created-asc' | 'created-desc' | 'progress-asc' | 'progress-desc';
 export type ViewPreset = 'all' | 'active' | 'post' | 'paused' | 'done' | 'custom';
 export type HealthFilter = 'all' | 'ok' | 'warning' | 'critical';
 export type StageFilter = 'all' | 'infra' | 'adherence' | 'conversion' | 'environment' | 'implementation' | 'post';
+export type StageStatusFilter = 'all' | StageStatus;
 
 export interface SavedFilter {
   id: string;
@@ -20,6 +22,7 @@ export interface FilterState {
   viewPreset: ViewPreset;
   healthScore: HealthFilter;
   currentStage: StageFilter;
+  stageStatus: StageStatusFilter;
   projectLeader: string;
   systemType: string;
   sortOrder: SortOrder;
@@ -37,6 +40,7 @@ interface FilterStore extends FilterState {
   setViewPreset: (preset: ViewPreset) => void;
   setHealthScore: (score: HealthFilter) => void;
   setCurrentStage: (stage: StageFilter) => void;
+  setStageStatus: (status: StageStatusFilter) => void;
   setProjectLeader: (leader: string) => void;
   setSystemType: (type: string) => void;
   setSortOrder: (order: SortOrder) => void;
@@ -68,6 +72,7 @@ const defaultFilters: FilterState = {
   viewPreset: "active",
   healthScore: "all",
   currentStage: "all",
+  stageStatus: "all",
   projectLeader: "",
   systemType: "",
   sortOrder: "uat-desc",
@@ -90,7 +95,12 @@ export const useFilterStore = create<FilterStore>()(
       setSearchQuery: (query) => set({ searchQuery: query, activeFilterId: null }),
       setViewPreset: (preset) => set({ viewPreset: preset, activeFilterId: null }),
       setHealthScore: (score) => set({ healthScore: score, activeFilterId: null }),
-      setCurrentStage: (stage) => set({ currentStage: stage, activeFilterId: null }),
+      setCurrentStage: (stage) => set({
+        currentStage: stage,
+        stageStatus: stage === "all" ? "all" : "in-progress",
+        activeFilterId: null,
+      }),
+      setStageStatus: (stageStatus) => set({ stageStatus, activeFilterId: null }),
       setProjectLeader: (leader) => set({ projectLeader: leader, activeFilterId: null }),
       setSystemType: (type) => set({ systemType: type, activeFilterId: null }),
       setSortOrder: (order) => set({ sortOrder: order }),
@@ -106,6 +116,7 @@ export const useFilterStore = create<FilterStore>()(
           viewPreset: state.viewPreset,
           healthScore: state.healthScore,
           currentStage: state.currentStage,
+          stageStatus: state.stageStatus,
           projectLeader: state.projectLeader,
           systemType: state.systemType,
           sortOrder: state.sortOrder,
@@ -127,7 +138,15 @@ export const useFilterStore = create<FilterStore>()(
       loadFilter: (id) => {
         const filter = get().savedFilters.find((f) => f.id === id);
         if (filter) {
-          set({ ...filter.filters, activeFilterId: id });
+          const currentStage = filter.filters.currentStage ?? "all";
+          set({
+            ...filter.filters,
+            currentStage,
+            stageStatus:
+              filter.filters.stageStatus ??
+              (currentStage === "all" ? "all" : "in-progress"),
+            activeFilterId: id,
+          });
         }
       },
 
@@ -162,6 +181,19 @@ export const useFilterStore = create<FilterStore>()(
     }),
     {
       name: 'siplan_filters_v2',
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<FilterStore>;
+        const currentStage = persisted.currentStage ?? currentState.currentStage;
+
+        return {
+          ...currentState,
+          ...persisted,
+          currentStage,
+          stageStatus:
+            persisted.stageStatus ??
+            (currentStage === "all" ? "all" : "in-progress"),
+        };
+      },
     }
   )
 );

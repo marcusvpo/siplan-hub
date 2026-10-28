@@ -66,8 +66,10 @@ import {
   SortOrder,
   HealthFilter,
   StageFilter,
+  StageStatusFilter,
   ViewPreset,
 } from "@/stores/filterStore";
+import { getStageStatusOptions } from "@/lib/project-stage-filters";
 
 interface AdvancedFiltersProps {
   leaders: string[];
@@ -91,6 +93,8 @@ export function AdvancedFilters({
     setHealthScore,
     currentStage,
     setCurrentStage,
+    stageStatus,
+    setStageStatus,
     projectLeader,
     setProjectLeader,
     systemType,
@@ -119,6 +123,7 @@ export function AdvancedFilters({
   const activeFiltersCount = [
     healthScore !== "all",
     currentStage !== "all",
+    currentStage !== "all" && stageStatus !== "all",
     projectLeader !== "",
     systemType !== "",
     dateFrom !== "",
@@ -179,6 +184,11 @@ export function AdvancedFilters({
     { value: "implementation", label: "Implantação" },
     { value: "post", label: "Pós-Implantação" },
   ];
+
+  const selectedStageLabel = stageOptions.find(
+    (option) => option.value === currentStage,
+  )?.label;
+  const stageStatusOptions = getStageStatusOptions(currentStage);
 
   const filterColors = [
     { value: "blue", class: "bg-blue-500" },
@@ -469,6 +479,43 @@ export function AdvancedFilters({
                         ))}
                       </SelectContent>
                     </Select>
+
+                    {currentStage !== "all" && (
+                      <div
+                        className="w-full space-y-2 rounded-lg border bg-muted/30 p-3"
+                        data-testid="project-stage-status-filter"
+                      >
+                        <Label
+                          htmlFor="project-stage-status-filter-select"
+                          className="text-xs font-semibold text-muted-foreground"
+                        >
+                          Status de {selectedStageLabel}
+                        </Label>
+                        <Select
+                          value={stageStatus}
+                          onValueChange={(value) =>
+                            setStageStatus(value as StageStatusFilter)
+                          }
+                        >
+                          <SelectTrigger
+                            id="project-stage-status-filter-select"
+                            className="h-11 w-full bg-background"
+                          >
+                            <SelectValue placeholder="Selecione o status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {stageStatusOptions.map((option) => (
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                   </div>
 
                   <Separator />
@@ -614,12 +661,25 @@ export function AdvancedFilters({
           )}
           {currentStage !== "all" && (
             <Badge variant="secondary" className="max-w-full gap-1.5 pr-1">
-              Etapa: {stageOptions.find((s) => s.value === currentStage)?.label}
+              Etapa: {selectedStageLabel}
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-4 w-4 hover:bg-transparent"
                 onClick={() => setCurrentStage("all")}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </Badge>
+          )}
+          {currentStage !== "all" && stageStatus !== "all" && (
+            <Badge variant="secondary" className="max-w-full gap-1.5 pr-1">
+              Status: {stageStatusOptions.find((s) => s.value === stageStatus)?.label}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-4 w-4 hover:bg-transparent"
+                onClick={() => setStageStatus("all")}
               >
                 <X className="h-3 w-3" />
               </Button>

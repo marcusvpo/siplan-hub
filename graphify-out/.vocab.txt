@@ -98,6 +98,7 @@ armazenamento
 arquitetura
 arquitetural
 arquivo
+arquivos
 arrastar
 array
 article
@@ -177,6 +178,7 @@ blocks
 bloco
 blocos
 blog
+bloqueio
 bloqueios
 board
 boards
@@ -327,6 +329,7 @@ comparar
 compare
 compartilhada
 compartilhadas
+compatibility
 compiler
 complete
 completed
@@ -375,6 +378,7 @@ content
 context
 contexto
 contextual
+continua
 contra
 control
 controle
@@ -474,6 +478,7 @@ desenvolvidos
 desenvolvimento
 design
 desk
+desta
 detail
 detailed
 details
@@ -669,6 +674,7 @@ find
 finished
 first
 fits
+fix
 floating
 flow
 fluxo
@@ -1143,6 +1149,7 @@ opcao
 opcional
 open
 openai
+opera
 operacionais
 operacional
 opinion
@@ -1197,6 +1204,7 @@ parity
 parse
 part
 parte
+participantes
 parts
 passo
 passos
@@ -1424,6 +1432,7 @@ regression
 regressions
 rela
 relacionada
+relacionados
 relat
 relationships
 relative
@@ -1469,12 +1478,14 @@ responsividade
 rest
 restore
 result
+resultado
 resultados
 results
 resumo
 retorna
 retry
 return
+returns
 review
 revis
 revisar

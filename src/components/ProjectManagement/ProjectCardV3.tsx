@@ -38,6 +38,7 @@ import {
   getBottleneckColor,
   getBottleneckIcon,
 } from "@/lib/predictability-utils";
+import { isModelosTnProject } from "@/lib/project-stage-filters";
 
 interface ProjectCardV3Props {
   project: ProjectV2;
@@ -64,7 +65,7 @@ export function ProjectCardV3({
   const bottlenecks = identifyBottlenecks(project); // Array of all bottlenecks
   const stageReadiness = getStageReadiness(project);
 
-  const isModelosTN = project.systemType === "Modelos TN";
+  const isModelosTN = isModelosTnProject(project);
 
   const isImplementationInProgress =
     !isModelosTN && project.stages?.implementation?.status === "in-progress";
@@ -158,7 +159,7 @@ export function ProjectCardV3({
 
   const isOrionTN =
     project.systemType === "Orion TN" ||
-    project.systemType === "Modelos TN" ||
+    isModelosTN ||
     project.products?.includes("Orion TN") ||
     project.products?.includes("OrionTN");
 

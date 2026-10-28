@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-30T13:40:17.955832+00:00",
+  "generated_at": "2026-10-22T11:52:08.622034+00:00",
   "nodes": {
     "src_app_myday": {
       "code_fingerprint": "be97355329d60faed6342b7e2eca2bde49bccabd8b3676b0340fb1d51c1b2f34",
@@ -22,7 +22,7 @@
           "q": "Criar um modulo Kanban pessoal no Meu Dia"
         }
       ],
-      "score": 2.223437533,
+      "score": 1.339748444,
       "source_file": "src/App.tsx",
       "status": "preferred",
       "uses": 3
@@ -38,7 +38,7 @@
           "q": "Como adicionar um alerta persistente aos contatos e filtrar a lista pelo card Alerta?"
         }
       ],
-      "score": 0.726985352,
+      "score": 0.438050307,
       "source_file": "src/components/cs-cx/ContactAttentionDashboard.tsx",
       "status": "tentative",
       "uses": 1
@@ -54,7 +54,7 @@
           "q": "Onde são montados o PDF exportado do BI de NPS, os filtros e as métricas por cartório?"
         }
       ],
-      "score": 0.740690282,
+      "score": 0.446308312,
       "source_file": "src/components/cs-cx/NpsAnalytics.tsx",
       "status": "tentative",
       "uses": 1
@@ -70,7 +70,7 @@
           "q": "Onde implementar o filtro por Produto nas solicitações NPS e qual o risco arquitetural?"
         }
       ],
-      "score": 0.605073588,
+      "score": 0.364591488,
       "source_file": "src/components/cs-cx/NpsSurveyManagement.tsx",
       "status": "tentative",
       "uses": 1
@@ -86,7 +86,7 @@
           "q": "Mais alguma ideia de melhoria pra essa parte do quadro?"
         }
       ],
-      "score": 0.744987684,
+      "score": 0.448897743,
       "source_file": "src/components/my-day/MyDayBoardCardDialog.tsx",
       "status": "tentative",
       "uses": 1
@@ -112,7 +112,7 @@
           "q": "Quais as intruções para o Tech Lead"
         }
       ],
-      "score": 2.164317624,
+      "score": 1.304125313,
       "source_file": "src/components/pwa/PwaStatus.tsx",
       "status": "preferred",
       "uses": 3
@@ -128,7 +128,7 @@
           "q": "Tem como criar uma opcao de zoom ali no canto inferior?"
         }
       ],
-      "score": 0.7449291,
+      "score": 0.448862443,
       "source_file": "src/components/ui/button.tsx",
       "status": "tentative",
       "uses": 1
@@ -144,13 +144,13 @@
           "q": "Faz um teste geral no sistema, ve se encontra algum erro"
         }
       ],
-      "score": 0.959995701,
+      "score": 0.578452387,
       "source_file": "src/contexts/AuthContext.tsx",
       "status": "tentative",
       "uses": 1
     },
     "src_hooks_usecscxcore": {
-      "code_fingerprint": "294a0b0af5d610f16c652868de64b44583aae4a6f4fe9bf826c7fb3ebd7ac8bf",
+      "code_fingerprint": "8fa3c854ee0ba17dc2c744a850961ef21e1feb2fcb479ffddd97b9f0f7d2438f",
       "label": "useCsCxCore.ts",
       "last": "2026-09-08T19:48:11.036760+00:00",
       "provenance": [
@@ -160,7 +160,7 @@
           "q": "Onde implementar o filtro por Produto nas solicitações NPS e qual o risco arquitetural?"
         }
       ],
-      "score": 0.605073588,
+      "score": 0.364591488,
       "source_file": "src/hooks/useCsCxCore.ts",
       "status": "tentative",
       "uses": 1
@@ -176,7 +176,7 @@
           "q": "Como adicionar um alerta persistente aos contatos e filtrar a lista pelo card Alerta?"
         }
       ],
-      "score": 0.726985352,
+      "score": 0.438050307,
       "source_file": "src/hooks/useCsCxEngagement.ts",
       "status": "tentative",
       "uses": 1
@@ -197,7 +197,7 @@
           "q": "ajusta o que depende de você então"
         }
       ],
-      "score": 1.487111839,
+      "score": 0.896070046,
       "source_file": "src/hooks/useMyDayBoard.ts",
       "status": "preferred",
       "uses": 2
@@ -223,7 +223,7 @@
           "q": "Quais as intruções para o Tech Lead"
         }
       ],
-      "score": 2.164317624,
+      "score": 1.304125313,
       "source_file": "src/hooks/usePermissions.ts",
       "status": "preferred",
       "uses": 3
@@ -239,7 +239,7 @@
           "q": "Onde são montados o PDF exportado do BI de NPS, os filtros e as métricas por cartório?"
         }
       ],
-      "score": 0.740690282,
+      "score": 0.446308312,
       "source_file": "src/lib/cs-cx-experience-pdf.ts",
       "status": "tentative",
       "uses": 1
@@ -255,7 +255,7 @@
           "q": "Onde são montados o PDF exportado do BI de NPS, os filtros e as métricas por cartório?"
         }
       ],
-      "score": 0.740690282,
+      "score": 0.446308312,
       "source_file": "src/lib/cs-cx-nps-analytics.ts",
       "status": "tentative",
       "uses": 1
@@ -276,7 +276,7 @@
           "q": "Acha que o Meu dia esta 100% agora?"
         }
       ],
-      "score": 1.484525259,
+      "score": 0.894511484,
       "source_file": "src/lib/my-day-board.ts",
       "status": "preferred",
       "uses": 2
@@ -292,7 +292,7 @@
           "q": "Tinha pensado em criar um novo modulo/card para o menu Meu dia, tipo trello que é um sistema kanban com notas e personalizável por usuário, teria como fazer isso?"
         }
       ],
-      "score": 0.740141708,
+      "score": 0.445977765,
       "source_file": "src/lib/my-day-workspace.ts",
       "status": "tentative",
       "uses": 1
@@ -308,7 +308,7 @@
           "q": "Como adicionar um alerta persistente aos contatos e filtrar a lista pelo card Alerta?"
         }
       ],
-      "score": 0.726985352,
+      "score": 0.438050307,
       "source_file": "src/pages/cs-cx/CsCxContacts.tsx",
       "status": "tentative",
       "uses": 1
@@ -344,7 +344,7 @@
           "q": "Aqui na tela do meu quadro eu queria que os cards ficassem sempre na horizontal igual no Trello e nao um em baixo do outro. Deixa mais compacto o hero da tela tambem."
         }
       ],
-      "score": 3.723569891,
+      "score": 2.243664099,
       "source_file": "src/pages/MyDayBoard.tsx",
       "status": "preferred",
       "uses": 5
@@ -365,7 +365,7 @@
           "q": "Quais as intruções para o Tech Lead"
         }
       ],
-      "score": 1.204321922,
+      "score": 0.725672927,
       "source_file": "src/types/ProjectV2.ts",
       "status": "preferred",
       "uses": 2
@@ -381,7 +381,7 @@
           "q": "Agora faça a mesma descrição dos outroa agentes para que configuralos"
         }
       ],
-      "score": 0.602185884,
+      "score": 0.362851481,
       "source_file": "src/utils/infra-validation.ts",
       "status": "tentative",
       "uses": 1
@@ -397,7 +397,7 @@
           "q": "Agora faça a mesma descrição dos outroa agentes para que configuralos"
         }
       ],
-      "score": 0.602185884,
+      "score": 0.362851481,
       "source_file": "vm-worker/src/codexModelSkill.ts",
       "status": "tentative",
       "uses": 1
