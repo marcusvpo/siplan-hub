@@ -18,6 +18,7 @@ import {
 import { AdvancedFilters } from "./AdvancedFilters";
 import { useFilterStore } from "@/stores/filterStore";
 import { cn, normalizeText } from "@/lib/utils";
+import { matchesProjectStageFilter } from "@/lib/project-stage-filters";
 
 export function ProjectGrid() {
   const {
@@ -25,6 +26,7 @@ export function ProjectGrid() {
     viewPreset,
     healthScore,
     currentStage,
+    stageStatus,
     projectLeader,
     systemType,
     sortOrder,
@@ -62,6 +64,7 @@ export function ProjectGrid() {
     viewPreset,
     healthScore,
     currentStage,
+    stageStatus,
     projectLeader,
     systemType,
     sortOrder,
@@ -153,12 +156,11 @@ export function ProjectGrid() {
         healthScore === "all" || project.healthScore === healthScore;
 
       // Current stage filter
-      let matchesStage = true;
-      if (currentStage !== "all") {
-        const stageData =
-          project.stages[currentStage as keyof typeof project.stages];
-        matchesStage = stageData?.status === "in-progress";
-      }
+      const matchesStage = matchesProjectStageFilter(
+        project,
+        currentStage,
+        stageStatus,
+      );
 
       // Project leader filter
       const matchesLeader =
@@ -242,6 +244,7 @@ export function ProjectGrid() {
     viewPreset,
     healthScore,
     currentStage,
+    stageStatus,
     projectLeader,
     systemType,
     sortOrder,
