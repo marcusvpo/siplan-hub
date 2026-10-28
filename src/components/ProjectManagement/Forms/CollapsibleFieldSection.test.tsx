@@ -32,6 +32,8 @@ describe("blocos expansíveis da preparação de ambiente", () => {
 
     expect(trigger).toHaveAttribute("aria-expanded", "true");
     expect(trigger).toHaveTextContent("Clique para recolher");
+    expect(trigger.parentElement).toHaveClass("border-neutral-200", "bg-neutral-50/30");
+    expect(trigger.parentElement).not.toHaveClass("border-primary/40", "bg-primary/5");
     expect(screen.getByText("Conteúdo da configuração")).toBeVisible();
   });
 
@@ -64,6 +66,10 @@ describe("blocos expansíveis da preparação de ambiente", () => {
     fireEvent.click(trigger);
 
     expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(trigger.parentElement?.parentElement).toHaveClass(
+      "border-neutral-200",
+      "bg-neutral-50/30",
+    );
     expect(screen.getByText("Campo de conexão")).toBeVisible();
   });
 });
