@@ -5,12 +5,14 @@ import { ptBR } from "date-fns/locale";
 import { FileText, User, Clock, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EllevoTicketLink } from "@/components/EllevoTicketLink";
+import { ProjectCommercial0800Bridge } from "@/components/ProjectManagement/Forms/ProjectCommercial0800Bridge";
 
 interface ProjectHeaderFormProps {
   project: ProjectV2;
+  onProjectUpdated?: (updatedProject?: Partial<ProjectV2>) => void;
 }
 
-export function ProjectHeaderForm({ project }: ProjectHeaderFormProps) {
+export function ProjectHeaderForm({ project, onProjectUpdated }: ProjectHeaderFormProps) {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
@@ -74,6 +76,12 @@ export function ProjectHeaderForm({ project }: ProjectHeaderFormProps) {
                  </div>
                )}
             </div>
+
+            {/* Auto-detecção comercial do 0800: Logo abaixo do campo Legado */}
+            <ProjectCommercial0800Bridge
+              project={project}
+              onProjectUpdated={onProjectUpdated}
+            />
          </div>
 
          {/* Coluna 2: Status Card (4 cols) */}

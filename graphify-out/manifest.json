@@ -210,9 +210,9 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/ProjectHeaderForm.tsx": {
-    "mtime": 1789412061.262789,
-    "seen": 1793301766.0104465,
-    "ast_hash": "1d6e8822b68d5b75afb8f17338e66b59",
+    "mtime": 1793328703.4518485,
+    "seen": 1793329239.260666,
+    "ast_hash": "d6a3cdd3218b9a43aeba90e5e4fc564c",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/StageCard.tsx": {
@@ -300,9 +300,9 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Tabs/EditProjectTab.tsx": {
-    "mtime": 1789999695.2038212,
-    "seen": 1793301766.0104747,
-    "ast_hash": "533ccdeb14f1f97d27ba92e064cb42f0",
+    "mtime": 1793328873.2338934,
+    "seen": 1793329239.2754233,
+    "ast_hash": "cb7fbd71b1790c3165f18ebb50b346d2",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Tabs/FilesTab.tsx": {
@@ -312,9 +312,9 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Tabs/GeneralInfoTab.tsx": {
-    "mtime": 1793289929.107581,
-    "seen": 1793301766.0104778,
-    "ast_hash": "1043b339e8301caa59983746d47cf1e9",
+    "mtime": 1793328727.684964,
+    "seen": 1793329239.276081,
+    "ast_hash": "4a3ac24f579e720ce59f8b2eaa92a25f",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Tabs/LogsTab.tsx": {
@@ -6070,12 +6070,6 @@
     "ast_hash": "",
     "semantic_hash": ""
   },
-  "docs/proximas-implantacoes-2026.md": {
-    "mtime": 1792430322.5358064,
-    "seen": 1793301766.0115337,
-    "ast_hash": "83733d455697366e5ca6d0345832302a",
-    "semantic_hash": ""
-  },
   "src/components/Reports/InfraProgress/InfraProgressKPIs.tsx": {
     "mtime": 1793037724.5427146,
     "seen": 1793301766.0105257,
@@ -6161,16 +6155,10 @@
     "ast_hash": "",
     "semantic_hash": ""
   },
-  "docs/Cria\u00e7\u00e3o de Projetos Siplan HUB - 0800.json": {
-    "mtime": 1793282552.3575456,
-    "seen": 1793301766.0102954,
-    "ast_hash": "24c23540aa1a7a8a48fee3b833298aaf",
-    "semantic_hash": ""
-  },
   "docs/automacoes/n8n-workflow-projetos-e-produtos-secundarios-0800.json": {
-    "mtime": 1793296640.8048756,
-    "seen": 1793301766.0102975,
-    "ast_hash": "4d11adc06b67299a7f7bda22b6da3c5f",
+    "mtime": 1793329071.7017915,
+    "seen": 1793329239.2092679,
+    "ast_hash": "e4ef35ddce648f72f963cd492a7426e0",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Tabs/SecondaryProductsTab.tsx": {
@@ -6204,21 +6192,33 @@
     "semantic_hash": ""
   },
   "docs/automacoes/criacao_projetos_e_produtos_secundarios_0800.md": {
-    "mtime": 1793297086.1031477,
-    "seen": 1793301766.011519,
-    "ast_hash": "9f144bb3146f62b43b729093955242fe",
+    "mtime": 1793329050.4683833,
+    "seen": 1793329239.5247762,
+    "ast_hash": "044af09d7b555d2aabe559512e4070b7",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/OrionAdminSection.tsx": {
-    "mtime": 1793311147.001127,
-    "seen": 1793311243.3963869,
-    "ast_hash": "69402ca2d1836e0f8533aaebdf829238",
+    "mtime": 1793317385.872504,
+    "seen": 1793329239.2598336,
+    "ast_hash": "9d05864b7b84b8e7ff103f60fa912e2a",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/OrionAdminAnimatedButton.tsx": {
     "mtime": 1793316213.3803737,
     "seen": 1793316314.91225,
     "ast_hash": "bcd2af5f7b17e7cc47fe575cb421b0dc",
+    "semantic_hash": ""
+  },
+  "src/components/ProjectManagement/Forms/ProjectCommercial0800Bridge.tsx": {
+    "mtime": 1793328649.2988794,
+    "seen": 1793329239.260649,
+    "ast_hash": "5ed62f546e4c86dfe5c213494fa3a5c6",
+    "semantic_hash": ""
+  },
+  "src/hooks/useDetected0800CommercialData.ts": {
+    "mtime": 1793328631.4306269,
+    "seen": 1793329239.3567963,
+    "ast_hash": "e427c76382328597592efaa3e5a3d5e5",
     "semantic_hash": ""
   },
   "package-lock.json": {

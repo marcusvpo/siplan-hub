@@ -305,7 +305,15 @@ export function GeneralInfoTab({
       )}
 
       {/* 2. Dados do Projeto (Componente Extraído) */}
-      <ProjectHeaderForm project={data} />
+      <ProjectHeaderForm
+        project={data}
+        onProjectUpdated={(patch) => {
+          if (patch) {
+            if (patch.soldHours !== undefined) updateField("soldHours", patch.soldHours);
+            if (patch.legacySystem !== undefined) updateField("legacySystem", patch.legacySystem);
+          }
+        }}
+      />
 
       {/* 3. Observações Gerais (Rich Editor + Melhorar texto com IA) */}
       <div className="pt-2">
