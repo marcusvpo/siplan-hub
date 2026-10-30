@@ -59,6 +59,8 @@ import {
   ListTodo,
   Columns3,
   PackageCheck,
+  ServerCog,
+  UserCheck,
 } from "lucide-react";
 
 export interface PageHelpStep {
@@ -681,6 +683,66 @@ export const pageHelpData: PageHelpInfo[] = [
     ],
     quickLinks: [
       { label: "Gerenciar Projetos", path: "/projects" },
+      { label: "Calendário de Projetos", path: "/calendar" },
+    ],
+  },
+  {
+    route: "/deployments/environment-config",
+    title: "Configuração de Ambiente",
+    subtitle: "Kanban Operacional de Preparação de Ambientes",
+    moduleName: "Implantação",
+    icon: ServerCog,
+    description:
+      "Painel Kanban operacional para acompanhamento, assunção e execução da configuração de ambientes de implantação (Etapa 4). Inclui cálculo automático da data limite (último dia útil da semana anterior ao início do treinamento), alertas visuais dinâmicos de proximidade do prazo, seção retrátil para ambientes 100% finalizados e gestão de pendências complementares.",
+    keyFeatures: [
+      "Kanban em 3 colunas: Não Iniciados, Em Andamento e Concluídos com arrastar e soltar suave",
+      "Cálculo dinâmico da Data Final Limite baseada na Fase 1 (Treinamento & Acompanhamento)",
+      "Alertas visuais de urgência com cores (Verde, Laranja, Vermelho pulsante) e ordenação por prioridade",
+      "Filtros rápidos de responsável (Fila Geral, Bruno Fernandes, Alex Silva, Sem Responsável) e por Sistema",
+      "Seção retrátil 'Finalizados' com gestão de interruptor de Pendências para produtos pendentes",
+      "Sincronização bidirecional em tempo real com a etapa 4 (Preparação de Ambiente) e Orion Admin em /projects",
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Filtre a Fila por Responsável ou Sistema",
+        description:
+          "Use os botões de atalho rápido 'Fila Geral', 'Bruno Fernandes' e 'Alex Silva' ou filtre por sistema e cliente para focar nas suas prioridades.",
+        icon: Filter,
+      },
+      {
+        stepNumber: 2,
+        title: "Assuma a Configuração do Projeto",
+        description:
+          "Nos cards 'Não Iniciados' com alerta de ausência de responsável, clique sobre o card e use o botão 'Assumir Configuração' para atribuir o chamado ao seu nome.",
+        icon: UserCheck,
+      },
+      {
+        stepNumber: 3,
+        title: "Preencha Dados de Conexão e Orion Admin",
+        description:
+          "No modal do card, preencha acessos remotos (AnyDesk, SO), credenciais do PostgreSQL, verifique produtos secundários vinculados e configure chaves no Orion Admin.",
+        icon: Database,
+      },
+      {
+        stepNumber: 4,
+        title: "Conclua ou Marque com Pendências",
+        description:
+          "Arraste o card para 'Concluídos' quando o ambiente estiver pronto. Se o sistema principal foi instalado mas restar pendência de SGA/LCW, ative o interruptor de 'Pendências' para manter o card visível.",
+        icon: CheckCircle2,
+      },
+    ],
+    tips: [
+      {
+        title: "Sincronização com a Etapa 4",
+        description:
+          "Mover um card para 'Concluídos' automaticamente preenche o campo 'Finalizado Em' da etapa 4 com a data atual e atualiza seu status para 'Finalizado'. Mover de volta para 'Em Andamento' reabre a etapa.",
+        variant: "info",
+      },
+    ],
+    quickLinks: [
+      { label: "Gerenciar Projetos", path: "/projects" },
+      { label: "Produtos Secundários", path: "/deployments/secondary-products" },
       { label: "Calendário de Projetos", path: "/calendar" },
     ],
   },

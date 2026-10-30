@@ -300,7 +300,7 @@ export function getProjectOrionAdminStatus(
   });
 
   const dependentProducts = Array.from(dependentProductsSet);
-  const configText = project?.stages?.environment?.orionAdminConfig || "";
+  const configText = sanitizeOrionAdminConfig(project?.stages?.environment?.orionAdminConfig || "");
   const explicitConfigured = project?.stages?.environment?.orionAdminConfigured;
   const configuredBy = project?.stages?.environment?.orionAdminConfiguredBy;
   const configuredAt = project?.stages?.environment?.orionAdminConfiguredAt;
@@ -382,4 +382,78 @@ export function matchSecondaryTicket(
   }
 
   return false;
+}
+
+/**
+ * Sanitiza o conteúdo de configuração do Orion Admin (.properties).
+ * Converte árvores de texto rico serializadas do Lexical (JSON {"root":...}),
+ * remove tags HTML e normaliza para texto puro com quebras de linha limpas.
+ * Garante que a formatação nunca fique corrompida.
+ */
+export function sanitizeOrionAdminConfig(raw: unknown): string {
+  if (raw === null || raw === undefined) return "";
+  if (typeof raw !== "string") {
+    if (typeof raw === "object") {
+      try {
+        const root = (raw as any).root || raw;
+        if (root && Array.isArray(root.children)) {
+          return extractLexicalTree(root);
+        }
+      } catch {
+        return "";
+      }
+    }
+    return String(raw || "").trim();
+  }
+
+  const trimmed = raw.trim();
+  if (!trimmed) return "";
+
+  // 1. Se for Lexical JSON serializado (inicia com {"root":...)
+  if (trimmed.startsWith("{") && trimmed.includes('"root"')) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      const root = parsed.root || parsed;
+      if (root && Array.isArray(root.children)) {
+        return extractLexicalTree(root);
+      }
+    } catch {
+      // Se falhar o parse JSON, prossegue para sanitização de texto/HTML
+    }
+  }
+
+  // 2. Se contiver marcações HTML (<p>, <br>, etc.)
+  if (/<[a-z][\s\S]*>/i.test(trimmed)) {
+    let clean = trimmed
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/?(?:p|div|li)[^>]*>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/gi, " ")
+      .replace(/&amp;/gi, "&")
+      .replace(/&lt;/gi, "<")
+      .replace(/&gt;/gi, ">");
+    clean = clean.replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+    return clean;
+  }
+
+  // 3. Normalizar quebras de linha Windows \r\n para \n
+  return trimmed.replace(/\r\n/g, "\n");
+}
+
+function extractLexicalTree(root: any): string {
+  function walk(node: any): string {
+    if (!node) return "";
+    if (node.type === "linebreak") return "\n";
+    if (typeof node.text === "string") return node.text;
+
+    if (Array.isArray(node.children)) {
+      const isBlock = node.type === "paragraph" || node.type === "heading" || node.type === "listitem";
+      const inner = node.children.map(walk).join("");
+      return isBlock ? inner + "\n" : inner;
+    }
+    return "";
+  }
+
+  const res = root.children.map(walk).join("");
+  return res.replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
 }

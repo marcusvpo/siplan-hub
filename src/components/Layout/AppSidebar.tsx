@@ -48,6 +48,7 @@ import {
   Columns3,
   Newspaper,
   PackageCheck,
+  ServerCog,
 } from "lucide-react";
 import {
   Collapsible,
@@ -161,6 +162,7 @@ export function AppSidebar() {
     ["projects", "/projects"],
     ["calendar_projects", "/calendar"],
     ["secondary_products", "/deployments/secondary-products"],
+    ["environment_config", "/deployments/environment-config"],
     ["reports", "/reports"],
     ["deployments_next", "/deployments"],
     ["deployments_latest", "/deployments/latest"],
@@ -557,6 +559,18 @@ export function AppSidebar() {
                     >
                       <PackageCheck className="h-4 w-4" />
                       <span>Produtos Secundários</span>
+                    </Button>
+                  </Link>
+                  )}
+                  {can("environment_config") && (
+                  <Link to="/deployments/environment-config">
+                    <Button
+                      variant={isActive("/deployments/environment-config") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <ServerCog className="h-4 w-4" />
+                      <span>Config. Ambiente</span>
                     </Button>
                   </Link>
                   )}

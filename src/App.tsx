@@ -39,6 +39,7 @@ const LatestDeployments = lazy(() => import("./pages/LatestDeployments"));
 const DeploymentsTickets = lazy(() => import("./pages/DeploymentsTickets"));
 const DeploymentsLegacyTickets = lazy(() => import("./pages/DeploymentsLegacyTickets"));
 const DeploymentsSecondaryProducts = lazy(() => import("./pages/DeploymentsSecondaryProducts"));
+const DeploymentsEnvironmentConfig = lazy(() => import("./pages/DeploymentsEnvironmentConfig"));
 const RoadmapPage = lazy(() => import("./pages/RoadmapPage"));
 const TeamConfiguration = lazy(() => import("./pages/admin/TeamConfiguration"));
 const AuditLogPage = lazy(() => import("./pages/admin/AuditLog"));
@@ -469,6 +470,18 @@ const App = () => (
                                 <DeploymentsSecondaryProducts />
                               </RequirePermission>
                             }
+                          />
+                          <Route
+                            path="/deployments/environment-config"
+                            element={
+                              <RequirePermission resource="environment_config">
+                                <DeploymentsEnvironmentConfig />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/environment-config"
+                            element={<Navigate to="/deployments/environment-config" replace />}
                           />
                           <Route
                             path="/meu-dia"

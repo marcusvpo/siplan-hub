@@ -267,6 +267,14 @@ export interface EnvironmentScreenshot {
   uploadedBy?: string;
 }
 
+export interface EnvironmentTimelineItem {
+  id: string;
+  timestamp: string; // ISO
+  author: string;
+  action: "created" | "assigned" | "transferred" | "moved_column" | "toggle_pendings" | "note";
+  description: string;
+}
+
 export interface EnvironmentStageV2 {
   status: StageStatus;
   responsible?: string;
@@ -298,6 +306,9 @@ export interface EnvironmentStageV2 {
   orionAdminConfiguredAt?: string;
   orionAdminConfiguredBy?: string;
   screenshots?: EnvironmentScreenshot[];
+  kanbanStatus?: "not_started" | "in_progress" | "completed";
+  hasPendings?: boolean;
+  timeline?: EnvironmentTimelineItem[];
 }
 
 export interface ConversionStageV2 {

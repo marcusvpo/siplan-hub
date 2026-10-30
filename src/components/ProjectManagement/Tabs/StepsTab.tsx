@@ -112,7 +112,7 @@ export function StepsTab({
   const { canEditProjects } = usePermissions();
   const [notifying, setNotifying] = useState(false);
   const [sendingToConversion, setSendingToConversion] = useState(false);
-  const { sendToConversion, getItemByProjectId, removeFromQueue } =
+  const { sendToConversion, getItemByProjectId, removeFromQueue, loading: queueLoading } =
     useConversionQueue();
   const { user } = useAuth();
   const currentUserId = user?.id || "";
@@ -133,9 +133,14 @@ export function StepsTab({
     }
   }, [activeStepId]);
 
+  const stagesData = data.stages;
+
   // Check if project is already in conversion queue
   const conversionItem = getItemByProjectId(project.id);
-  const isInConversionQueue = !!conversionItem;
+  const isInConversionQueue =
+    !!conversionItem ||
+    !!stagesData.conversion?.sentAt ||
+    !!project.stages?.conversion?.sentAt;
 
   const isOrionTN =
     project.systemType === "Orion TN" ||
@@ -225,8 +230,6 @@ export function StepsTab({
       setNotifying(false);
     }
   };
-
-  const stagesData = data.stages;
 
   // Special handling for Implementation Phases
   const updatePhase = (
@@ -399,7 +402,7 @@ export function StepsTab({
               canEditProjects={canEditProjects}
               automationNotice="Automação Ativa: Projeto adicionado automaticamente à fila de conversão e e-mail de início enviado."
             >
-              <ConversionStageForm stage={stagesData.conversion} canEditProjects={canEditProjects} isInConversionQueue={isInConversionQueue} sendingToConversion={sendingToConversion} conversionItem={conversionItem} projectId={project.id} onUpdate={(u) => updateStage("conversion", u)} onSendToConversion={handleSendToConversion} onRemoveFromQueue={removeFromQueue} />
+              <ConversionStageForm stage={stagesData.conversion} canEditProjects={canEditProjects} isInConversionQueue={isInConversionQueue} sendingToConversion={sendingToConversion} queueLoading={queueLoading} conversionItem={conversionItem} projectId={project.id} onUpdate={(u) => updateStage("conversion", u)} onSendToConversion={handleSendToConversion} onRemoveFromQueue={removeFromQueue} />
             </StageCard>
           </div>
 

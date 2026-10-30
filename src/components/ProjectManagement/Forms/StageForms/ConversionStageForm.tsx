@@ -33,6 +33,7 @@ interface ConversionStageFormProps {
   canEditProjects: boolean;
   isInConversionQueue: boolean;
   sendingToConversion: boolean;
+  queueLoading?: boolean;
   conversionItem: ConversionQueueItem | undefined;
   projectId: string;
   onUpdate: (updates: Partial<ConversionStageV2>) => void;
@@ -45,6 +46,7 @@ export function ConversionStageForm({
   canEditProjects,
   isInConversionQueue,
   sendingToConversion,
+  queueLoading = false,
   conversionItem,
   projectId,
   onUpdate,
@@ -62,7 +64,7 @@ export function ConversionStageForm({
               <Button
                 variant={isInConversionQueue ? "outline" : "default"}
                 size="sm"
-                disabled={sendingToConversion || isInConversionQueue || !canEditProjects}
+                disabled={queueLoading || sendingToConversion || isInConversionQueue || !canEditProjects}
                 className={cn(
                   "w-full md:w-auto font-bold shadow-sm h-8 text-xs",
                   isInConversionQueue
@@ -70,7 +72,12 @@ export function ConversionStageForm({
                     : "bg-primary hover:bg-primary/90 text-primary-foreground",
                 )}
               >
-                {isInConversionQueue ? (
+                {queueLoading && !isInConversionQueue ? (
+                  <>
+                    <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                    Verificando fila...
+                  </>
+                ) : isInConversionQueue ? (
                   <>
                     <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
                     Na Fila de Conversão
