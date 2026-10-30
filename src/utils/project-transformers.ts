@@ -16,6 +16,7 @@ import {
   ProjectTramite
 } from "@/types/ProjectV2";
 import { normalizeSpecialty, normalizeSystemType, getSpecialtyForSystem } from "./projectSpecialty";
+import { sanitizeOrionAdminConfig } from "@/lib/secondary-products";
 
 export function calculateHealthScore(row: Record<string, unknown>): "ok" | "warning" | "critical" {
   const now = new Date();
@@ -147,11 +148,26 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
         postgresHost: (row.custom_fields as any)?.environment_postgres_host || "",
         postgresUser: (row.custom_fields as any)?.environment_postgres_user || "",
         postgresPassword: (row.custom_fields as any)?.environment_postgres_password || "",
-        orionAdminConfig: (row.custom_fields as any)?.environment_orion_admin_config || "",
+        orionAdminConfig: sanitizeOrionAdminConfig((row.custom_fields as any)?.environment_orion_admin_config),
         orionAdminConfigured: Boolean((row.custom_fields as any)?.environment_orion_admin_configured),
         orionAdminConfiguredAt: (row.custom_fields as any)?.environment_orion_admin_configured_at || undefined,
         orionAdminConfiguredBy: (row.custom_fields as any)?.environment_orion_admin_configured_by || undefined,
         screenshots: (row.custom_fields as any)?.environment_screenshots || [],
+        kanbanStatus: (
+          row.environment_status === 'in-progress' ||
+          row.environment_status === 'done' ||
+          Boolean(
+            (row.custom_fields as any)?.implementation_phase1?.startDate ||
+            (row.custom_fields as any)?.implementation_phase1?.start_date ||
+            row.implementation_start_date
+          )
+        )
+          ? (((row.custom_fields as any)?.environment_kanban_status as ("not_started" | "in_progress" | "completed") | undefined) || (row.environment_status === 'done' ? 'completed' : 'not_started'))
+          : undefined,
+        hasPendings: Boolean((row.custom_fields as any)?.environment_has_pendings),
+        timeline: Array.isArray((row.custom_fields as any)?.environment_timeline)
+          ? (row.custom_fields as any).environment_timeline
+          : [],
       },
       conversion: createStage<ConversionStageV2>('conversion'),
       implementation: (() => {
@@ -349,6 +365,7 @@ function mapEnvironmentStage(environment: EnvironmentStageV2 | undefined, oldEnv
 function mapConversionStage(conversion: ConversionStageV2 | undefined, oldConversion?: ConversionStageV2): Record<string, unknown> {
   if (!conversion) return {};
   const { startDate, endDate } = resolveStageDates(conversion.status, oldConversion?.status, conversion.startDate, conversion.endDate);
+  const sentAt = conversion.sentAt !== undefined ? conversion.sentAt : oldConversion?.sentAt;
 
   return {
     conversion_status: conversion.status,
@@ -363,7 +380,7 @@ function mapConversionStage(conversion: ConversionStageV2 | undefined, oldConver
     conversion_deviations: conversion.deviations,
     conversion_homologation_status: conversion.homologationStatus,
     conversion_homologation_responsible: conversion.homologationResponsible,
-    conversion_sent_at: formatDateForDB(conversion.sentAt),
+    conversion_sent_at: formatDateForDB(sentAt),
     conversion_finished_at: formatDateForDB(conversion.finishedAt),
     conversion_homologation_complete: conversion.homologationComplete,
     conversion_homologation_workflow_status: conversion.homologationWorkflowStatus,
@@ -601,6 +618,9 @@ export function transformToDB(project: ProjectUpdate, currentProject?: ProjectV2
       const orionAdminConfiguredAt = stages.environment.orionAdminConfiguredAt;
       const orionAdminConfiguredBy = stages.environment.orionAdminConfiguredBy;
       const screenshots = stages.environment.screenshots;
+      const kanbanStatus = stages.environment.kanbanStatus;
+      const hasPendings = stages.environment.hasPendings;
+      const timeline = stages.environment.timeline;
 
       dbRow.custom_fields = {
         ...(currentCustomFields as any),
@@ -616,11 +636,14 @@ export function transformToDB(project: ProjectUpdate, currentProject?: ProjectV2
         ...(postgresHost !== undefined ? { environment_postgres_host: postgresHost } : {}),
         ...(postgresUser !== undefined ? { environment_postgres_user: postgresUser } : {}),
         ...(postgresPassword !== undefined ? { environment_postgres_password: postgresPassword } : {}),
-        ...(orionAdminConfig !== undefined ? { environment_orion_admin_config: orionAdminConfig } : {}),
+        ...(orionAdminConfig !== undefined ? { environment_orion_admin_config: sanitizeOrionAdminConfig(orionAdminConfig) } : {}),
         ...(orionAdminConfigured !== undefined ? { environment_orion_admin_configured: orionAdminConfigured } : {}),
         ...(orionAdminConfiguredAt !== undefined ? { environment_orion_admin_configured_at: orionAdminConfiguredAt } : {}),
         ...(orionAdminConfiguredBy !== undefined ? { environment_orion_admin_configured_by: orionAdminConfiguredBy } : {}),
         ...(screenshots !== undefined ? { environment_screenshots: screenshots } : {}),
+        ...(kanbanStatus !== undefined ? { environment_kanban_status: kanbanStatus } : {}),
+        ...(hasPendings !== undefined ? { environment_has_pendings: hasPendings } : {}),
+        ...(timeline !== undefined ? { environment_timeline: timeline } : {}),
       };
     }
   }

@@ -34,6 +34,7 @@ import {
     Columns3,
     Newspaper,
     PackageCheck,
+    ServerCog,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -154,6 +155,13 @@ export const menuItems: MenuItem[] = [
                 icon: PackageCheck,
                 description: "Esteira de produtos complementares vinculados às implantações",
                 permissionKey: "secondary_products",
+            },
+            {
+                title: "Config. Ambiente",
+                path: "/deployments/environment-config",
+                icon: ServerCog,
+                description: "Kanban e esteira de preparação de ambientes de implantação",
+                permissionKey: "environment_config",
             },
             {
                 title: "Relatórios",

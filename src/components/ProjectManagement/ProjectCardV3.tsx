@@ -20,6 +20,7 @@ import {
   Cog,
   PlayCircle,
   PackageCheck,
+  AlertTriangle,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -42,6 +43,7 @@ import {
 } from "@/lib/predictability-utils";
 import { isModelosTnProject } from "@/lib/project-stage-filters";
 import { getProjectOrionAdminStatus } from "@/lib/secondary-products";
+import { getEnvironmentSlaAlert } from "@/lib/environment-config";
 
 interface ProjectCardV3Props {
   project: ProjectV2;
@@ -81,6 +83,10 @@ export function ProjectCardV3({
 
   const orionStatus = useMemo(() => {
     return getProjectOrionAdminStatus(project);
+  }, [project]);
+
+  const envSlaAlert = useMemo(() => {
+    return getEnvironmentSlaAlert(project);
   }, [project]);
 
   const isForecastScheduled =
@@ -249,6 +255,18 @@ export function ProjectCardV3({
       {/* Project Status Badges - Floating over Top Right Corner */}
       <div className="col-span-2 flex min-w-0 flex-wrap items-center gap-1.5 pl-1 md:absolute md:-right-1.5 md:-top-1.5 md:z-10 md:pl-0">
         <PosSaudeBadge projectId={project.id} />
+        {envSlaAlert && (
+          <Badge
+            className={cn(
+              "text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background flex items-center gap-1",
+              envSlaAlert.colorClass
+            )}
+            title={envSlaAlert.title}
+          >
+            <AlertTriangle className="w-2.5 h-2.5 shrink-0" />
+            {envSlaAlert.label}
+          </Badge>
+        )}
         {orionStatus.required && (
           <Badge
             className={cn(

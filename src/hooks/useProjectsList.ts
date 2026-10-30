@@ -18,6 +18,7 @@ import {
 
 import { ViewPreset } from "@/stores/filterStore";
 import { normalizeSpecialty } from "@/utils/projectSpecialty";
+import { sanitizeOrionAdminConfig } from "@/lib/secondary-products";
 
 export const useProjectsList = (
   searchQuery: string = "",
@@ -145,6 +146,10 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
         healthScore = "warning";
     }
 
+    const phase1 = parsePhase1FromDb(row.implementation_phase1);
+    const hasPhase1Date = Boolean(phase1?.startDate || phase1?.endDate || row.implementation_start_date);
+    const isEnvironmentEligible = row.environment_status === 'in-progress' || row.environment_status === 'done' || hasPhase1Date;
+
     // Returns a lightweight project object suitable for lists/cards
     return {
         id: row.id,
@@ -190,8 +195,15 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
                 startDate: row.environment_start_date ? new Date(row.environment_start_date as string) : undefined,
                 endDate: row.environment_end_date ? new Date(row.environment_end_date as string) : undefined,
                 responsible: row.environment_responsible as string | undefined,
-                orionAdminConfig: ((row.custom_fields as any)?.environment_orion_admin_config as string) || "",
+                orionAdminConfig: sanitizeOrionAdminConfig((row.custom_fields as any)?.environment_orion_admin_config),
                 orionAdminConfigured: Boolean((row.custom_fields as any)?.environment_orion_admin_configured),
+                kanbanStatus: isEnvironmentEligible
+                  ? (((row.custom_fields as any)?.environment_kanban_status as ("not_started" | "in_progress" | "completed") | undefined) || (row.environment_status === 'done' ? 'completed' : 'not_started'))
+                  : undefined,
+                hasPendings: Boolean((row.custom_fields as any)?.environment_has_pendings),
+                timeline: Array.isArray((row.custom_fields as any)?.environment_timeline)
+                  ? (row.custom_fields as any).environment_timeline
+                  : [],
             } as EnvironmentStageV2,
             conversion: { 
                 status: row.conversion_status || 'todo',
@@ -216,7 +228,7 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
                 startDate: row.implementation_start_date ? new Date(row.implementation_start_date as string) : undefined,
                 endDate: row.implementation_end_date ? new Date(row.implementation_end_date as string) : undefined,
                 responsible: row.implementation_responsible as string | undefined,
-                phase1: parsePhase1FromDb(row.implementation_phase1)
+                phase1
             } as ImplementationStageV2,
             post: { 
                 status: row.post_status || 'todo',

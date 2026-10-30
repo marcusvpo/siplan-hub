@@ -11,10 +11,12 @@ import {
   matchSecondaryTicket,
   OFFICIAL_SECONDARY_PRODUCTS,
   getProjectOrionAdminStatus,
+  sanitizeOrionAdminConfig,
 } from "@/lib/secondary-products";
 import { Breadcrumbs } from "@/components/Layout/Breadcrumbs";
 import DeploymentsSecondaryProducts from "@/pages/DeploymentsSecondaryProducts";
 import { SecondaryProductsTab } from "@/components/ProjectManagement/Tabs/SecondaryProductsTab";
+import { OrionAdminSection } from "@/components/ProjectManagement/Forms/OrionAdminSection";
 import type { SecondaryTicketWithLinks } from "@/hooks/useSecondaryTickets";
 import type { ProjectV2 } from "@/types/ProjectV2";
 
@@ -475,5 +477,135 @@ describe("Produtos Secundários — regras de negócio, espelho 0800 e esteira",
     expect(matchSecondaryTicket(ticketSga, "SGA")).toBe(true);
     expect(matchSecondaryTicket(ticketSga, "Atendimento")).toBe(true);
     expect(matchSecondaryTicket(ticketSga, "763911")).toBe(true);
+  });
+
+  describe("sanitizeOrionAdminConfig", () => {
+    it("sanitiza árvore JSON do Lexical extraindo texto puro preservando quebras e links", () => {
+      const lexicalJson = JSON.stringify({
+        root: {
+          children: [
+            {
+              type: "paragraph",
+              children: [
+                { type: "text", text: "#### ORION ADMIN ####" },
+                { type: "linebreak" },
+                { type: "text", text: "urlAdminCentral=" },
+                {
+                  type: "link",
+                  children: [{ type: "text", text: "wss://admin.siplan.com.br" }],
+                },
+                { type: "linebreak" },
+                { type: "text", text: "usuarioAdminCentral=cartorio@orion.com.br" },
+              ],
+            },
+          ],
+        },
+      });
+
+      const sanitized = sanitizeOrionAdminConfig(lexicalJson);
+      expect(sanitized).toBe(
+        "#### ORION ADMIN ####\nurlAdminCentral=wss://admin.siplan.com.br\nusuarioAdminCentral=cartorio@orion.com.br"
+      );
+    });
+
+    it("sanitiza conteúdo com tags HTML substituindo tags de bloco e br por quebras de linha", () => {
+      const htmlContent = "<p>urlAdminCentral=wss://admin.siplan.com.br</p><br/><div>usuario=teste</div>";
+      const sanitized = sanitizeOrionAdminConfig(htmlContent);
+      expect(sanitized).toBe("urlAdminCentral=wss://admin.siplan.com.br\n\nusuario=teste");
+    });
+
+    it("mantém texto puro já formatado intacto com quebras de linha limpas", () => {
+      const plainText = "urlAdminCentral=wss://admin.siplan.com.br\nusuario=teste\ncns=12.345-6";
+      expect(sanitizeOrionAdminConfig(plainText)).toBe(plainText);
+    });
+
+    it("retorna string vazia para valores nulos, vazios ou indefinidos", () => {
+      expect(sanitizeOrionAdminConfig(null)).toBe("");
+      expect(sanitizeOrionAdminConfig(undefined)).toBe("");
+      expect(sanitizeOrionAdminConfig("")).toBe("");
+      expect(sanitizeOrionAdminConfig("   ")).toBe("");
+    });
+  });
+
+  describe("OrionAdminSection", () => {
+    it("exibe badges apenas para URL Central, Usuário e Senha (sem validação de CNS) e botão de importar", () => {
+      const mockProject = {
+        id: "proj-1",
+        clientName: "Cartório de Teste",
+        systemType: "Orion TN",
+        ticketNumber: "763901",
+        stages: {
+          environment: {
+            status: "todo",
+            orionAdminConfig: "",
+            orionAdminConfigured: false,
+          },
+        },
+      } as unknown as ProjectV2;
+
+      render(
+        <OrionAdminSection
+          stage={mockProject.stages.environment as any}
+          project={mockProject}
+          canEdit={true}
+          currentUserName="Bruno Fernandes"
+          onUpdate={vi.fn()}
+        />
+      );
+
+      // Deve exibir os badges de URL Central, Usuário e Senha
+      expect(screen.getByText("URL Central")).toBeInTheDocument();
+      expect(screen.getByText("Usuário")).toBeInTheDocument();
+      expect(screen.getByText("Senha")).toBeInTheDocument();
+
+      // NÃO deve conter validação/badge de CNS
+      expect(screen.queryByText("CNS")).toBeNull();
+
+      // Deve conter o botão de importar .properties
+      expect(screen.getByRole("button", { name: /importar/i })).toBeInTheDocument();
+    });
+
+    it("ativa automaticamente o status Configurado ao preencher ou colar propriedades válidas com as 3 chaves", () => {
+      const mockProject = {
+        id: "proj-1",
+        clientName: "Cartório de Teste",
+        systemType: "Orion TN",
+        ticketNumber: "763901",
+        stages: {
+          environment: {
+            status: "todo",
+            orionAdminConfig: "",
+            orionAdminConfigured: false,
+          },
+        },
+      } as unknown as ProjectV2;
+
+      const onUpdateMock = vi.fn();
+
+      render(
+        <OrionAdminSection
+          stage={mockProject.stages.environment as any}
+          project={mockProject}
+          canEdit={true}
+          currentUserName="Bruno Fernandes"
+          onUpdate={onUpdateMock}
+        />
+      );
+
+      const textarea = screen.getByRole("textbox");
+
+      const validProperties = `#### ORION ADMIN ####\nurlAdminCentral=wss://www.tispcm.com.br/wsSiplan\nurlAdminCentralHttp=https://www.tispcm.com.br\nusuarioAdminCentral=111989.embudasartes@orion.com.br\nsenhaAdminCentral=$2a$10$0JLPOheYnn0cKXA4SnVYOe2PhXbyP56sZ4s4ncnaF/uGFO0zWy/ge\nsenhaAdminCentralHttp=R7kSHPutSxH5lBlZL21rpje3TLtqGh0LJUTq380IYik=`;
+
+      // Simula alteração do textarea contendo as 3 chaves obrigatórias
+      fireEvent.change(textarea, { target: { value: validProperties } });
+
+      // Deve disparar onUpdate marcando orionAdminConfigured como true automaticamente
+      expect(onUpdateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orionAdminConfigured: true,
+          orionAdminConfig: validProperties,
+        })
+      );
+    });
   });
 });

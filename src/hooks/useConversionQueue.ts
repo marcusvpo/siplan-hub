@@ -188,7 +188,7 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
     };
   }, [queue, myQueue]);
 
-  // Send to conversion
+  // Send to conversion (idempotente e resiliente a duplicatas)
   const sendToConversion = useCallback(
     async (
       projectId: string,
@@ -197,36 +197,94 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
       priority: number = 3
     ) => {
       try {
-        // Insert into conversion queue
-        const { error } = await supabase.from("conversion_queue").insert({
-          project_id: projectId,
-          sent_by: sentBy || null,
-          sent_by_name: sentByName,
-          priority,
-          queue_status: "pending",
-        });
+        // 1. Verifica se o projeto já está na fila de conversão
+        const { data: existingQueueItem, error: selectError } = await supabase
+          .from("conversion_queue")
+          .select("id, queue_status, assigned_to, assigned_to_name")
+          .eq("project_id", projectId)
+          .maybeSingle();
 
-        if (error) throw error;
+        if (selectError) throw selectError;
 
-        // Create notification for the conversion team
-        // First, get the project info for the notification message
-        const { data: projectData } = await supabase
+        let shouldNotify = false;
+
+        if (existingQueueItem) {
+          // Se já existe, preserva o status e responsável se em andamento, atualizando metadados/prioridade
+          const updates: Record<string, unknown> = {
+            priority,
+            sent_by: sentBy || null,
+            sent_by_name: sentByName,
+            updated_at: new Date().toISOString(),
+          };
+
+          // Se estiver cancelado, reabre como 'pending'
+          if (existingQueueItem.queue_status === "cancelled") {
+            updates.queue_status = "pending";
+            updates.sent_at = new Date().toISOString();
+            shouldNotify = true;
+          }
+
+          const { error: updateError } = await supabase
+            .from("conversion_queue")
+            .update(updates)
+            .eq("id", existingQueueItem.id);
+
+          if (updateError) throw updateError;
+        } else {
+          // Inserção atômica com upsert para prevenir race condition de cliques múltiplos
+          const { error: insertError } = await supabase
+            .from("conversion_queue")
+            .upsert(
+              {
+                project_id: projectId,
+                sent_by: sentBy || null,
+                sent_by_name: sentByName,
+                priority,
+                queue_status: "pending",
+                sent_at: new Date().toISOString(),
+              },
+              { onConflict: "project_id" }
+            );
+
+          if (insertError) throw insertError;
+          shouldNotify = true;
+        }
+
+        // 2. Garante que a tabela projects reflita conversion_sent_at e conversion_status
+        const nowIso = new Date().toISOString();
+        const { error: projectError } = await supabase
           .from("projects")
-          .select("client_name, ticket_number")
-          .eq("id", projectId)
-          .single();
+          .update({
+            conversion_sent_at: nowIso,
+            conversion_status: "in-progress",
+            updated_at: nowIso,
+          })
+          .eq("id", projectId);
 
-        const clientName = projectData?.client_name || "Cliente";
-        const ticketNumber = projectData?.ticket_number || "";
+        if (projectError) {
+          console.warn("Could not immediately update project conversion fields:", projectError);
+        }
 
-        await supabase.from("notifications").insert({
-          team: "conversion",
-          project_id: projectId,
-          type: "new_demand",
-          title: "Nova conversão na fila",
-          message: `${clientName}${ticketNumber ? ` (#${ticketNumber})` : ""} foi enviado para a fila de conversão por ${sentByName}.`,
-          action_url: "/conversion/atividades",
-        });
+        // 3. Notificação para a equipe de conversão (somente em novos envios ou reativações)
+        if (shouldNotify) {
+          const { data: projectData } = await supabase
+            .from("projects")
+            .select("client_name, ticket_number")
+            .eq("id", projectId)
+            .single();
+
+          const clientName = projectData?.client_name || "Cliente";
+          const ticketNumber = projectData?.ticket_number || "";
+
+          await supabase.from("notifications").insert({
+            team: "conversion",
+            project_id: projectId,
+            type: "new_demand",
+            title: "Nova conversão na fila",
+            message: `${clientName}${ticketNumber ? ` (#${ticketNumber})` : ""} foi enviado para a fila de conversão por ${sentByName}.`,
+            action_url: "/conversion/atividades",
+          });
+        }
 
         await fetchQueue();
         return true;
