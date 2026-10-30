@@ -13,6 +13,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
+import { useDetected0800CommercialData } from "@/hooks/useDetected0800CommercialData";
+import { Sparkles, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -52,6 +54,7 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
       await new Promise((resolve) => setTimeout(resolve, 500));
     },
   );
+  const { detectedData: detected0800 } = useDetected0800CommercialData(data.ticketNumber, data.id);
 
   const [productsOpen, setProductsOpen] = useState(false);
 
@@ -286,6 +289,45 @@ export function EditProjectTab({ project, onUpdate }: TabProps) {
                   onChange={(e) => handleChange("legacySystem", e.target.value)}
                 />
               </div>
+              {/* Auxílio de preenchimento comercial via 0800 */}
+              {(!data.soldHours || !data.legacySystem) && (
+                detected0800?.found && !detected0800?.already_applied ? (
+                  <div className="col-span-full rounded-lg border border-amber-500/40 bg-amber-500/10 p-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="text-xs text-amber-950 dark:text-amber-200">
+                      <span className="font-bold flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                        Encontrado no Trâmite {detected0800.tramite_numero || 4} do 0800:
+                      </span>
+                      <span className="text-[11px] opacity-90">
+                        {detected0800.sold_hours ? `${detected0800.sold_hours}h` : ""}
+                        {detected0800.sold_hours && detected0800.legacy_system ? " • " : ""}
+                        {detected0800.legacy_system || ""}
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs border-amber-500/40 bg-background hover:bg-amber-500/20 text-amber-900 dark:text-amber-200 shrink-0"
+                      onClick={() => {
+                        if (detected0800.sold_hours !== undefined && detected0800.sold_hours !== null) {
+                          handleChange("soldHours", detected0800.sold_hours);
+                        }
+                        if (detected0800.legacy_system) {
+                          handleChange("legacySystem", detected0800.legacy_system);
+                        }
+                      }}
+                    >
+                      Preencher Formulário
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="col-span-full flex items-center gap-2 rounded-lg border border-dashed border-border/70 bg-muted/20 px-2.5 py-1.5 text-[11px] text-muted-foreground/80">
+                    <Clock className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                    <span>Aguardando informações de Legado e Horas nos Trâmites do chamado do 0800</span>
+                  </div>
+                )
+              )}
               <div className="space-y-2">
                 <Label>Especialidade</Label>
                 <Select

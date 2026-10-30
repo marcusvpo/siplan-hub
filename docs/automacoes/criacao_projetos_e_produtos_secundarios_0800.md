@@ -8,16 +8,25 @@ tags:
   - #0800
   - #produtos_secundarios
   - #implantacao
+  - #horas_e_legado
 status_atual: #ativo
 ---
 
-# 🚀 Guia Passo a Passo (Node por Node): Automação 0800 — Sistemas Principais + Produtos Secundários
+# 🚀 Guia Passo a Passo (Node por Node): Automação 0800 — Sistemas Principais, Produtos Secundários, Horas e Sistema Legado
 
-Este manual explica **exatamente o que alterar manualmente em cada um dos 4 nós** do seu workflow atual no **n8n** (`Criação de Projetos Siplan HUB - 0800`) para que ele passe a capturar tanto os **Sistemas Principais** (`Orion TN`, `Orion PRO`, `Orion REG`, `WebRI`) quanto os **14 Produtos Secundários Oficiais** (`Livro Caixa Web`, `SGA`, `Library`, `Cartório On Hand`, `e-Recepção`, `CIAF`, `Image`, `Image PRO`, `e-Qualificação`, `Orion Caixa`, `Orion CartFLOW`, `Orion Connect`, `Orion Editor` e `Orion GED`), sem depender de importação de arquivo JSON.
+Este manual explica **exatamente o que alterar manualmente em cada um dos 4 nós** do seu workflow atual no **n8n** (`Criação de Projetos Siplan HUB - 0800`) para que ele capture:
+1. Os **Sistemas Principais** (`Orion TN`, `Orion PRO`, `Orion REG`, `WebRI`);
+2. Os **14 Produtos Secundários Oficiais** (`Livro Caixa Web`, `SGA`, `Library`, `Cartório On Hand`, `e-Recepção`, `CIAF`, `Image`, `Image PRO`, `e-Qualificação`, `Orion Caixa`, `Orion CartFLOW`, `Orion Connect`, `Orion Editor` e `Orion GED`);
+3. As **Horas Vendidas/Contratadas** (`sold_hours`) e o **Sistema Legado** (`legacy_system`), eliminando a necessidade de preenchimento manual no HUB.
 
 > [!IMPORTANT]
-> **Onde mora a inteligência?**
-> Toda a classificação oficial do catálogo de 14 produtos, o bloqueio de vendas avulsas (cartórios sem projeto ativo ou apenas com projetos concluídos), a regra exclusiva do `Orion Editor ➔ Orion TN` e o espelhamento automático entre múltiplos sistemas principais (`Orion TN` + `Orion PRO`) **já estão rodando dentro da função `public.sync_0800_project` no Supabase**. No n8n você só precisa ajustar o SQL, o código JS e o lote sequencial do HTTP Request!
+> **Onde mora a inteligência e como é resolvido o "Trâmite 4" que chega dias depois?**
+> A solução é composta por 3 camadas coordenadas:
+> 1. **No Nascimento do Projeto (n8n às 08h):** O n8n já extrai o **Sistema Legado** pelo título do chamado (ex: `+ Conversão WebTD`) e as **Horas** caso já estejam presentes no trâmite inicial.
+> 2. **Na Chegada do Trâmite Comercial (Trâmite 4 via Supabase Trigger):** Quando o comercial (Soraya/Camila) lança o Trâmite 4 no Ellevo dias depois com `Horas vendidas de Implantação: 80 horas`, o `vm-worker` sincroniza o trâmite e um **Trigger automático no Postgres (`trg_sync_project_commercial_data`)** atualiza o projeto no Siplan HUB na hora em background, sem exigir nenhuma intervenção sua!
+> 3. **Na Interface do HUB (Aba Informações Gerais e Edição):** Se você abrir o projeto no HUB, haverá um assistente visual abaixo do campo Legado:
+>    - Se o 0800 tiver os dados: card de 1 clique `Encontrado no Trâmite 4 do 0800: 80h • WebTD [Aplicar ao Projeto]`.
+>    - Se o comercial ainda não postou o trâmite: aviso discreto `Aguardando informações de Legado e Horas nos Trâmites do chamado do 0800`.
 
 ---
 
@@ -26,7 +35,7 @@ Este manual explica **exatamente o que alterar manualmente em cada um dos 4 nós
 ```mermaid
 flowchart LR
     N1["1. Schedule Trigger (Diário 08h)"] --> N2["2. Microsoft SQL (Principais + Secundários)"]
-    N2 --> N3["3. Code in JavaScript (Deduplica + Ordena Principais 1º)"]
+    N2 --> N3["3. Code in JavaScript (Extrai OP, Legado, Horas e Ordena)"]
     N3 --> N4["4. HTTP Request (POST RPC sync_0800_project)"]
 ```
 
@@ -34,16 +43,15 @@ flowchart LR
 
 ## 🛠️ Passo a Passo Manual — Nó por Nó
 
-### Nó 1: `Schedule Trigger` (Nenhuma alteração necessária)
-- Mantenha exatamente como já está configurado hoje:
-  - **Trigger Rules:** `Days` / `Trigger at Hour: 8` (`08:00` todos os dias).
+### Nó 1: `Schedule Trigger` (Mantenha como está)
+- **Trigger Rules:** `Days` / `Trigger at Hour: 8` (`08:00` todos os dias).
 
 ---
 
 ### Nó 2: `Microsoft SQL` (`UNION ALL` unificando Collation SAP `CP850` + Ellevo `CP1`)
 1. Abra o nó **`Microsoft SQL`** no seu workflow atual.
 2. Mantenha sua credencial atual (`Microsoft SQL account`, com `Request Timeout` em `60000`) e **Operation:** `Execute Query`.
-3. **Substitua todo o conteúdo do campo `Query`** pelo SQL abaixo:
+3. O conteúdo do campo `Query` é exatamente este:
 
 ```sql
 WITH principais AS (
@@ -98,55 +106,51 @@ secundarios AS (
       'Orion CartFLOW', 'OrionCartFLOW', 'CartFLOW',
       'Orion Connect', 'OrionConnect',
       'Editor', 'Orion Editor', 'OrionEditor',
-      'OrionGED', 'Orion GED'
+      'GED', 'Orion GED', 'OrionGED'
     )
-    AND (c.SolTitulo LIKE '%Impla%Treinamento%' OR c.SolTitulo LIKE '%Configura%Treinamento%')
+    AND (
+      c.SolTitulo LIKE '%Impla%Treinamento%'
+      OR c.SolTitulo LIKE '%Configura%Treinamento%'
+      OR c.SolTitulo LIKE '%Treinamento%'
+      OR c.SolTitulo LIKE '%Instala%'
+      OR c.SolTitulo LIKE '%Configura%'
+    )
 )
-SELECT
-  CONVERT(nvarchar(400), NomeCliente) COLLATE SQL_Latin1_General_CP1_CI_AI AS NomeCliente,
-  CONVERT(nvarchar(50), NumeroChamado) COLLATE SQL_Latin1_General_CP1_CI_AI AS NumeroChamado,
-  CONVERT(nvarchar(150), Software) COLLATE SQL_Latin1_General_CP1_CI_AI AS Software,
-  CONVERT(nvarchar(50), NumeroPedidoVenda) COLLATE SQL_Latin1_General_CP1_CI_AI AS NumeroPedidoVenda,
-  CONVERT(nvarchar(500), TituloChamado) COLLATE SQL_Latin1_General_CP1_CI_AI AS TituloChamado,
-  CONVERT(nvarchar(max), CONVERT(varchar(max), descricaotramite)) COLLATE SQL_Latin1_General_CP1_CI_AI AS descricaotramite,
-  CONVERT(nvarchar(200), ResponsavelAtividade) COLLATE SQL_Latin1_General_CP1_CI_AI AS ResponsavelAtividade,
-  CONVERT(nvarchar(200), EtapasProjeto) COLLATE SQL_Latin1_General_CP1_CI_AI AS EtapasProjeto,
-  CONVERT(nvarchar(30), DataPedidoVenda, 120) COLLATE SQL_Latin1_General_CP1_CI_AI AS DataPedidoVenda
-FROM principais
-WHERE rn = 1
+SELECT 
+  p.NomeCliente COLLATE database_default AS NomeCliente,
+  p.NumeroChamado COLLATE database_default AS NumeroChamado,
+  p.Software COLLATE database_default AS Software,
+  CAST(p.NumeroPedidoVenda AS varchar(50)) COLLATE database_default AS NumeroPedidoVenda,
+  p.TituloChamado COLLATE database_default AS TituloChamado,
+  CAST(p.descricaotramite AS nvarchar(max)) COLLATE database_default AS descricaotramite,
+  p.ResponsavelAtividade COLLATE database_default AS ResponsavelAtividade,
+  p.EtapasProjeto COLLATE database_default AS EtapasProjeto,
+  p.DataPedidoVenda
+FROM principais p
+WHERE p.rn = 1
 
 UNION ALL
 
-SELECT
-  CONVERT(nvarchar(400), NomeCliente) COLLATE SQL_Latin1_General_CP1_CI_AI AS NomeCliente,
-  CONVERT(nvarchar(50), NumeroChamado) COLLATE SQL_Latin1_General_CP1_CI_AI AS NumeroChamado,
-  CONVERT(nvarchar(150), Software) COLLATE SQL_Latin1_General_CP1_CI_AI AS Software,
-  CAST(NULL AS nvarchar(50)) COLLATE SQL_Latin1_General_CP1_CI_AI AS NumeroPedidoVenda,
-  CONVERT(nvarchar(500), TituloChamado) COLLATE SQL_Latin1_General_CP1_CI_AI AS TituloChamado,
-  CAST(N'Sem descrição' AS nvarchar(max)) COLLATE SQL_Latin1_General_CP1_CI_AI AS descricaotramite,
-  CONVERT(nvarchar(200), ResponsavelAtividade) COLLATE SQL_Latin1_General_CP1_CI_AI AS ResponsavelAtividade,
-  CONVERT(nvarchar(200), EtapasProjeto) COLLATE SQL_Latin1_General_CP1_CI_AI AS EtapasProjeto,
-  CONVERT(nvarchar(30), DataPedidoVenda, 120) COLLATE SQL_Latin1_General_CP1_CI_AI AS DataPedidoVenda
-FROM secundarios
-WHERE rn = 1;
+SELECT 
+  s.NomeCliente COLLATE database_default AS NomeCliente,
+  s.NumeroChamado COLLATE database_default AS NumeroChamado,
+  s.Software COLLATE database_default AS Software,
+  NULL AS NumeroPedidoVenda,
+  s.TituloChamado COLLATE database_default AS TituloChamado,
+  NULL AS descricaotramite,
+  s.ResponsavelAtividade COLLATE database_default AS ResponsavelAtividade,
+  s.EtapasProjeto COLLATE database_default AS EtapasProjeto,
+  s.DataPedidoVenda
+FROM secundarios s
+WHERE s.rn = 1;
 ```
-
-**Por que cada detalhe acima existe?**
-1. **Isolamento do erro `Conversion failed` do SAP (`Msg 245`):** a `vw_2026_PROCESSO_VENDA_FATURAMENTO_ITEM_ATIVIDADES` cruza campos texto do SAP contra `int` do Ellevo sem `TRY_CAST` e quebra ao ler produtos secundários. Mantemos `principais` intacto nela e lemos `secundarios` na `plataformaellevo.dbo.vw_ChamadosTodosStatus` (mesmo banco `plataformaellevo`).
-2. **Unificação de Collation (`COLLATE SQL_Latin1_General_CP1_CI_AI` no `SELECT` externo):** a view de faturamento herda a collation `SQL_Latin1_General_CP850_CI_AS` do SAP, enquanto a `vw_ChamadosTodosStatus` usa `SQL_Latin1_General_CP1_CI_AI` do Ellevo. Aplicar `COLLATE SQL_Latin1_General_CP1_CI_AI` somente na saída final do `UNION ALL` (após `WHERE rn = 1`) resolve 100% o conflito de collation sem qualquer impacto de performance nos índices do `WHERE`.
-3. **Blindagem em 4 Camadas contra Erros de Digitação e Nomenclatura (`20261029150000_secondary_products_typo_shield.sql`):**
-   - **Camada 1 (Raiz morfológica `Impla...Treinamento`):** captura erros ortográficos como `"Implanmtação e Treinamento"`, `"Implatação"` ou omissão do `"e"`, bloqueando pós-implantação, rotinas, atualizações, período de teste e IA.
-   - **Camada 2 (`Configura...Treinamento` exclusivo para Secundários):** aceita `"Configuração e Treinamento"` apenas para os **14 Produtos Secundários Oficiais** quando o cartório possui projeto principal ativo (`global_status <> 'done'`), barrando 100% treinamentos de rotina em sistemas principais (ex.: `"OrionTN 6.0 - Configuração de rotinas e Treinamento"`).
-   - **Camada 3 (Dupla checagem `Título` + `Software`):** o título continua sendo a fonte primária, mas se o sufixo for omitido ou tiver grafia inédita, o classificador usa `Software` do Ellevo como *fallback* seguro.
-   - **Camada 4 (Ponte SAP ↔ Ellevo):** cruza `OP`, `Pedido de Venda`, `client_name` e os espelhos `chamados_processo_venda` / `chamados_0800` para vincular mesmo quando o nome no SAP difere do nome abreviado no Ellevo e o título veio sem `OP`.
-4. **Observação sobre permissão da credencial do n8n:** o fato de o SQL Server ter inspecionado as colunas e a collation da `plataformaellevo.dbo.vw_ChamadosTodosStatus` indica que ambas estão visíveis no mesmo banco `plataformaellevo`. Caso, ao executar, apareça especificamente `The SELECT permission was denied on the object 'vw_ChamadosTodosStatus'`, basta liberar `GRANT SELECT` nessa view para o usuário do n8n **ou** podemos mover a descoberta automática dos secundários diretamente para o `vm-worker` (que já lê a `vw_ChamadosTodosStatus` a cada 5 minutos), mantendo o n8n apenas com o SQL antigo dos principais.
 
 ---
 
-### Nó 3: `Code in JavaScript` (Remover bloqueio JS antigo e ordenar Principais antes dos Secundários)
+### Nó 3: `Code in JavaScript` (Extração de OP, Legado, Horas e Ordenação)
 1. Abra o nó **`Code in JavaScript`**.
 2. Confirme que **Mode** está em `Run Once for All Items` e **Language** em `JavaScript`.
-3. **Apague todo o código antigo** e cole o código abaixo:
+3. **Substitua todo o conteúdo** pelo código abaixo:
 
 ```javascript
 const normalizeText = (val) =>
@@ -191,6 +195,7 @@ for (const item of $input.all()) {
   const rawSoftware = String(dados.Software || dados.software || '').trim();
   const softwareNorm = normalizeText(rawSoftware);
 
+  // 1. Extração do Número da OP
   let opNumber = null;
   const opMatch = titulo.match(/\bOP:?\s*([\d\/]+)/i);
   if (opMatch && opMatch[1]) {
@@ -201,6 +206,7 @@ for (const item of $input.all()) {
     }
   }
 
+  // 2. Extração do Pedido de Venda
   let salesOrderNumber = null;
   if (dados.NumeroPedidoVenda) {
     const cleanSales = String(dados.NumeroPedidoVenda).replace(/\D/g, '');
@@ -224,6 +230,23 @@ for (const item of $input.all()) {
     dados.etapasprojeto ||
     'Sem etapas definidas';
 
+  // 3. Extração Inteligente de Sistema Legado (do Título ou Atividade)
+  let legacySystem = null;
+  const legTitleMatch = titulo.match(/\+\s*Convers[ãa]o(?:\s+de\s+Bases?(?:\s+de\s+Dados)?(?:\s+e\s+Imagens)?)?\s*[:\-]?\s*([A-Za-z0-9_\-\.\s]+?)(?:$|[\n\r<])/i);
+  if (legTitleMatch && legTitleMatch[1]) {
+    legacySystem = legTitleMatch[1].trim().replace(/\s+/g, ' ');
+  }
+
+  // 4. Extração Inteligente de Horas Vendidas (da Descrição do Trâmite, se já presente)
+  let soldHours = null;
+  const hoursMatch = String(tramiteDesc).match(/Horas vendidas[^:\n\r<]*:\s*([0-9]+(?:[.,][0-9]+)?)\s*h/i);
+  if (hoursMatch && hoursMatch[1]) {
+    const parsedHours = parseFloat(hoursMatch[1].replace(',', '.'));
+    if (!Number.isNaN(parsedHours) && parsedHours > 0) {
+      soldHours = parsedHours;
+    }
+  }
+
   const primaryPriority = isLikelyPrimary(tituloNorm, softwareNorm) ? 0 : 1;
 
   itemsByTicket.set(ticketNum, {
@@ -238,7 +261,9 @@ for (const item of $input.all()) {
       p_descricao_tramite: String(tramiteDesc),
       p_responsavel_atividade: String(responsavel),
       p_etapas_projeto: String(etapas),
-      p_project_leader: 'Bruno Fernandes'
+      p_project_leader: 'Bruno Fernandes',
+      p_sold_hours: soldHours,
+      p_legacy_system: legacySystem
     }
   });
 }
@@ -248,62 +273,46 @@ return Array.from(itemsByTicket.values())
   .map((entry) => ({ json: entry.payload }));
 ```
 
-**O que mudou aqui e por quê?**
-- Removemos o bloqueio antigo `isOrionTarget` que descartava `WebRI` e todos os produtos secundários.
-- A extração de OP agora aceita tanto `OP: 12131/2026` quanto `OP 10612` (sem dois-pontos).
-- **Ordenação Inteligente (`_sortPriority`):** coloca todos os chamados de **Sistemas Principais primeiro (`0`)** e todos os **Produtos Secundários depois (`1`)**. Assim, se um cartório abrir `Orion TN` + `LCW` + `SGA` no mesmo dia, o projeto principal é criado primeiro no Supabase e, milissegundos depois, `LCW` e `SGA` já encontram o projeto pai ativo e se vinculam na mesma execução!
-
 ---
 
-### Nó 4: `HTTP Request` (Manter endpoint atual + ativar Batching sequencial)
+### Nó 4: `HTTP Request` (Manter endpoint atual + ativar Batching)
 1. Abra o nó **`HTTP Request`**.
-2. **Não mexa nos seus Headers de autenticação atuais** (`apikey`, `Authorization: Bearer ...` e `Content-Type: application/json`) nem na URL:
+2. **Configurações:**
    - **Method:** `POST`
    - **URL:** `https://okvufcwkophaadttmjwa.supabase.co/rest/v1/rpc/sync_0800_project`
    - **Send Body:** `true` | **Body Content Type:** `JSON` | **Specify Body:** `Using JSON`
    - **JSON:** `={{ $json }}`
-3. Role até **Options** no final do nó, clique em **`Add Option` ➔ `Batching`** e configure:
-   - **Items per Batch:** `1`
-   - **Batch Interval (ms):** `50`
-   *(Isso garante que o n8n envie 1 chamado por vez respeitando rigorosamente a fila Sistemas Principais ➔ Produtos Secundários, sem condição de corrida).*
+3. Em **Options** (no final do nó):
+   - Confirme que **Batching** está ativo:
+     - **Items per Batch:** `1`
+     - **Batch Interval (ms):** `50`
 
 ---
 
-## 🧪 Como Testar com Segurança no n8n
+## 🎯 Como Funciona em Tempo Real:
 
-1. Com os 4 nós atualizados, clique em **`Test workflow`** (ou `Execute Workflow`).
-2. Verifique:
-   - No nó **Microsoft SQL**, a consulta concluirá rapidamente sem timeout, sem erro de conversão do SAP e sem conflito de collation.
-   - No nó **Code in JavaScript**, os primeiros itens da saída serão os sistemas principais (`Orion TN`, `Orion PRO`, `Orion REG`, `WebRI`) e os seguintes serão os demais chamados `"Implantação e Treinamento"`.
-   - No nó **HTTP Request**, todas as chamadas retornarão sucesso (`200`/`204`).
-   - Abra o **Siplan HUB** em `/deployments/secondary-products` ou em `/projects`:
-     - Apenas produtos secundários pertencentes aos **14 produtos oficiais** cujo cartório possua projeto principal ativo (`global_status <> 'done'`) terão entrado!
-     - `Siplan IA`, `Siplan NFSe`, `BI Report`, `WebRC`, suporte/conversão e vendas avulsas terão sido **automaticamente ignorados**.
-     - Em até ~5 minutos (ou clicando em **"Sincronizar 0800"** na tela), o `vm-worker` preencherá o **Status atual no Ellevo**, **Analista/Equipe atual no 0800** e o **Último Trâmite**.
-3. Clique em **`Save`** no canto superior direito do n8n para gravar em produção!
+1. **Quando o chamado é aberto (Trâmite 1):**
+   - O n8n roda às 08h e cria o projeto no Siplan HUB.
+   - Se o título tiver `+ Conversão WebTD`, o campo **Sistema Legado** já nasce preenchido.
+   - O campo **Horas** fica aguardando.
+   - No modal do projeto (aba *Informações Gerais*), aparece o aviso suave:
+     > `🕒 Aguardando informações de Legado e Horas nos Trâmites do chamado do 0800`
+
+2. **Quando a Soraya/Camila inclui o Trâmite 4 (dias depois):**
+   - O `vm-worker` sincroniza o novo trâmite no Supabase.
+   - O trigger automático `trg_sync_project_commercial_data` detecta o texto `Horas vendidas de Implantação: 80 horas`.
+   - O projeto no HUB é **automaticamente atualizado para 80h**!
+
+3. **Se você estiver com o projeto aberto no HUB:**
+   - Logo abaixo de *Legado*, o assistente exibirá o botão de 1 clique:
+     > `✨ Encontrado no Trâmite 4 do 0800: 80h • WebTD [Aplicar ao Projeto]`
+   - Clicando em **Aplicar**, o projeto é atualizado imediatamente!
 
 ---
 
-## ➕ Como Adicionar um Novo Produto Secundário no Futuro
+## 🧪 Como Testar no n8n
 
-Como o catálogo oficial vive no banco (`public.secondary_product_catalog`), se o Administrativo lançar um 15º produto secundário no futuro:
-1. Inclua o nome do `Software` correspondente no bloco `secundarios` (`LTRIM(RTRIM(c.Software)) IN (...)`) do **Nó 2 (`Microsoft SQL`)** no n8n (caso ainda não esteja coberto pelos nomes existentes).
-2. Rode um `INSERT` no SQL Editor do Supabase (sem precisar fazer deploy de código):
-
-```sql
-INSERT INTO public.secondary_product_catalog (
-  code, name, category, match_patterns, only_system_type, requires_orion_admin, priority, active
-) VALUES (
-  'novo_produto',
-  'Nome Oficial do Produto',
-  'secondary',
-  ARRAY['\mnome\s*oficial\M', '\msigla\M'],
-  NULL,  -- ou 'Orion TN' se depender exclusivamente de um sistema específico
-  false, -- ou true se exigir criação de chave no Orion Admin
-  65,
-  true
-);
-```
-
-Arquivo JSON de referência (com placeholder `<SUPABASE_SERVICE_ROLE_KEY>` por segurança):
-[`docs/automacoes/n8n-workflow-projetos-e-produtos-secundarios-0800.json`](./n8n-workflow-projetos-e-produtos-secundarios-0800.json)
+1. No n8n, abra o workflow e clique em **`Test workflow`**.
+2. Verifique no Node 3 (`Code in JavaScript`) se os campos `p_sold_hours` e `p_legacy_system` foram incluídos no payload JSON.
+3. No Node 4 (`HTTP Request`), todas as requisições retornarão `200`/`204`.
+4. Clique em **`Save`** no canto superior direito do n8n para manter em produção!
