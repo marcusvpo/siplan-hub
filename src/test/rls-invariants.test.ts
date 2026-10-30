@@ -144,7 +144,7 @@ suite("invariantes de RLS (banco real)", () => {
         ('menu_conversao', array['conversion_home','conversion_engines']),
         ('menu_orion', array['orion_dashboard','orion_projects','orion_editor']),
         ('menu_calendario', array['calendar_projects','calendar_analysts']),
-        ('menu_implantacao', array['projects','reports','deployments_next','deployments_latest'])
+        ('menu_implantacao', array['projects','calendar_projects','secondary_products','reports','deployments_next','deployments_latest'])
       )
       select distinct pm.perfil, m.menu
       from perms pm

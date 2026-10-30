@@ -488,6 +488,110 @@ export type OrionUpdateAuditInsert = Omit<OrionUpdateAuditRow, "id" | "user_id" 
 };
 export type OrionUpdateAuditUpdate = Partial<OrionUpdateAuditInsert>;
 
+export type SecondaryTicketHubStatus =
+  | "pending"
+  | "in_progress"
+  | "deployed_field"
+  | "handed_to_sd"
+  | "completed_sd"
+  | "blocked_client"
+  | "cancelled";
+
+export type SecondaryProductCatalogRow = {
+  id: string;
+  code: string;
+  name: string;
+  category: "primary" | "secondary" | "ignored";
+  match_patterns: string[];
+  only_system_type: string | null;
+  requires_orion_admin: boolean;
+  priority: number;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+export type SecondaryProductCatalogInsert = Omit<
+  SecondaryProductCatalogRow,
+  "id" | "match_patterns" | "requires_orion_admin" | "priority" | "active" | "created_at" | "updated_at"
+> & {
+  id?: string;
+  match_patterns?: string[];
+  requires_orion_admin?: boolean;
+  priority?: number;
+  active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+export type SecondaryProductCatalogUpdate = Partial<SecondaryProductCatalogInsert>;
+
+export type SecondaryTicketRow = {
+  id: string;
+  ticket_number: string;
+  product_code: string | null;
+  product_name: string;
+  client_name: string;
+  codigo_cliente: string | null;
+  op_number: number | null;
+  sales_order_number: number | null;
+  titulo_chamado: string | null;
+  hub_status: SecondaryTicketHubStatus;
+  responsible: string | null;
+  observations: string | null;
+  tramited_to_cs: boolean;
+  ellevo_status: string | null;
+  ellevo_team: string | null;
+  ellevo_analyst: string | null;
+  ellevo_opened_at: string | null;
+  ellevo_closed_at: string | null;
+  ellevo_last_tramite: string | null;
+  ellevo_last_tramite_at: string | null;
+  ellevo_synced_at: string | null;
+  created_at: string;
+  updated_at: string;
+  updated_by: string | null;
+};
+export type SecondaryTicketInsert = {
+  id?: string;
+  ticket_number: string;
+  product_code?: string | null;
+  product_name: string;
+  client_name: string;
+  codigo_cliente?: string | null;
+  op_number?: number | null;
+  sales_order_number?: number | null;
+  titulo_chamado?: string | null;
+  hub_status?: SecondaryTicketHubStatus;
+  responsible?: string | null;
+  observations?: string | null;
+  tramited_to_cs?: boolean;
+  ellevo_status?: string | null;
+  ellevo_team?: string | null;
+  ellevo_analyst?: string | null;
+  ellevo_opened_at?: string | null;
+  ellevo_closed_at?: string | null;
+  ellevo_last_tramite?: string | null;
+  ellevo_last_tramite_at?: string | null;
+  ellevo_synced_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  updated_by?: string | null;
+};
+export type SecondaryTicketUpdate = Partial<SecondaryTicketInsert>;
+
+export type ProjectSecondaryTicketLinkRow = {
+  project_id: string;
+  secondary_ticket_id: string;
+  link_source: "auto" | "manual";
+  created_at: string;
+};
+export type ProjectSecondaryTicketLinkInsert = {
+  project_id: string;
+  secondary_ticket_id: string;
+  link_source?: "auto" | "manual";
+  created_at?: string;
+};
+export type ProjectSecondaryTicketLinkUpdate = Partial<ProjectSecondaryTicketLinkInsert>;
+
 /**
  * O arquivo gerado do projeto estava vazio antes desta mudança. Estes aliases
  * mantêm os consumidores legados sem tipagem até ser possível regenerar todo o
@@ -517,6 +621,9 @@ export type Tables<TableName extends string> =
                               : TableName extends "orion_update_shares" ? OrionUpdateShareRow
                                 : TableName extends "orion_update_suggestions" ? OrionUpdateSuggestionRow
                                   : TableName extends "orion_update_audit" ? OrionUpdateAuditRow
+                                    : TableName extends "secondary_product_catalog" ? SecondaryProductCatalogRow
+                                      : TableName extends "secondary_tickets" ? SecondaryTicketRow
+                                        : TableName extends "project_secondary_ticket_links" ? ProjectSecondaryTicketLinkRow
                                     : UntypedSupabaseShape;
 
 export type TablesInsert<TableName extends string> =
@@ -538,6 +645,9 @@ export type TablesInsert<TableName extends string> =
                               : TableName extends "orion_update_shares" ? OrionUpdateShareInsert
                                 : TableName extends "orion_update_suggestions" ? OrionUpdateSuggestionInsert
                                   : TableName extends "orion_update_audit" ? OrionUpdateAuditInsert
+                                    : TableName extends "secondary_product_catalog" ? SecondaryProductCatalogInsert
+                                      : TableName extends "secondary_tickets" ? SecondaryTicketInsert
+                                        : TableName extends "project_secondary_ticket_links" ? ProjectSecondaryTicketLinkInsert
                                     : UntypedSupabaseShape;
 
 export type TablesUpdate<TableName extends string> =
@@ -559,4 +669,7 @@ export type TablesUpdate<TableName extends string> =
                               : TableName extends "orion_update_shares" ? OrionUpdateShareUpdate
                                 : TableName extends "orion_update_suggestions" ? OrionUpdateSuggestionUpdate
                                   : TableName extends "orion_update_audit" ? OrionUpdateAuditUpdate
+                                    : TableName extends "secondary_product_catalog" ? SecondaryProductCatalogUpdate
+                                      : TableName extends "secondary_tickets" ? SecondaryTicketUpdate
+                                        : TableName extends "project_secondary_ticket_links" ? ProjectSecondaryTicketLinkUpdate
                                     : UntypedSupabaseShape;

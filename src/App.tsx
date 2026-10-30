@@ -38,6 +38,7 @@ const NextDeployments = lazy(() => import("./pages/NextDeployments"));
 const LatestDeployments = lazy(() => import("./pages/LatestDeployments"));
 const DeploymentsTickets = lazy(() => import("./pages/DeploymentsTickets"));
 const DeploymentsLegacyTickets = lazy(() => import("./pages/DeploymentsLegacyTickets"));
+const DeploymentsSecondaryProducts = lazy(() => import("./pages/DeploymentsSecondaryProducts"));
 const RoadmapPage = lazy(() => import("./pages/RoadmapPage"));
 const TeamConfiguration = lazy(() => import("./pages/admin/TeamConfiguration"));
 const AuditLogPage = lazy(() => import("./pages/admin/AuditLog"));
@@ -461,6 +462,14 @@ const App = () => (
                       <Suspense fallback={<PageLoader />}>
                         <Routes>
                           <Route path="/" element={<Home />} />
+                          <Route
+                            path="/deployments/secondary-products"
+                            element={
+                              <RequirePermission resource="secondary_products">
+                                <DeploymentsSecondaryProducts />
+                              </RequirePermission>
+                            }
+                          />
                           <Route
                             path="/meu-dia"
                             element={

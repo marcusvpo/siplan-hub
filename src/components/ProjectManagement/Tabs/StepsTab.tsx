@@ -24,6 +24,7 @@ import { PostChamados0800 } from "@/components/ProjectManagement/Forms/PostChama
 import { checkPosCriticosAbertos } from "@/hooks/useChamados0800";
 import { toast as sonnerToast } from "sonner";
 import { EnvironmentScreenshots } from "@/components/ProjectManagement/Forms/EnvironmentScreenshots";
+import { OrionAdminSection } from "@/components/ProjectManagement/Forms/OrionAdminSection";
 import { ObservationsWithAI } from "@/components/ProjectManagement/Forms/ObservationsWithAI";
 import { CollapsibleFieldSection } from "@/components/ProjectManagement/Forms/CollapsibleFieldSection";
 import { InfraStageForm, AdherenceStageForm, EnvironmentStageForm, ConversionStageForm, ImplementationStageForm } from "../Forms/StageForms";
@@ -63,6 +64,8 @@ import {
   Loader2,
   Eye,
   User,
+  AlertTriangle,
+  PackageCheck,
 } from "lucide-react";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
@@ -424,17 +427,13 @@ export function StepsTab({
                 collapsibleSpecificFields={true}
                 automationNotice="Automação Ativa: Um e-mail de notificação foi enviado solicitando a preparação deste ambiente."
                 beforeObservations={
-                  <CollapsibleFieldSection title="Configuração no Orion Admin">
-                    <ObservationsWithAI
-                      hideTitle
-                      placeholder="Detalhes da configuração no Orion Admin..."
-                      observations={stagesData.environment.orionAdminConfig}
-                      onChange={(content) => updateStage("environment", { orionAdminConfig: content })}
-                      canEdit={canEditProjects}
-                      projectId={project.id}
-                      requestedBy={currentUserName}
-                    />
-                  </CollapsibleFieldSection>
+                  <OrionAdminSection
+                    stage={stagesData.environment}
+                    project={project}
+                    canEdit={canEditProjects}
+                    currentUserName={currentUserName}
+                    onUpdate={(u) => updateStage("environment", u)}
+                  />
                 }
                 afterObservations={
                   <EnvironmentScreenshots
@@ -502,6 +501,26 @@ export function StepsTab({
             }
             observations={stagesData.implementation.observations}
             hideDates={true} // Hide main dates - will be managed by Phase 1 and Phase 2
+            beforeObservations={
+              (project.secondaryTicketsPendingCount || 0) > 0 ? (
+                <div className="flex items-start gap-2.5 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-xs">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <div className="min-w-0 space-y-1">
+                    <p className="font-bold text-amber-900 dark:text-amber-200">
+                      Produtos Secundários Pendentes ({project.secondaryTicketsPendingCount})
+                    </p>
+                    <p className="text-amber-800/90 dark:text-amber-300/90 leading-relaxed">
+                      Este cartório possui chamado(s) complementar(es) vinculado(s)
+                      {project.secondaryProductsNames?.length
+                        ? ` (${project.secondaryProductsNames.join(", ")})`
+                        : ""}
+                      . Ao finalizar a implantação, atualize o status na aba{" "}
+                      <strong>Produtos Secundários</strong> e encaminhe os chamados correspondentes no 0800.
+                    </p>
+                  </div>
+                </div>
+              ) : undefined
+            }
             isReadyToStart={
               stageReadiness.find((r) => r.stageId === "implementation")?.isReady
             }
@@ -524,6 +543,12 @@ export function StepsTab({
                   ...((updates.phase1 as Record<string, unknown>) || {}),
                   endDate: u.endDate,
                 };
+              }
+              if (u.status === "done" && (project.secondaryTicketsPendingCount || 0) > 0) {
+                sonnerToast.warning(
+                  `Lembrete: este projeto possui ${project.secondaryTicketsPendingCount} produto(s) secundário(s) ainda pendente(s) de conclusão ou trâmite no 0800. Confira a aba "Produtos Secundários".`,
+                  { duration: 7000 }
+                );
               }
               updateStage("implementation", updates);
             }}

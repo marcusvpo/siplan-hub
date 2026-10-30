@@ -1,5 +1,5 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Pencil, X, ExternalLink } from "lucide-react";
+import { ArrowLeft, Pencil, X, ExternalLink, PackageCheck, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { GeneralInfoTab } from "@/components/ProjectManagement/Tabs/GeneralInfoTab";
 import { StepsTab } from "@/components/ProjectManagement/Tabs/StepsTab";
@@ -17,19 +17,51 @@ import { RoadmapManager } from "@/components/ProjectManagement/RoadmapManager";
 import { EditProjectTab } from "@/components/ProjectManagement/Tabs/EditProjectTab";
 import { Chamado0800Tab } from "@/components/ProjectManagement/Tabs/Chamado0800Tab"; // Tab 0800
 import { PosImplantacaoTab } from "@/components/ProjectManagement/Tabs/PosImplantacaoTab";
+import { SecondaryProductsTab } from "@/components/ProjectManagement/Tabs/SecondaryProductsTab";
 import { ProjectV2 } from "@/types/ProjectV2";
 import { useQueryClient } from "@tanstack/react-query";
 import { EllevoTicketLink } from "@/components/EllevoTicketLink";
+import { cn } from "@/lib/utils";
+import { OrionAdminAnimatedButton } from "@/components/ProjectManagement/OrionAdminAnimatedButton";
 
 export default function ProjectDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState("general");
+  const [activeTab, setActiveTab] = useState(() => searchParams.get("tab") || "general");
+  const [targetSecondaryProduct, setTargetSecondaryProduct] = useState<string | null>(null);
   const [activeStepId, setActiveStepId] = useState<string | undefined>(undefined);
   const { canEditProjects } = usePermissions();
   const { updateProject } = useProjectsV2();
+
+  const handleProductBadgeClick = (productName: string) => {
+    setTargetSecondaryProduct(productName);
+    setActiveTab("secondary_products");
+  };
+
+  const handleOpenOrionAdmin = () => {
+    setActiveTab("steps");
+    setActiveStepId("environment");
+    setTimeout(() => {
+      const el = document.getElementById("orion-admin-stage-section");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("ring-2", "ring-primary", "transition-all", "duration-500");
+        setTimeout(() => {
+          el.classList.remove("ring-2", "ring-primary");
+        }, 2500);
+      }
+    }, 280);
+  };
+
+  useEffect(() => {
+    const requestedTab = searchParams.get("tab");
+    if (requestedTab) {
+      setActiveTab(requestedTab);
+    }
+  }, [searchParams]);
 
   const { project, isLoading, error } = useProjectDetails(id || null);
 
@@ -76,6 +108,38 @@ export default function ProjectDetails() {
                 <Badge variant="secondary" className="bg-slate-700 text-white hover:bg-slate-800 text-xs py-0.5 px-2 shrink-0">
                   {project?.systemType}
                 </Badge>
+
+                {project?.products?.map((product) => (
+                  <button
+                    key={product}
+                    type="button"
+                    onClick={() => handleProductBadgeClick(product)}
+                    className="inline-flex items-center gap-1 rounded-md border border-slate-300 dark:border-slate-800 bg-secondary/80 hover:bg-secondary text-secondary-foreground px-2 py-0.5 text-xs font-semibold shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    title={`Ver detalhes de "${product}" na aba Produtos Secundários`}
+                  >
+                    <PackageCheck className="h-3 w-3 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <span>{product}</span>
+                  </button>
+                ))}
+
+                {project?.relatedTickets && project.relatedTickets.length > 0 && (
+                  <div className="hidden md:block h-3.5 w-px bg-border mx-0.5 shrink-0" />
+                )}
+
+                {project?.relatedTickets?.map((ticket, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => handleProductBadgeClick(ticket.name || ticket.number)}
+                    className="text-[11px] text-muted-foreground flex items-center gap-1 bg-muted/50 hover:bg-muted/80 px-2 py-0.5 rounded-md border border-border/50 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    title={`Ver chamado #${ticket.number} (${ticket.name}) na aba Produtos Secundários`}
+                  >
+                    <span className="font-medium uppercase opacity-70">
+                      {ticket.name}:
+                    </span>
+                    <span className="font-semibold text-foreground/90">{ticket.number}</span>
+                  </button>
+                ))}
                 {project?.TituloChamado && (
                   <>
                     <div className="hidden md:block h-3.5 w-px bg-border mx-0.5 shrink-0" />
@@ -91,6 +155,11 @@ export default function ProjectDetails() {
         </div>
 
         <div className="flex items-center gap-2 shrink-0 mt-0.5">
+          <OrionAdminAnimatedButton
+            project={project}
+            onClick={handleOpenOrionAdmin}
+          />
+
           {canEditProjects && !isLoading && (
             <Button
               variant={isEditing ? "destructive" : "outline"}
@@ -148,6 +217,12 @@ export default function ProjectDetails() {
                 className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm font-medium"
               >
                 <option value="general">Informações Gerais</option>
+                <option value="secondary_products">
+                  Produtos Secundários
+                  {(project?.secondaryTicketsCount || 0) > 0
+                    ? ` (${project?.secondaryTicketsCount})`
+                    : ""}
+                </option>
                 {project && (project.TituloChamado || project.descricaotramite || project.ResponsavelAtividade || project.EtapasProjeto) && (
                   <option value="chamado_0800">Chamado 0800</option>
                 )}
@@ -167,6 +242,24 @@ export default function ProjectDetails() {
                     className="h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 text-muted-foreground hover:text-primary/80 hover:border-border/50 data-[state=active]:text-foreground transition-all duration-200"
                   >
                     Informações Gerais
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="secondary_products"
+                    className="h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 text-muted-foreground hover:text-primary/80 hover:border-border/50 data-[state=active]:text-foreground transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap"
+                  >
+                    <span>Produtos Secundários</span>
+                    {(project?.secondaryTicketsCount || 0) > 0 && (
+                      <span
+                        className={cn(
+                          "inline-flex h-4 min-w-[1.15rem] items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none",
+                          (project?.secondaryTicketsPendingCount || 0) > 0
+                            ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40"
+                            : "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40"
+                        )}
+                      >
+                        {project?.secondaryTicketsCount}
+                      </span>
+                    )}
                   </TabsTrigger>
                   {project && (project.TituloChamado || project.descricaotramite || project.ResponsavelAtividade || project.EtapasProjeto) && (
                     <TabsTrigger
@@ -234,11 +327,25 @@ export default function ProjectDetails() {
                     >
                       <GeneralInfoTab 
                         project={project} 
-                        onUpdate={handleUpdate} 
+                        onUpdate={handleUpdate}
+                        onOpenSecondaryTab={() => setActiveTab("secondary_products")}
                         onStageClick={(id) => {
                           setActiveStepId(id);
                           setActiveTab("steps");
                         }}
+                      />
+                    </motion.div>
+                  </TabsContent>
+                  <TabsContent value="secondary_products" className="m-0 border-none p-0 outline-none">
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <SecondaryProductsTab
+                        project={project}
+                        targetProduct={targetSecondaryProduct}
+                        onTargetProductScrolled={() => setTargetSecondaryProduct(null)}
                       />
                     </motion.div>
                   </TabsContent>

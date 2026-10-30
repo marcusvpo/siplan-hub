@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { ProjectV2 } from "@/types/ProjectV2";
 import {
   Card,
@@ -18,6 +19,7 @@ import {
   X,
   Cog,
   PlayCircle,
+  PackageCheck,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -39,6 +41,7 @@ import {
   getBottleneckIcon,
 } from "@/lib/predictability-utils";
 import { isModelosTnProject } from "@/lib/project-stage-filters";
+import { getProjectOrionAdminStatus } from "@/lib/secondary-products";
 
 interface ProjectCardV3Props {
   project: ProjectV2;
@@ -75,6 +78,10 @@ export function ProjectCardV3({
   const startDate = phase1?.startDate || project.stages?.implementation?.startDate;
   const endDate = phase1?.endDate || project.stages?.implementation?.endDate;
   const hasForecastDates = Boolean(startDate && endDate);
+
+  const orionStatus = useMemo(() => {
+    return getProjectOrionAdminStatus(project);
+  }, [project]);
 
   const isForecastScheduled =
     !isModelosTN && !isImplementationInProgress && !isConfirmed && hasForecastDates;
@@ -242,6 +249,28 @@ export function ProjectCardV3({
       {/* Project Status Badges - Floating over Top Right Corner */}
       <div className="col-span-2 flex min-w-0 flex-wrap items-center gap-1.5 pl-1 md:absolute md:-right-1.5 md:-top-1.5 md:z-10 md:pl-0">
         <PosSaudeBadge projectId={project.id} />
+        {orionStatus.required && (
+          <Badge
+            className={cn(
+              "text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background flex items-center gap-1",
+              orionStatus.isConfigured
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20"
+                : "bg-rose-600 hover:bg-rose-700 text-white shadow-rose-500/20 animate-pulse"
+            )}
+            title={
+              orionStatus.isConfigured
+                ? "Orion Admin Configurado: Chaves cadastradas na Etapa 4"
+                : `Orion Admin Pendente: Requer chaves para ${orionStatus.dependentProducts.join(", ") || "produtos dependentes"}`
+            }
+          >
+            {orionStatus.isConfigured ? (
+              <CheckCircle2 className="w-2.5 h-2.5 shrink-0" />
+            ) : (
+              <span className="h-1.5 w-1.5 rounded-full bg-white shrink-0 animate-ping" />
+            )}
+            Orion Admin: {orionStatus.isConfigured ? "Configurado" : "Pendente"}
+          </Badge>
+        )}
         {isFromAutomacao && (
           <Badge className="text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background bg-purple-600 hover:bg-purple-700 text-white shadow-purple-500/20">
             Autom. N8N
@@ -316,6 +345,37 @@ export function ProjectCardV3({
           />
         </div>
 
+        {(project.secondaryTicketsCount || 0) > 0 && (
+          <div className="w-full min-w-0">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAction("openSecondaryProducts", project);
+              }}
+              title={
+                project.secondaryProductsNames?.length
+                  ? `Produtos: ${project.secondaryProductsNames.join(", ")}. Clique para gerenciar.`
+                  : "Clique para abrir a aba de Produtos Secundários"
+              }
+              className={cn(
+                "inline-flex max-w-full items-center gap-1 rounded-md border px-1.5 py-0.5 text-left text-[10px] font-semibold transition-colors",
+                (project.secondaryTicketsPendingCount || 0) > 0
+                  ? "border-amber-500/40 bg-amber-500/10 text-amber-800 hover:bg-amber-500/20 dark:text-amber-300"
+                  : "border-emerald-500/35 bg-emerald-500/10 text-emerald-800 hover:bg-emerald-500/20 dark:text-emerald-300"
+              )}
+            >
+              <PackageCheck className="h-3 w-3 shrink-0" />
+              <span className="truncate">
+                +{project.secondaryTicketsCount}{" "}
+                {(project.secondaryTicketsCount || 0) > 1 ? "Produtos" : "Produto"}
+                {project.secondaryProductsNames?.length
+                  ? `: ${project.secondaryProductsNames.join(", ")}`
+                  : ""}
+              </span>
+            </button>
+          </div>
+        )}
         {project.TituloChamado && (
           <div className="w-full min-w-0 break-words text-[11px] font-medium leading-snug text-muted-foreground/90 md:truncate" title={project.TituloChamado}>
             {project.TituloChamado}

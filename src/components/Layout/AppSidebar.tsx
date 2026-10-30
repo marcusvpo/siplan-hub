@@ -47,6 +47,7 @@ import {
   ListTodo,
   Columns3,
   Newspaper,
+  PackageCheck,
 } from "lucide-react";
 import {
   Collapsible,
@@ -84,6 +85,7 @@ export function AppSidebar() {
       location.pathname === "/calendar" ||
       location.pathname === "/reports" ||
       location.pathname === "/deployments" ||
+      location.pathname === "/deployments/secondary-products" ||
       location.pathname === "/deployments/latest",
   );
   const [isCalendarioOpen, setIsCalendarioOpen] = useState(
@@ -158,6 +160,7 @@ export function AppSidebar() {
   const rotaImplantacao = primeiraRota(
     ["projects", "/projects"],
     ["calendar_projects", "/calendar"],
+    ["secondary_products", "/deployments/secondary-products"],
     ["reports", "/reports"],
     ["deployments_next", "/deployments"],
     ["deployments_latest", "/deployments/latest"],
@@ -545,6 +548,18 @@ export function AppSidebar() {
                     </Button>
                   </Link>
                   )}
+                  {can("secondary_products") && (
+                  <Link to="/deployments/secondary-products">
+                    <Button
+                      variant={isActive("/deployments/secondary-products") ? "secondary" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start gap-3 h-9"
+                    >
+                      <PackageCheck className="h-4 w-4" />
+                      <span>Produtos Secundários</span>
+                    </Button>
+                  </Link>
+                  )}
                   {can("reports") && (
                   <Link to="/reports">
                     <Button
@@ -593,6 +608,7 @@ export function AppSidebar() {
                       isActive("/calendar") ||
                       isActive("/reports") ||
                       isActive("/deployments") ||
+                      isActive("/deployments/secondary-products") ||
                       isActive("/deployments/latest")
                       ? "secondary"
                       : "ghost"
