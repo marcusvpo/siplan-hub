@@ -48,6 +48,7 @@ export function ProjectGrid() {
   const [selectedProject, setSelectedProject] =
     useState<Partial<ProjectV2> | null>(null);
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
+  const [modalInitialTab, setModalInitialTab] = useState<string | undefined>(undefined);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -75,7 +76,8 @@ export function ProjectGrid() {
 
   // Open project from URL if present
   useEffect(() => {
-    const projectId = searchParams.get("id");
+    const projectId = searchParams.get("id") || searchParams.get("project");
+    const tabParam = searchParams.get("tab") || undefined;
     if (!projectId) {
       closedIdRef.current = null;
       return;
@@ -88,18 +90,22 @@ export function ProjectGrid() {
 
     if (projectId !== selectedProject?.id) {
       const foundInList = projects.find((p) => p.id === projectId);
+      setModalInitialTab(tabParam);
       setSelectedProject(foundInList || ({ id: projectId } as Partial<ProjectV2>));
     }
   }, [searchParams, projects, selectedProject]);
 
   const handleCloseModal = () => {
-    const currentId = searchParams.get("id");
+    const currentId = searchParams.get("id") || searchParams.get("project");
     if (currentId) {
       closedIdRef.current = currentId;
       const newParams = new URLSearchParams(searchParams);
       newParams.delete("id");
+      newParams.delete("project");
+      newParams.delete("tab");
       setSearchParams(newParams, { replace: true });
     }
+    setModalInitialTab(undefined);
     setSelectedProject(null);
   };
 
@@ -318,7 +324,10 @@ export function ProjectGrid() {
                   <ProjectCardV3
                     key={project.id}
                     project={project as ProjectV2}
-                    onClick={() => setSelectedProject(project)}
+                    onClick={() => {
+                      setModalInitialTab(undefined);
+                      setSelectedProject(project);
+                    }}
                     selected={selectedProjectIds.includes(project.id)}
                     onSelect={(selected) =>
                       toggleSelection(project.id, selected)
@@ -327,6 +336,11 @@ export function ProjectGrid() {
                       getItemByProjectId(project.id)?.engineStatus
                     }
                     onAction={(action, project) => {
+                      if (action === "openSecondaryProducts") {
+                        setModalInitialTab("secondary_products");
+                        setSelectedProject(project);
+                        return;
+                      }
                       if (action === "delete") {
                         if (
                           confirm(
@@ -464,6 +478,7 @@ export function ProjectGrid() {
       <ProjectModal
         project={selectedProject as ProjectV2}
         open={!!selectedProject}
+        initialTab={modalInitialTab}
         onOpenChange={(open) => !open && handleCloseModal()}
         onUpdate={(updatedProject) => {
           updateProject.mutate({

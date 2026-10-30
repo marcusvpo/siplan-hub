@@ -107,6 +107,9 @@ export interface ProjectV2 {
   files?: ProjectFile[];
 
   relatedTickets?: { name: string; number: string }[];
+  secondaryTicketsCount?: number;
+  secondaryTicketsPendingCount?: number;
+  secondaryProductsNames?: string[];
 
   // Pessoas
   projectLeader: string;
@@ -291,6 +294,9 @@ export interface EnvironmentStageV2 {
   postgresUser?: string;
   postgresPassword?: string;
   orionAdminConfig?: string;
+  orionAdminConfigured?: boolean;
+  orionAdminConfiguredAt?: string;
+  orionAdminConfiguredBy?: string;
   screenshots?: EnvironmentScreenshot[];
 }
 

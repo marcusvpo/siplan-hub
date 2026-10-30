@@ -15,10 +15,11 @@ import { LogsTab } from "./Tabs/LogsTab";
 import { RoadmapManager } from "./RoadmapManager";
 import { Chamado0800Tab } from "./Tabs/Chamado0800Tab";
 import { PosImplantacaoTab } from "./Tabs/PosImplantacaoTab";
+import { SecondaryProductsTab } from "./Tabs/SecondaryProductsTab";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, X, Maximize2, ClipboardList, PlayCircle, CheckCircle2, Calendar, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { Pencil, X, Maximize2, ClipboardList, PlayCircle, CheckCircle2, Calendar, ExternalLink, PackageCheck, KeyRound, ShieldCheck } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -27,6 +28,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PosSaudeBadge } from "@/components/ProjectManagement/PosSaudeBadge";
 import { EllevoTicketLink } from "@/components/EllevoTicketLink";
+import { OrionAdminAnimatedButton } from "./OrionAdminAnimatedButton";
 import { cn } from "@/lib/utils";
 
 interface ProjectModalProps {
@@ -34,6 +36,7 @@ interface ProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdate: (project: ProjectV2) => void;
+  initialTab?: string;
 }
 
 export function ProjectModal({
@@ -41,9 +44,38 @@ export function ProjectModal({
   open,
   onOpenChange,
   onUpdate,
+  initialTab,
 }: ProjectModalProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState("general");
+  const [activeTab, setActiveTab] = useState(initialTab || "general");
+  const [targetSecondaryProduct, setTargetSecondaryProduct] = useState<string | null>(null);
+  useEffect(() => {
+    if (open) {
+      setActiveTab(initialTab || "general");
+      setIsEditing(false);
+      setTargetSecondaryProduct(null);
+    }
+  }, [open, initialProject?.id, initialTab]);
+
+  const handleProductBadgeClick = (productName: string) => {
+    setTargetSecondaryProduct(productName);
+    setActiveTab("secondary_products");
+  };
+
+  const handleOpenOrionAdmin = () => {
+    setActiveTab("steps");
+    setActiveStepId("environment");
+    setTimeout(() => {
+      const el = document.getElementById("orion-admin-stage-section");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("ring-2", "ring-primary", "transition-all", "duration-500");
+        setTimeout(() => {
+          el.classList.remove("ring-2", "ring-primary");
+        }, 2500);
+      }
+    }, 280);
+  };
   const [activeStepId, setActiveStepId] = useState<string | undefined>(undefined);
   const { canEditProjects } = usePermissions();
   const navigate = useNavigate();
@@ -242,13 +274,16 @@ export function ProjectModal({
                 </Badge>
 
                 {displayProject?.products?.map((product) => (
-                  <Badge
+                  <button
                     key={product}
-                    variant="secondary"
-                    className="border-slate-300 dark:border-slate-800 text-xs shadow-sm"
+                    type="button"
+                    onClick={() => handleProductBadgeClick(product)}
+                    className="inline-flex items-center gap-1 rounded-md border border-slate-300 dark:border-slate-800 bg-secondary/80 hover:bg-secondary text-secondary-foreground px-2 py-0.5 text-xs font-semibold shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    title={`Ver detalhes de "${product}" na aba Produtos Secundários`}
                   >
-                    {product}
-                  </Badge>
+                    <PackageCheck className="h-3 w-3 text-amber-600 dark:text-amber-400 shrink-0" />
+                    <span>{product}</span>
+                  </button>
                 ))}
 
                 {displayProject?.relatedTickets &&
@@ -257,15 +292,18 @@ export function ProjectModal({
                   )}
 
                 {displayProject?.relatedTickets?.map((ticket, index) => (
-                  <span
+                  <button
                     key={index}
-                    className="text-[11px] text-muted-foreground flex items-center gap-1 bg-muted/50 px-2 py-0.5 rounded-md border border-border/50"
+                    type="button"
+                    onClick={() => handleProductBadgeClick(ticket.name || ticket.number)}
+                    className="text-[11px] text-muted-foreground flex items-center gap-1 bg-muted/50 hover:bg-muted/80 px-2 py-0.5 rounded-md border border-border/50 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    title={`Ver chamado #${ticket.number} (${ticket.name}) na aba Produtos Secundários`}
                   >
                     <span className="font-medium uppercase opacity-70">
                       {ticket.name}:
                     </span>
-                    <span className="font-semibold">{ticket.number}</span>
-                  </span>
+                    <span className="font-semibold text-foreground/90">{ticket.number}</span>
+                  </button>
                 ))}
               </div>
             )}
@@ -277,6 +315,10 @@ export function ProjectModal({
           <div className="flex w-full shrink-0 flex-wrap items-center gap-1.5 sm:mr-8 sm:mt-0 sm:w-auto sm:gap-2">
             {displayProject?.id && (
               <>
+                <OrionAdminAnimatedButton
+                  project={displayProject}
+                  onClick={handleOpenOrionAdmin}
+                />
                 <ChecklistStatusButton
                   projectId={displayProject.id}
                   checklist={projectChecklist}
@@ -350,6 +392,12 @@ export function ProjectModal({
                 className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-xs font-medium text-foreground shadow-sm outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="general">Informações gerais</option>
+                <option value="secondary_products">
+                  Produtos secundários
+                  {(displayProject?.secondaryTicketsCount || 0) > 0
+                    ? ` (${displayProject?.secondaryTicketsCount})`
+                    : ""}
+                </option>
                 {isFromAutomacao && <option value="chamado_0800">Chamado 0800</option>}
                 <option value="steps">Etapas</option>
                 <option value="files">Arquivos</option>
@@ -390,6 +438,29 @@ export function ProjectModal({
                   className="h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 text-muted-foreground hover:text-primary/80 hover:border-border/50 data-[state=active]:text-foreground transition-all duration-200"
                 >
                   Informações Gerais
+                </TabsTrigger>
+                <TabsTrigger
+                  value="secondary_products"
+                  className="h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 text-muted-foreground hover:text-primary/80 hover:border-border/50 data-[state=active]:text-foreground transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap"
+                >
+                  <span>Produtos Secundários</span>
+                  {(displayProject?.secondaryTicketsCount || 0) > 0 && (
+                    <span
+                      className={cn(
+                        "inline-flex h-4 min-w-[1.15rem] items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none",
+                        (displayProject?.secondaryTicketsPendingCount || 0) > 0
+                          ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40"
+                          : "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40"
+                      )}
+                      title={
+                        (displayProject?.secondaryTicketsPendingCount || 0) > 0
+                          ? `${displayProject?.secondaryTicketsPendingCount} produto(s) secundário(s) pendente(s)`
+                          : "Todos os produtos secundários encaminhados/concluídos"
+                      }
+                    >
+                      {displayProject?.secondaryTicketsCount}
+                    </span>
+                  )}
                 </TabsTrigger>
                 {fullProject && (fullProject.TituloChamado || fullProject.descricaotramite || fullProject.ResponsavelAtividade || fullProject.EtapasProjeto) && (
                   <TabsTrigger
@@ -473,10 +544,18 @@ export function ProjectModal({
                     <GeneralInfoTab 
                       project={fullProject} 
                       onUpdate={onUpdate} 
+                      onOpenSecondaryTab={() => setActiveTab("secondary_products")}
                       onStageClick={(id) => {
                         setActiveStepId(id);
                         setActiveTab("steps");
                       }}
+                    />
+                  </TabsContent>
+                  <TabsContent value="secondary_products" className="m-0 h-full">
+                    <SecondaryProductsTab
+                      project={fullProject}
+                      targetProduct={targetSecondaryProduct}
+                      onTargetProductScrolled={() => setTargetSecondaryProduct(null)}
                     />
                   </TabsContent>
                   <TabsContent value="steps" className="m-0 h-full">
@@ -499,7 +578,7 @@ export function ProjectModal({
                   <TabsContent value="pos_analysis" className="m-0 h-full">
                     <PosImplantacaoTab project={fullProject} />
                   </TabsContent>
-                  {fullProject && (fullProject.TituloChamado || fullProject.descricaotramite || fullProject.ResponsavelAtividade || fullProject.EtapasProjeto) && (
+                {fullProject && (fullProject.TituloChamado || fullProject.descricaotramite || fullProject.ResponsavelAtividade || fullProject.EtapasProjeto) && (
                     <TabsContent value="chamado_0800" className="m-0 h-full">
                       <Chamado0800Tab project={fullProject} />
                     </TabsContent>

@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
+import { useProjectSecondaryTickets } from "@/hooks/useSecondaryTickets";
+import { hasSecondary0800Divergence, SECONDARY_HUB_STATUS_MAP } from "@/lib/secondary-products";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
@@ -78,6 +80,8 @@ import {
   Users,
   BarChart3,
   FileDown,
+  PackageCheck,
+  AlertTriangle,
 } from "lucide-react";
 
 interface KeyUserItem {
@@ -378,6 +382,7 @@ function TransicaoPlaceholder() {
 
   // 2. Fetch full details of the selected project (lazy loaded)
   const { project, isLoading: isLoadingDetails } = useProjectDetails(selectedProjectId || null);
+  const { data: secondaryTickets = [] } = useProjectSecondaryTickets(selectedProjectId || null);
 
   // 3. Connect to auto-save logic (only runs when we have an active project)
   const getInitialDtc = (): DTCData | null => {
@@ -1880,6 +1885,61 @@ function TransicaoPlaceholder() {
               </div>
             </div>
           </div>
+
+          {/* Alerta não bloqueante de Produtos Secundários na Transição (DTC) */}
+          {secondaryTickets.length > 0 && (
+            <div className="no-print rounded-xl border border-amber-500/35 bg-amber-500/[0.07] p-3.5 space-y-2.5">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-2 min-w-0">
+                  <PackageCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm font-bold text-foreground">
+                      Produtos Secundários Contratados nesta Implantação ({secondaryTickets.length})
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Confira se todos os chamados complementares abaixo receberam trâmite final no 0800 ou passagem para o SD antes de encerrar a transição.
+                    </p>
+                  </div>
+                </div>
+                <Button asChild size="sm" variant="outline" className="h-8 shrink-0 gap-1.5 text-xs font-semibold">
+                  <Link to={`/projects?id=${selectedProjectId}&tab=secondary_products`}>
+                    Abrir no Modal do Projeto
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {secondaryTickets.map((st) => {
+                  const meta = SECONDARY_HUB_STATUS_MAP[st.hub_status];
+                  const div0800 = hasSecondary0800Divergence(st);
+                  return (
+                    <div
+                      key={st.id}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-background/90 px-2.5 py-2 text-xs"
+                    >
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <span className="truncate font-bold text-foreground">{st.product_name}</span>
+                        <EllevoTicketLink
+                          ticketNumber={st.ticket_number}
+                          className="shrink-0 rounded border border-primary/25 bg-primary/10 px-1.5 py-0.5 font-mono text-[11px] font-bold text-primary"
+                        />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Badge variant="outline" className={cn("text-[10px] font-semibold", meta.badgeClass)}>
+                          {meta.shortLabel}
+                        </Badge>
+                        {div0800 && (
+                          <span title="Falta tramitar ou encaminhar este chamado no 0800">
+                            <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Form Tabs */}
           <Tabs defaultValue="geral" className="no-print w-full space-y-4">

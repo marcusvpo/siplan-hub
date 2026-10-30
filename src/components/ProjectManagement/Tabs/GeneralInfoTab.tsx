@@ -1,6 +1,7 @@
 import { ProjectV2, ContentBlock } from "@/types/ProjectV2";
 import { useProjectForm } from "@/hooks/useProjectForm";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   CheckCircle2,
   Server,
@@ -10,6 +11,9 @@ import {
   Power,
   Check,
   FileEdit,
+  PackageCheck,
+  AlertTriangle,
+  ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProjectHeaderForm } from "@/components/ProjectManagement/Forms/ProjectHeaderForm";
@@ -21,9 +25,15 @@ interface TabProps {
   project: ProjectV2;
   onUpdate: (project: ProjectV2) => void;
   onStageClick?: (stageId: string) => void;
+  onOpenSecondaryTab?: () => void;
 }
 
-export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
+export function GeneralInfoTab({
+  project,
+  onUpdate,
+  onStageClick,
+  onOpenSecondaryTab,
+}: TabProps) {
   // We use useProjectForm mainly for Autosave management of Notes here
   const { data, updateField, saveState } = useProjectForm(project, onUpdate);
   const { canEditProjects } = usePermissions();
@@ -114,6 +124,10 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
 
     updateField("notes", newNotes);
   };
+
+  const secondaryCount = project.secondaryTicketsCount || 0;
+  const secondaryPendingCount = project.secondaryTicketsPendingCount || 0;
+  const secondaryNames = project.secondaryProductsNames || [];
 
   return (
     <div className="w-full min-w-0 space-y-3 pb-2">
@@ -229,6 +243,66 @@ export function GeneralInfoTab({ project, onUpdate, onStageClick }: TabProps) {
           })}
         </div>
       </div>
+
+      {/* Banner de Destaque: Produtos Secundários Contratados */}
+      {secondaryCount > 0 && (
+        <div
+          className={cn(
+            "flex flex-col gap-2.5 rounded-xl border p-3 sm:flex-row sm:items-center sm:justify-between sm:p-3.5",
+            secondaryPendingCount > 0
+              ? "border-amber-500/40 bg-amber-500/10"
+              : "border-emerald-500/35 bg-emerald-500/10"
+          )}
+        >
+          <div className="min-w-0 space-y-1.5">
+            <div className="flex flex-wrap items-center gap-2">
+              {secondaryPendingCount > 0 ? (
+                <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+              ) : (
+                <PackageCheck className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              )}
+              <span
+                className={cn(
+                  "text-xs font-bold sm:text-sm",
+                  secondaryPendingCount > 0
+                    ? "text-amber-900 dark:text-amber-200"
+                    : "text-emerald-900 dark:text-emerald-200"
+                )}
+              >
+                {secondaryPendingCount > 0
+                  ? `Atenção na Implantação: ${secondaryCount} produto(s) secundário(s) vinculado(s) (${secondaryPendingCount} pendente(s) de conclusão/trâmite no 0800)`
+                  : `${secondaryCount} produto(s) secundário(s) vinculado(s) — todos encaminhados/concluídos`}
+              </span>
+            </div>
+            {secondaryNames.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {secondaryNames.map((prodName) => (
+                  <Badge
+                    key={prodName}
+                    variant="outline"
+                    className="bg-background/80 text-[11px] font-semibold text-foreground"
+                  >
+                    {prodName}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {onOpenSecondaryTab && (
+            <Button
+              type="button"
+              size="sm"
+              variant={secondaryPendingCount > 0 ? "default" : "outline"}
+              className="h-9 shrink-0 gap-1.5 text-xs font-semibold"
+              onClick={onOpenSecondaryTab}
+            >
+              Abrir Aba Produtos Secundários
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* 2. Dados do Projeto (Componente Extraído) */}
       <ProjectHeaderForm project={data} />

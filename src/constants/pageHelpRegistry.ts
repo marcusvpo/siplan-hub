@@ -58,6 +58,7 @@ import {
   Save,
   ListTodo,
   Columns3,
+  PackageCheck,
 } from "lucide-react";
 
 export interface PageHelpStep {
@@ -628,8 +629,59 @@ export const pageHelpData: PageHelpInfo[] = [
     quickLinks: [
       { label: "Gerenciar Projetos", path: "/projects" },
       { label: "Calendário de Projetos", path: "/calendar" },
+      { label: "Produtos Secundários", path: "/deployments/secondary-products" },
       { label: "Relatórios", path: "/reports" },
       { label: "Próximas Implantações", path: "/deployments" },
+    ],
+  },
+  {
+    route: "/deployments/secondary-products",
+    title: "Esteira de Produtos Secundários",
+    subtitle: "Controle de Chamados Complementares do 0800",
+    moduleName: "Implantação",
+    icon: PackageCheck,
+    description:
+      "Central consolidada de chamados 'Implantação e Treinamento' de produtos complementares (Livro Caixa Web, SGA, Cartório On Hand, Orion Editor, Orion GED e demais) vinculados às implantações ativas. Garante visibilidade para implantadores, SD, CS/CX e faturamento, redirecionando sempre para o Modal do projeto principal.",
+    keyFeatures: [
+      "Indicadores rápidos por situação: Em Campo, Fila Remota SD, Falta Tramitar no 0800, Com CS/Pós e Bloqueados",
+      "Espelho automático do status, analista/equipe e histórico de trâmites do 0800 (Ellevo)",
+      "Sincronização espelhada entre sistemas principais do mesmo cartório (ex.: Orion TN e Orion PRO)",
+      "Redirecionamento direto ao Modal do projeto na aba 'Produtos Secundários' ao selecionar qualquer item",
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Filtre os Chamados por Situação ou Produto",
+        description:
+          "Toque nos cards superiores (ex.: 'Falta Tramitar 0800' ou 'Fila Remota SD') ou filtre pelo produto oficial e sistema principal.",
+        icon: Filter,
+      },
+      {
+        stepNumber: 2,
+        title: "Confira o Espelho do 0800",
+        description:
+          "Verifique se algum produto já concluído em campo ou pelo SD continua sem encaminhamento para CS/Maria Santos no Ellevo.",
+        icon: AlertCircle,
+      },
+      {
+        stepNumber: 3,
+        title: "Gerencie Diretamente no Modal do Projeto",
+        description:
+          "Clique sobre a linha ou no botão 'Abrir Projeto' para abrir o Modal na aba 'Produtos Secundários', atualizar o status ou copiar o trâmite sugerido para o 0800.",
+        icon: FileEdit,
+      },
+    ],
+    tips: [
+      {
+        title: "Vendas Avulsas Filtradas",
+        description:
+          "Apenas chamados vinculados a projetos principais ativos aparecem nesta esteira; vendas avulsas de clientes antigos ficam fora do HUB.",
+        variant: "info",
+      },
+    ],
+    quickLinks: [
+      { label: "Gerenciar Projetos", path: "/projects" },
+      { label: "Calendário de Projetos", path: "/calendar" },
     ],
   },
   {

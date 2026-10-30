@@ -44,7 +44,9 @@ export const useProjectsList = (
           modelos_editor_status, modelos_editor_start_date, modelos_editor_end_date, modelos_editor_responsible,
           implementation_status, implementation_start_date, implementation_end_date, implementation_responsible, implementation_phase1,
           post_status, post_start_date, post_end_date, post_responsible,
-          TituloChamado, descricaotramite, ResponsavelAtividade, EtapasProjeto
+          TituloChamado, descricaotramite, ResponsavelAtividade, EtapasProjeto,
+          secondary_tickets_count, secondary_tickets_pending_count, secondary_products_names,
+          custom_fields
         `) 
         .eq("is_deleted", false);
 
@@ -160,6 +162,13 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
         descricaotramite: row.descricaotramite,
         ResponsavelAtividade: row.ResponsavelAtividade,
         EtapasProjeto: row.EtapasProjeto,
+        secondaryTicketsCount: typeof row.secondary_tickets_count === "number" ? row.secondary_tickets_count : 0,
+        secondaryTicketsPendingCount:
+          typeof row.secondary_tickets_pending_count === "number" ? row.secondary_tickets_pending_count : 0,
+        secondaryProductsNames: Array.isArray(row.secondary_products_names)
+          ? (row.secondary_products_names as string[])
+          : [],
+        customFields: (row.custom_fields as Record<string, unknown>) || {},
         // Stages with complete date tracking for bottleneck detection
         stages: {
             infra: { 
@@ -180,7 +189,9 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
                 status: row.environment_status || 'todo',
                 startDate: row.environment_start_date ? new Date(row.environment_start_date as string) : undefined,
                 endDate: row.environment_end_date ? new Date(row.environment_end_date as string) : undefined,
-                responsible: row.environment_responsible as string | undefined
+                responsible: row.environment_responsible as string | undefined,
+                orionAdminConfig: ((row.custom_fields as any)?.environment_orion_admin_config as string) || "",
+                orionAdminConfigured: Boolean((row.custom_fields as any)?.environment_orion_admin_configured),
             } as EnvironmentStageV2,
             conversion: { 
                 status: row.conversion_status || 'todo',

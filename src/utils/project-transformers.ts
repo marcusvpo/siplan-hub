@@ -148,6 +148,9 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
         postgresUser: (row.custom_fields as any)?.environment_postgres_user || "",
         postgresPassword: (row.custom_fields as any)?.environment_postgres_password || "",
         orionAdminConfig: (row.custom_fields as any)?.environment_orion_admin_config || "",
+        orionAdminConfigured: Boolean((row.custom_fields as any)?.environment_orion_admin_configured),
+        orionAdminConfiguredAt: (row.custom_fields as any)?.environment_orion_admin_configured_at || undefined,
+        orionAdminConfiguredBy: (row.custom_fields as any)?.environment_orion_admin_configured_by || undefined,
         screenshots: (row.custom_fields as any)?.environment_screenshots || [],
       },
       conversion: createStage<ConversionStageV2>('conversion'),
@@ -180,6 +183,12 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     notes: notes,
 
     relatedTickets: (row.related_tickets as { name: string; number: string }[]) || [],
+    secondaryTicketsCount: typeof row.secondary_tickets_count === "number" ? row.secondary_tickets_count : 0,
+    secondaryTicketsPendingCount:
+      typeof row.secondary_tickets_pending_count === "number" ? row.secondary_tickets_pending_count : 0,
+    secondaryProductsNames: Array.isArray(row.secondary_products_names)
+      ? (row.secondary_products_names as string[])
+      : [],
 
     tags: (row.tags as string[]) || [],
     priority: (row.priority as ProjectV2['priority']) || "normal",
@@ -588,6 +597,9 @@ export function transformToDB(project: ProjectUpdate, currentProject?: ProjectV2
       const postgresUser = stages.environment.postgresUser;
       const postgresPassword = stages.environment.postgresPassword;
       const orionAdminConfig = stages.environment.orionAdminConfig;
+      const orionAdminConfigured = stages.environment.orionAdminConfigured;
+      const orionAdminConfiguredAt = stages.environment.orionAdminConfiguredAt;
+      const orionAdminConfiguredBy = stages.environment.orionAdminConfiguredBy;
       const screenshots = stages.environment.screenshots;
 
       dbRow.custom_fields = {
@@ -605,6 +617,9 @@ export function transformToDB(project: ProjectUpdate, currentProject?: ProjectV2
         ...(postgresUser !== undefined ? { environment_postgres_user: postgresUser } : {}),
         ...(postgresPassword !== undefined ? { environment_postgres_password: postgresPassword } : {}),
         ...(orionAdminConfig !== undefined ? { environment_orion_admin_config: orionAdminConfig } : {}),
+        ...(orionAdminConfigured !== undefined ? { environment_orion_admin_configured: orionAdminConfigured } : {}),
+        ...(orionAdminConfiguredAt !== undefined ? { environment_orion_admin_configured_at: orionAdminConfiguredAt } : {}),
+        ...(orionAdminConfiguredBy !== undefined ? { environment_orion_admin_configured_by: orionAdminConfiguredBy } : {}),
         ...(screenshots !== undefined ? { environment_screenshots: screenshots } : {}),
       };
     }

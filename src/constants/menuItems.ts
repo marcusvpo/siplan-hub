@@ -33,6 +33,7 @@ import {
     ListTodo,
     Columns3,
     Newspaper,
+    PackageCheck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -146,6 +147,13 @@ export const menuItems: MenuItem[] = [
                 icon: Calendar,
                 description: "Cronograma de atividades e prazos",
                 permissionKey: "calendar_projects",
+            },
+            {
+                title: "Produtos Secundários",
+                path: "/deployments/secondary-products",
+                icon: PackageCheck,
+                description: "Esteira de produtos complementares vinculados às implantações",
+                permissionKey: "secondary_products",
             },
             {
                 title: "Relatórios",

@@ -18,6 +18,7 @@ export function Breadcrumbs() {
     projects: "Projetos",
     reports: "Relatórios",
     deployments: "Próximas Implantações",
+    "secondary-products": "Produtos Secundários",
     latest: "Últimas Implantações",
     commercial: "Comercial",
     customers: "Painel de Clientes",
@@ -97,9 +98,18 @@ export function Breadcrumbs() {
             : "Consultar Chamados",
         },
       ]
-    : syntheticRoot
-      ? [syntheticRoot, ...defaultBreadcrumbs]
-      : defaultBreadcrumbs;
+    : location.pathname === "/deployments/secondary-products"
+      ? [
+          { value: "implantacao", to: "/implantacao", name: "Implantação" },
+          {
+            value: "secondary-products",
+            to: "/deployments/secondary-products",
+            name: "Produtos Secundários",
+          },
+        ]
+      : syntheticRoot
+        ? [syntheticRoot, ...defaultBreadcrumbs]
+        : defaultBreadcrumbs;
 
   return (
     <nav
@@ -116,7 +126,7 @@ export function Breadcrumbs() {
         <ChevronRight className="mx-1.5 h-4 w-4 shrink-0 sm:mx-2" />
       )}
 
-      {breadcrumbs.map(({ value, to, name }, index) => {
+      {breadcrumbs.map(({ to, name }, index) => {
         const isLast = index === breadcrumbs.length - 1;
 
         return (

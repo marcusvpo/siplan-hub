@@ -79,6 +79,7 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   // Implantação & Projetos
   { resource: "menu_implantacao", label: "Menu Implantação", category: "Implantação & Projetos", actions: ["view"] },
   { resource: "projects", label: "Gerenciar Projetos", category: "Implantação & Projetos", actions: ["view", "create", "edit", "delete"] },
+  { resource: "secondary_products", label: "Produtos Secundários", category: "Implantação & Projetos", actions: ["view", "edit"] },
   { resource: "deployments_next", label: "Próximas Implantações", category: "Implantação & Projetos", actions: ["view"] },
   { resource: "deployments_latest", label: "Últimas Implantações", category: "Implantação & Projetos", actions: ["view"] },
   { resource: "compare_projects", label: "Comparar Projetos", category: "Implantação & Projetos", actions: ["view"] },

@@ -405,6 +405,227 @@ async function upsertChamados(rows: ReturnType<typeof mapRow>[]): Promise<void> 
   }
 }
 
+interface SecondaryTicketDbRow {
+  id: string;
+  ticket_number: string;
+  codigo_cliente: string | null;
+  titulo_chamado: string | null;
+}
+
+interface SecondaryEllevoMetaRow {
+  NumeroChamado: string;
+  CodigoCliente: string | number | null;
+  TituloChamado: string | null;
+  DescricaoChamado: string | null;
+  StatusChamado: string | null;
+  EquipeResponsavelChamado: string | null;
+  AnalistaResponsavel: string | null;
+  DataAberturaIso: string | null;
+  DataEncerramentoIso: string | null;
+}
+
+async function syncSecondaryTicketsMirror(pool: sql.ConnectionPool): Promise<number> {
+  const { data: secData, error: secError } = await supabase
+    .from("secondary_tickets")
+    .select("id, ticket_number, codigo_cliente, titulo_chamado")
+    .neq("hub_status", "cancelled");
+
+  if (secError) {
+    console.warn("[chamados-sync] aviso ao ler secondary_tickets:", secError.message);
+    return 0;
+  }
+
+  const secRows = ((secData as SecondaryTicketDbRow[] | null) || []).filter((r) =>
+    /^\d{4,}$/.test((r.ticket_number || "").trim())
+  );
+  if (secRows.length === 0) return 0;
+
+  const secTickets = [...new Set(secRows.map((r) => r.ticket_number.trim()))];
+  const metaByTicket = new Map<string, SecondaryEllevoMetaRow>();
+  const latestTramiteByTicket = new Map<string, {
+    sequencia: number;
+    dataIso: string | null;
+    responsavel: string | null;
+    descricao: string | null;
+  }>();
+  const tramitesToUpsert = new Map<string, {
+    numero_chamado: string;
+    sequencia_tramite: number;
+    numero_tramite: number | null;
+    data_tramite: string | null;
+    responsavel: string | null;
+    equipe_responsavel: string | null;
+    atividade: string | null;
+    descricao: string | null;
+    synced_at: string;
+  }>();
+
+  const nowIso = new Date().toISOString();
+  const batchSize = 300;
+
+  for (let from = 0; from < secTickets.length; from += batchSize) {
+    const batch = secTickets.slice(from, from + batchSize);
+    const metaReq = pool.request();
+    const metaParams = batch.map((ticket, idx) => {
+      const param = `secTicket${idx}`;
+      metaReq.input(param, sql.VarChar(50), ticket);
+      return `@${param}`;
+    });
+
+    const metaRes = await metaReq.query<SecondaryEllevoMetaRow>(`
+      WITH sec_meta AS (
+        SELECT
+          CONVERT(varchar(50), c.NumeroChamado) AS NumeroChamado,
+          c.CodPN AS CodigoCliente,
+          c.SolTitulo AS TituloChamado,
+          CAST(c.DescricaoChamado AS nvarchar(max)) AS DescricaoChamado,
+          c.StatusChamado,
+          c.EquipeResponsavelChamado,
+          c.ResponsavelChamado AS AnalistaResponsavel,
+          CONVERT(varchar(19), c.DataAberturaChamadoComHoras, 126) AS DataAberturaIso,
+          CONVERT(varchar(19), c.SolDataFechamentoComHoras, 126) AS DataEncerramentoIso,
+          ROW_NUMBER() OVER (
+            PARTITION BY c.NumeroChamado
+            ORDER BY c.DataUltimaEdicaoTramite DESC
+          ) AS rn
+        FROM plataformaellevo.dbo.vw_ChamadosTodosStatus AS c WITH (NOLOCK)
+        WHERE CONVERT(varchar(50), c.NumeroChamado) IN (${metaParams.join(", ")})
+      )
+      SELECT
+        NumeroChamado,
+        CodigoCliente,
+        TituloChamado,
+        DescricaoChamado,
+        StatusChamado,
+        EquipeResponsavelChamado,
+        AnalistaResponsavel,
+        DataAberturaIso,
+        DataEncerramentoIso
+      FROM sec_meta
+      WHERE rn = 1
+    `);
+
+    for (const row of metaRes.recordset) {
+      metaByTicket.set(String(row.NumeroChamado).trim(), row);
+    }
+
+    const trReq = pool.request();
+    const trParams = batch.map((ticket, idx) => {
+      const param = `secTrTicket${idx}`;
+      trReq.input(param, sql.VarChar(50), ticket);
+      return `@${param}`;
+    });
+
+    const trRes = await trReq.query<ProcessoVendaTramiteRow>(`
+      SELECT DISTINCT
+        CONVERT(varchar(50), NumeroChamado) AS NumeroChamado,
+        NumeroTramite,
+        SequenciaTramite,
+        CONVERT(varchar(19), DataTramite, 126) AS DataTramiteIso,
+        ResponsavelTramite,
+        ResponsavelAtividade,
+        EquipeResponsavelAtividade,
+        DescricaoAtividade,
+        CAST(descricaotramite AS nvarchar(max)) AS descricaotramite
+      FROM plataformaellevo.dbo.vw_ChamadosTodosStatus_Tramites_Tempos WITH (NOLOCK)
+      WHERE CONVERT(varchar(50), NumeroChamado) IN (${trParams.join(", ")})
+        AND SequenciaTramite IS NOT NULL
+    `);
+
+    for (const tr of trRes.recordset) {
+      const numero = String(tr.NumeroChamado).trim();
+      const seq = Number(tr.SequenciaTramite);
+      const decoded = decodeDescricao(tr.descricaotramite);
+      const resp = tr.ResponsavelTramite?.trim() || tr.ResponsavelAtividade?.trim() || null;
+
+      tramitesToUpsert.set(`${numero}:${seq}`, {
+        numero_chamado: numero,
+        sequencia_tramite: seq,
+        numero_tramite: tr.NumeroTramite ?? null,
+        data_tramite: tr.DataTramiteIso || null,
+        responsavel: resp,
+        equipe_responsavel: tr.EquipeResponsavelAtividade?.trim() || null,
+        atividade: tr.DescricaoAtividade?.trim() || null,
+        descricao: decoded,
+        synced_at: nowIso,
+      });
+
+      const prev = latestTramiteByTicket.get(numero);
+      if (!prev || seq >= prev.sequencia) {
+        latestTramiteByTicket.set(numero, {
+          sequencia: seq,
+          dataIso: tr.DataTramiteIso || null,
+          responsavel: resp,
+          descricao: decoded,
+        });
+      }
+    }
+  }
+
+  // Tambem espelha no chamados_0800 para que dialogs padrao de chamado funcionem
+  const mirrorInList = secTickets.map((t) => `'${t}'`).join(",");
+  try {
+    const mirrorRes = await pool
+      .request()
+      .query<ViewRow>(CHAMADO_SELECT.replace("%COND%", `NumeroChamado IN (${mirrorInList})`));
+    const mirrorRows = mirrorRes.recordset.map(mapRow);
+    if (mirrorRows.length > 0) await upsertChamados(mirrorRows);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn("[chamados-sync] aviso ao espelhar secundarios em chamados_0800:", msg);
+  }
+
+  const tramiteValues = [...tramitesToUpsert.values()];
+  for (let i = 0; i < tramiteValues.length; i += 200) {
+    const { error } = await supabase
+      .from("chamados_processo_venda_tramites")
+      .upsert(tramiteValues.slice(i, i + 200), {
+        onConflict: "numero_chamado,sequencia_tramite",
+      });
+    if (error) {
+      console.warn("[chamados-sync] aviso ao gravar tramites secundarios:", error.message);
+    }
+  }
+
+  let updatedCount = 0;
+  for (const sec of secRows) {
+    const ticket = sec.ticket_number.trim();
+    const meta = metaByTicket.get(ticket);
+    const latestTr = latestTramiteByTicket.get(ticket);
+    if (!meta && !latestTr) continue;
+
+    const normalizedStatus = meta?.StatusChamado
+      ? normalizeChamadoStatus(meta.StatusChamado) || meta.StatusChamado.trim()
+      : null;
+
+    const { error: updErr } = await supabase
+      .from("secondary_tickets")
+      .update({
+        codigo_cliente: meta?.CodigoCliente != null
+          ? String(meta.CodigoCliente).trim() || sec.codigo_cliente
+          : sec.codigo_cliente,
+        titulo_chamado: meta?.TituloChamado?.trim() || sec.titulo_chamado,
+        ellevo_status: normalizedStatus,
+        ellevo_team: meta?.EquipeResponsavelChamado?.trim() || null,
+        ellevo_analyst: meta?.AnalistaResponsavel?.trim() || latestTr?.responsavel || null,
+        ellevo_opened_at: meta?.DataAberturaIso || null,
+        ellevo_closed_at: meta?.DataEncerramentoIso || null,
+        ellevo_last_tramite: latestTr?.descricao || decodeDescricao(meta?.DescricaoChamado ?? null),
+        ellevo_last_tramite_at: latestTr?.dataIso || null,
+        ellevo_synced_at: nowIso,
+      })
+      .eq("id", sec.id);
+
+    if (updErr) {
+      console.warn(`[chamados-sync] falha ao atualizar secondary_ticket #${ticket}:`, updErr.message);
+    } else {
+      updatedCount += 1;
+    }
+  }
+
+  return updatedCount;
+}
+
 async function runOnce(): Promise<string> {
   // 1. Projetos ativos com numero de chamado valido
   const { data: projects, error: projError } = await supabase
@@ -485,9 +706,17 @@ async function runOnce(): Promise<string> {
     const rows = [...porNumero.values()].map(mapRow);
     if (rows.length > 0) await upsertChamados(rows);
 
+    let secondarySynced = 0;
+    try {
+      secondarySynced = await syncSecondaryTicketsMirror(pool);
+    } catch (secErr) {
+      const msg = secErr instanceof Error ? secErr.message : String(secErr);
+      console.warn("[chamados-sync] erro ao sincronizar secondary_tickets:", msg);
+    }
+
     const detail =
       `${rows.length} chamados (${origem.recordset.length} origem, ` +
-      `${doPeriodo.length} do periodo, ${janelaPorCliente.size} clientes em pos)`;
+      `${doPeriodo.length} do periodo, ${janelaPorCliente.size} clientes em pos, ${secondarySynced} secundarios)`;
     console.log(`[chamados-sync] ok: ${detail}`);
     return detail;
   } finally {

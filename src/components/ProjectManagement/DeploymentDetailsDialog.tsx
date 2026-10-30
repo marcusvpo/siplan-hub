@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
+import { useContext, useState, useEffect, useMemo } from "react";
+import { QueryClientContext } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +45,7 @@ import {
   MapPin,
   Monitor,
   Palmtree,
+  PackageCheck,
   Plus,
   Rocket,
   Tag,
@@ -69,6 +71,11 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { EllevoTicketLink } from "@/components/EllevoTicketLink";
+import { useProjectSecondaryTickets } from "@/hooks/useSecondaryTickets";
+import {
+  hasSecondary0800Divergence,
+  SECONDARY_HUB_STATUS_MAP,
+} from "@/lib/secondary-products";
 
 interface DeploymentDetailsDialogProps {
   project: ProjectV2 | null;
@@ -556,6 +563,18 @@ export function DeploymentDetailsDialog({
                 ))}
               </ul>
             </div>
+          )}
+
+          {/* Produtos Secundários Vinculados a esta Implantação */}
+          {(project.secondaryTicketsCount || 0) > 0 && (
+            <DeploymentSecondaryTicketsSection
+              project={project}
+              open={open}
+              onManageInModal={() => {
+                navigate(`/projects?id=${project.id}&tab=secondary_products`);
+                onOpenChange(false);
+              }}
+            />
           )}
 
           {/* Bloco de Edição 360º: Fase 1 Treinamento & Acompanhamento */}
@@ -1129,6 +1148,121 @@ export function DeploymentDetailsDialog({
         </AlertDialogContent>
       </AlertDialog>
     </>
+  );
+}
+
+function DeploymentSecondaryTicketsSection({
+  project,
+  open,
+  onManageInModal,
+}: {
+  project: ProjectV2;
+  open: boolean;
+  onManageInModal: () => void;
+}) {
+  const hasQueryClient = Boolean(useContext(QueryClientContext));
+  return (
+    <div className="min-w-0 space-y-2.5 rounded-xl border border-amber-500/35 bg-amber-500/[0.06] p-3 sm:p-3.5">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-2">
+          <PackageCheck className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+          <h4 className="text-xs font-bold text-foreground">
+            Produtos Secundários Vinculados ({project.secondaryTicketsCount || 0})
+          </h4>
+        </div>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="h-7 gap-1 px-2.5 text-[11px] font-semibold"
+          onClick={onManageInModal}
+        >
+          Gerenciar no Modal
+          <ArrowRight className="h-3 w-3" />
+        </Button>
+      </div>
+
+      {hasQueryClient ? (
+        <DeploymentSecondaryTicketsLiveList project={project} open={open} />
+      ) : (
+        <div className="flex flex-wrap gap-1.5">
+          {(project.secondaryProductsNames || []).map((name) => (
+            <Badge key={name} variant="outline" className="bg-background text-[11px]">
+              {name}
+            </Badge>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DeploymentSecondaryTicketsLiveList({
+  project,
+  open,
+}: {
+  project: ProjectV2;
+  open: boolean;
+}) {
+  const { data: secondaryTickets = [] } = useProjectSecondaryTickets(
+    open ? project.id : null
+  );
+
+  if (secondaryTickets.length === 0) {
+    return (
+      <div className="flex flex-wrap gap-1.5">
+        {(project.secondaryProductsNames || []).map((name) => (
+          <Badge key={name} variant="outline" className="bg-background text-[11px]">
+            {name}
+          </Badge>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1.5">
+      {secondaryTickets.map((st) => {
+        const meta =
+          SECONDARY_HUB_STATUS_MAP[st.hub_status] || SECONDARY_HUB_STATUS_MAP.pending;
+        const div0800 = hasSecondary0800Divergence(st);
+        return (
+          <div
+            key={st.id}
+            className="flex flex-wrap items-center justify-between gap-2 rounded-lg border bg-background/85 px-2.5 py-1.5 text-xs"
+          >
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+              <span className="font-bold text-foreground">{st.product_name}</span>
+              <EllevoTicketLink
+                ticketNumber={st.ticket_number}
+                className="rounded border border-primary/25 bg-primary/10 px-1.5 py-0.5 font-mono text-[11px] font-bold text-primary"
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Badge
+                variant="outline"
+                className={cn("text-[10px] font-semibold", meta.badgeClass)}
+              >
+                {meta.shortLabel}
+              </Badge>
+              {div0800 && (
+                <Badge
+                  variant="outline"
+                  className="border-amber-500/40 bg-amber-500/15 text-[10px] font-bold text-amber-800 dark:text-amber-300"
+                >
+                  Falta Tramitar 0800
+                </Badge>
+              )}
+              {st.ellevo_status && (
+                <span className="text-[10px] text-muted-foreground">
+                  0800: {st.ellevo_status}
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

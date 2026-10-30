@@ -93,6 +93,7 @@ describe("Home — grupo sem subitem acessível", () => {
     expect(implantacao?.subItems?.map((sub) => sub.title)).toEqual([
       "Gerenciar Projetos",
       "Calendário de Projetos",
+      "Produtos Secundários",
       "Relatórios",
       "Próx. Implantações",
       "Últimas Implantações",

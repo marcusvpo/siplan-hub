@@ -1,0 +1,140 @@
+{
+  "name": "Criação de Projetos e Produtos Secundários Siplan HUB - 0800",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c6bf9d80-1e58-431a-8f73-29bd35d216bc",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH principais AS (\n  SELECT \n    NomeCliente, \n    NumeroChamado, \n    Software, \n    NumeroPedidoVenda, \n    TituloChamado, \n    descricaotramite, \n    ResponsavelAtividade, \n    EtapasProjeto, \n    DataPedidoVenda,\n    ROW_NUMBER() OVER (\n      PARTITION BY NumeroChamado \n      ORDER BY DataPedidoVenda DESC\n    ) AS rn\n  FROM plataformaellevo..vw_2026_PROCESSO_VENDA_FATURAMENTO_ITEM_ATIVIDADES \n  WHERE DataPedidoVenda >= '2026-09-10 00:00:00' \n    AND Software IS NOT NULL \n    AND TituloChamado IS NOT NULL\n    AND Software IN ('OrionTN', 'OrionPRO', 'OrionREG', 'Orion TN', 'Orion PRO', 'Orion REG', 'WEBRI', 'WEB RI', 'OrionREG (TDPJ)')\n    AND TituloChamado LIKE '%Impla%Treinamento%'\n),\nsecundarios AS (\n  SELECT\n    c.NomeCliente,\n    c.NumeroChamado,\n    c.Software,\n    c.SolTitulo AS TituloChamado,\n    c.ResponsavelChamado AS ResponsavelAtividade,\n    c.StatusChamado AS EtapasProjeto,\n    c.DataAberturaChamadoComHoras AS DataPedidoVenda,\n    ROW_NUMBER() OVER (\n      PARTITION BY c.NumeroChamado\n      ORDER BY c.DataUltimaEdicaoTramite DESC\n    ) AS rn\n  FROM plataformaellevo.dbo.vw_ChamadosTodosStatus AS c WITH (NOLOCK)\n  WHERE c.DataAberturaChamadoComHoras >= CONVERT(datetime, '2026-09-10T00:00:00', 126)\n    AND c.Software IS NOT NULL\n    AND c.SolTitulo IS NOT NULL\n    AND LTRIM(RTRIM(c.Software)) IN (\n      'LCW', 'Livro Caixa Web', 'LCX - Livro Caixa',\n      'SGA',\n      'Library',\n      'Cartório On Hand', 'On Hand',\n      'e-Recepção',\n      'CIAF',\n      'Image', 'IMG', 'ImagePRO', 'Image PRO',\n      'e-Qualificação',\n      'Caixa', 'Orion Caixa', 'OrionCaixa',\n      'Orion CartFLOW', 'OrionCartFLOW', 'CartFLOW',\n      'Orion Connect', 'OrionConnect',\n      'Editor', 'Orion Editor', 'OrionEditor',\n      'OrionGED', 'Orion GED'\n    )\n    AND (c.SolTitulo LIKE '%Impla%Treinamento%' OR c.SolTitulo LIKE '%Configura%Treinamento%')\n)\nSELECT\n  CONVERT(nvarchar(400), NomeCliente) COLLATE SQL_Latin1_General_CP1_CI_AI AS NomeCliente,\n  CONVERT(nvarchar(50), NumeroChamado) COLLATE SQL_Latin1_General_CP1_CI_AI AS NumeroChamado,\n  CONVERT(nvarchar(150), Software) COLLATE SQL_Latin1_General_CP1_CI_AI AS Software,\n  CONVERT(nvarchar(50), NumeroPedidoVenda) COLLATE SQL_Latin1_General_CP1_CI_AI AS NumeroPedidoVenda,\n  CONVERT(nvarchar(500), TituloChamado) COLLATE SQL_Latin1_General_CP1_CI_AI AS TituloChamado,\n  CONVERT(nvarchar(max), CONVERT(varchar(max), descricaotramite)) COLLATE SQL_Latin1_General_CP1_CI_AI AS descricaotramite,\n  CONVERT(nvarchar(200), ResponsavelAtividade) COLLATE SQL_Latin1_General_CP1_CI_AI AS ResponsavelAtividade,\n  CONVERT(nvarchar(200), EtapasProjeto) COLLATE SQL_Latin1_General_CP1_CI_AI AS EtapasProjeto,\n  CONVERT(nvarchar(30), DataPedidoVenda, 120) COLLATE SQL_Latin1_General_CP1_CI_AI AS DataPedidoVenda\nFROM principais\nWHERE rn = 1\n\nUNION ALL\n\nSELECT\n  CONVERT(nvarchar(400), NomeCliente) COLLATE SQL_Latin1_General_CP1_CI_AI AS NomeCliente,\n  CONVERT(nvarchar(50), NumeroChamado) COLLATE SQL_Latin1_General_CP1_CI_AI AS NumeroChamado,\n  CONVERT(nvarchar(150), Software) COLLATE SQL_Latin1_General_CP1_CI_AI AS Software,\n  CAST(NULL AS nvarchar(50)) COLLATE SQL_Latin1_General_CP1_CI_AI AS NumeroPedidoVenda,\n  CONVERT(nvarchar(500), TituloChamado) COLLATE SQL_Latin1_General_CP1_CI_AI AS TituloChamado,\n  CAST(N'Sem descrição' AS nvarchar(max)) COLLATE SQL_Latin1_General_CP1_CI_AI AS descricaotramite,\n  CONVERT(nvarchar(200), ResponsavelAtividade) COLLATE SQL_Latin1_General_CP1_CI_AI AS ResponsavelAtividade,\n  CONVERT(nvarchar(200), EtapasProjeto) COLLATE SQL_Latin1_General_CP1_CI_AI AS EtapasProjeto,\n  CONVERT(nvarchar(30), DataPedidoVenda, 120) COLLATE SQL_Latin1_General_CP1_CI_AI AS DataPedidoVenda\nFROM secundarios\nWHERE rn = 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "784f65a2-825e-4f4c-a027-85adb46c1d17",
+      "name": "Microsoft SQL",
+      "credentials": {
+        "microsoftSql": {
+          "id": "<SEU_CREDENTIAL_ID_MSSQL>",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const normalizeText = (val) =>\n  String(val || '')\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .toLowerCase()\n    .replace(/[^a-z0-9]+/g, ' ')\n    .trim();\n\nconst isLikelyPrimary = (tituloNorm, softwareNorm) => {\n  const match = tituloNorm.match(/\\bimpla[a-z]{2,10}\\s+(?:e\\s+|de\\s+|configuracao\\s+e\\s+)?treinamento\\b(.*)$/);\n  if (!match) return false;\n  const subject = (match[1] || '').trim() || tituloNorm;\n  if (/\\b(siplan\\s*ia|inteligencia\\s*artificial|bi\\s*report|nfse|nfs\\s*e|web\\s*rc|modulo\\s*ia|rotina)\\b/.test(tituloNorm)) {\n    return false;\n  }\n  if (/\\b(orio?n\\s*(tn|notas|tabelionato|pro|protesto|reg|registro)|web\\s*ri)\\b/.test(subject)) {\n    return true;\n  }\n  if (!(match[1] || '').trim() && /\\b(orion\\s*(tn|pro|reg)|web\\s*ri)\\b/.test(softwareNorm)) {\n    return true;\n  }\n  return false;\n};\n\nconst itemsByTicket = new Map();\n\nfor (const item of $input.all()) {\n  const dados = item.json;\n  const rawTicket = dados.NumeroChamado ?? dados.numerochamado;\n  if (!rawTicket) continue;\n\n  const ticketNum = String(rawTicket).trim();\n  if (!ticketNum || itemsByTicket.has(ticketNum)) continue;\n\n  const titulo = String(dados.TituloChamado || dados.titulochamado || dados.TITULOCHAMADO || '').trim();\n  const tituloNorm = normalizeText(titulo);\n  if (!/\\b(impla[a-z]{2,10}|configura[a-z]{2,10})\\s+(?:e\\s+|de\\s+|configuracao\\s+e\\s+)?treinamento\\b/.test(tituloNorm)) continue;\n  if (/\\bpos\\s+impla/.test(tituloNorm)) continue;\n\n  const rawSoftware = String(dados.Software || dados.software || '').trim();\n  const softwareNorm = normalizeText(rawSoftware);\n\n  let opNumber = null;\n  const opMatch = titulo.match(/\\bOP:?\\s*([\\d\\/]+)/i);\n  if (opMatch && opMatch[1]) {\n    const cleanNumber = opMatch[1].replace(/\\D/g, '');\n    const parsedOp = parseInt(cleanNumber, 10);\n    if (!Number.isNaN(parsedOp) && parsedOp > 0 && parsedOp <= 2147483647) {\n      opNumber = parsedOp;\n    }\n  }\n\n  let salesOrderNumber = null;\n  if (dados.NumeroPedidoVenda) {\n    const cleanSales = String(dados.NumeroPedidoVenda).replace(/\\D/g, '');\n    const parsedSales = parseInt(cleanSales, 10);\n    if (!Number.isNaN(parsedSales) && parsedSales > 0 && parsedSales <= 2147483647) {\n      salesOrderNumber = parsedSales;\n    }\n  }\n\n  const tramiteDesc =\n    dados.descricaotramite ||\n    dados.DescricaoTramite ||\n    dados.Descricaotramite ||\n    'Sem descrição';\n  const responsavel =\n    dados.ResponsavelAtividade ||\n    dados.responsavelatividade ||\n    'Não atribuído';\n  const etapas =\n    dados.EtapasProjeto ||\n    dados.etapasprojeto ||\n    'Sem etapas definidas';\n\n  const primaryPriority = isLikelyPrimary(tituloNorm, softwareNorm) ? 0 : 1;\n\n  itemsByTicket.set(ticketNum, {\n    _sortPriority: primaryPriority,\n    payload: {\n      p_ticket_number: ticketNum,\n      p_client_name: String(dados.NomeCliente || dados.nomecliente || '').trim(),\n      p_system_type: rawSoftware || 'Não informado',\n      p_sales_order_number: salesOrderNumber,\n      p_op_number: opNumber,\n      p_titulo_chamado: titulo || 'Título não preenchido no 0800',\n      p_descricao_tramite: String(tramiteDesc),\n      p_responsavel_atividade: String(responsavel),\n      p_etapas_projeto: String(etapas),\n      p_project_leader: 'Bruno Fernandes'\n    }\n  });\n}\n\nreturn Array.from(itemsByTicket.values())\n  .sort((a, b) => a._sortPriority - b._sortPriority)\n  .map((entry) => ({ json: entry.payload }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        0
+      ],
+      "id": "8c5f12eb-884f-486c-b5b7-275af9ce3468",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://okvufcwkophaadttmjwa.supabase.co/rest/v1/rpc/sync_0800_project",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "<SUPABASE_SERVICE_ROLE_KEY>"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer <SUPABASE_SERVICE_ROLE_KEY>"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 50
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        688,
+        0
+      ],
+      "id": "98b7195c-5b0c-43c5-ba48-252977dc487a",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Microsoft SQL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
