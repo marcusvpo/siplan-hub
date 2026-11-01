@@ -1018,30 +1018,48 @@ export const pageHelpData: PageHelpInfo[] = [
   },
   {
     route: "/agenda-analistas",
-    title: "Agenda dos Analistas",
-    subtitle: "Alocações da Equipe de Implantação",
+    title: "Agenda Siplan dos Analistas",
+    subtitle: "Central Unificada de Agendamentos, Implantações e Suporte",
     moduleName: "Calendário",
-    icon: Users,
+    icon: Calendar,
     description:
-      "Grade de ocupação e disponibilidade da equipe de analistas. Permite planejar viagens, atendimentos remotos e evitar sobreposição de agendas.",
+      "Agenda Siplan unificada para todos os colaboradores do Siplan HUB. Substitui integralmente a antiga agenda externa do SAP e integra em tempo real: implantações previstas e confirmadas (Fase 1 Treinamento & Acompanhamento desdobradas dia a dia), agendamentos da Etapa 2 (Análise de Aderência) e Etapa 3 (Homologação de Conversão), chamados de suporte Orion e Legados puxados via Ellevo/0800 por número de chamado, períodos de férias e escala de ausências com barreira de alerta e trava em feriados forenses/nacionais de 2026 a 2028.",
     keyFeatures: [
-      "Grid de ocupação por analista e período",
-      "Identificação de dias disponíveis e bloqueados para viagem",
-      "Visualização de horas alocadas por profissional",
+      "Integração 100% nativa com as etapas de Implantação Fase 1, Aderência (Etapa 2) e Homologação (Etapa 3)",
+      "Busca rápida e enriquecimento automático de chamados Orion e Legado via base do 0800 Ellevo",
+      "Visões completas de Mês, Semana e Dia com réguas de horários e divisão proporcional de turnos",
+      "Filtro comparativo multi-analista para até 3 colaboradores simultâneos com colunas lado a lado no Dia",
+      "Gestão de agendamentos em lote (sequência de dias consecutivos) com aviso de finais de semana e feriados",
+      "Alerta preventivo e trava de segurança ao tentar agendar em período de férias de implantadores",
+      "Faixa executiva de 4 KPIs com ocupação líquida considerando dias úteis e feriados forenses",
     ],
     steps: [
       {
         stepNumber: 1,
-        title: "Selecione o Analista",
+        title: "Navegação e Seleção de Período",
         description:
-          "Escolha o membro da equipe para checar a disponibilidade e compromissos.",
-        icon: Users,
+          "Alterne entre as visões de Mês, Semana e Dia na barra de ferramentas. Use os botões 'Hoje', 'Anterior' e 'Próximo' ou abra o seletor de data para navegar diretamente a qualquer período.",
+        icon: Calendar,
       },
       {
         stepNumber: 2,
-        title: "Aloque Novo Treinamento",
+        title: "Filtragem Multi-Analista e Categorias",
         description:
-          "Verifique os horários vagos antes de agendar uma nova sessão no cartório.",
+          "Filtre até 3 analistas simultaneamente para comparar agendas lado a lado na visão Diária. Refine por tipos de atividade (Implantações, Aderência, Homologação, Chamados Orion, Legado, Configuração, SD).",
+        icon: Users,
+      },
+      {
+        stepNumber: 3,
+        title: "Novo Agendamento Individual ou em Lote",
+        description:
+          "Gestores autorizados podem clicar em '+ Novo Cadastro' ou em qualquer horário vago. Digite o número do chamado 0800 para preenchimento instantâneo ou ative o modo 'Em Lote' para alocar múltiplos dias consecutivos.",
+        icon: CheckCircle2,
+      },
+      {
+        stepNumber: 4,
+        title: "Detalhamento e Trâmites do Chamado",
+        description:
+          "Clique sobre qualquer card de agendamento para abrir o modal executivo com dados do cliente, atalho direto para o projeto, trâmites recentes do Ellevo e opções de edição ou exclusão segura.",
         icon: Clock3,
       },
     ],

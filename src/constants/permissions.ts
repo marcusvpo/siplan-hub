@@ -95,7 +95,7 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   { resource: "menu_calendario", label: "Menu Calendário", category: "Calendário", actions: ["view"] },
   { resource: "calendar_projects", label: "Calendário de Projetos", category: "Calendário", actions: ["view", "create", "edit", "delete"] },
   // Agenda dos Analistas é embed do Power BI: não há o que editar.
-  { resource: "calendar_analysts", label: "Agenda dos Analistas", category: "Calendário", actions: ["view"] },
+  { resource: "calendar_analysts", label: "Agenda dos Analistas", category: "Calendário", actions: ["view", "create", "edit", "delete", "manage"] },
 
   // Comercial
   { resource: "menu_comercial", label: "Menu Comercial", category: "Comercial", actions: ["view"] },

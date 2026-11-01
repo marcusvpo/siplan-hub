@@ -1,5 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 import {
   X,
   User,
@@ -9,11 +10,17 @@ import {
   LayoutDashboard,
   KeyRound,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import {
+  getImplantadorSpecialties,
+  SYSTEM_BADGE_STYLES,
+} from "@/constants/implantadorSpecialties";
 import {
   Dialog,
   DialogContent,
@@ -85,6 +92,7 @@ export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
   const userName =
     user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuário";
   const userEmail = user?.email || "—";
+  const implantadorSpecs = getImplantadorSpecialties(userName);
 
   // Team labels mapping
   const teamLabels: Record<string, string> = {
@@ -116,22 +124,21 @@ export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
     }
   };
 
-  return (
-    <>
+  const drawerContent = (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop em tela cheia com alta sobreposição */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
             onClick={onClose}
           />
 
-          {/* Drawer */}
+          {/* Drawer posicionado de forma absoluta no viewport */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -141,13 +148,14 @@ export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
               stiffness: 400,
               damping: 30,
             }}
-            className="fixed bottom-[max(5rem,calc(env(safe-area-inset-bottom)+4rem))] left-3 right-3 z-50 w-auto max-w-80 overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl sm:left-4 sm:right-auto sm:w-80"
+            className="fixed bottom-[max(5rem,calc(env(safe-area-inset-bottom)+4rem))] left-3 right-3 z-[100] w-auto max-w-80 overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-2xl sm:left-4 sm:right-auto sm:w-80"
           >
             {/* Header */}
             <div className="relative border-b border-border bg-gradient-to-r from-primary/10 via-rose-500/10 to-orange-500/10 px-5 py-4">
               <button
                 onClick={onClose}
                 className="absolute right-3 top-3 rounded-full p-1.5 transition-colors hover:bg-muted"
+                aria-label="Fechar perfil"
               >
                 <X className="h-4 w-4 text-muted-foreground" />
               </button>
@@ -215,6 +223,40 @@ export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
                 </div>
               )}
 
+              {/* Especialidade (Exclusivo para Implantadores) */}
+              {implantadorSpecs.length > 0 && (
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-full bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Especialidade
+                    </span>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {implantadorSpecs.map((spec) => {
+                        const style = SYSTEM_BADGE_STYLES[spec] || {
+                          badgeClass: "bg-primary/10 text-primary border-primary/20",
+                          dotColor: "bg-primary",
+                        };
+                        return (
+                          <span
+                            key={spec}
+                            className={cn(
+                              "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-semibold border shadow-2xs",
+                              style.badgeClass
+                            )}
+                          >
+                            <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", style.dotColor)} />
+                            {spec}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Admin Toggle Button */}
               {role === "admin" && (
                 <button
@@ -255,6 +297,13 @@ export function UserProfileDrawer({ isOpen, onClose }: UserProfileDrawerProps) {
         </>
       )}
     </AnimatePresence>
+  );
+
+  return (
+    <>
+      {typeof document !== "undefined"
+        ? createPortal(drawerContent, document.body)
+        : drawerContent}
 
       {/* Change Password Dialog */}
       <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>

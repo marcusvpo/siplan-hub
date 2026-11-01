@@ -86,21 +86,17 @@ describe("Home — grupo sem subitem acessível", () => {
     expect(screen.queryByText("Conversão")).not.toBeInTheDocument();
   });
 
-  it("posiciona Calendário de Projetos em Implantação (entre Gerenciar Projetos e Relatórios) e mantém apenas Agenda dos Analistas em Calendário", () => {
+  it("mantém Calendário de Projetos em Implantação e posiciona Agenda dos Analistas como item principal", () => {
     const implantacao = menuItems.find((item) => item.title === "Implantação");
+    const agendaAnalistas = menuItems.find((item) => item.title === "Agenda dos Analistas");
     const calendario = menuItems.find((item) => item.title === "Calendário");
 
-    expect(implantacao?.subItems?.map((sub) => sub.title)).toEqual([
-      "Gerenciar Projetos",
-      "Calendário de Projetos",
-      "Produtos Secundários",
-      "Relatórios",
-      "Próx. Implantações",
-      "Últimas Implantações",
-    ]);
-    expect(calendario?.subItems?.map((sub) => sub.title)).toEqual([
-      "Agenda dos Analistas",
-    ]);
+    expect(calendario).toBeUndefined();
+    expect(agendaAnalistas).toBeDefined();
+    expect(agendaAnalistas?.path).toBe("/agenda-analistas");
+    expect(agendaAnalistas?.permissionKey).toBe("calendar_analysts");
+    expect(agendaAnalistas?.subItems).toBeUndefined();
+    expect(implantacao?.subItems?.some((sub) => sub.title === "Calendário de Projetos")).toBe(true);
   });
 
   it("exibe os 6 cards de KPIs do Calendário de Projetos na Home quando o usuário possui permissão", () => {

@@ -235,16 +235,16 @@ export const mapChamado0800 = (c: any): Chamado0800 => ({
   tema: c.tema_ia && c.tema_ia !== "interno" ? c.tema_ia : undefined,
 });
 
-/** Busca os dados completos de um chamado pelo número para exibição sob demanda. */
-export function useChamado0800ByNumber(numeroChamado?: string | null) {
+/** Busca os dados completos de um chamado pelo número para exibição sob demanda (100% dos dados). */
+export function useChamado0800ByNumber(numeroChamado?: string | null, enabled = true) {
   const ticket = (numeroChamado || "").trim();
 
   return useQuery<Chamado0800 | null>({
     queryKey: ["chamado0800ByNumber", ticket],
-    enabled: Boolean(ticket),
+    enabled: Boolean(ticket && enabled),
     staleTime: 60_000,
     queryFn: async () => {
-      const [processoVenda, geral] = await Promise.all([
+      const [processoVenda, geral, secundario] = await Promise.all([
         supabase
           .from("chamados_processo_venda")
           .select("*")
@@ -255,34 +255,57 @@ export function useChamado0800ByNumber(numeroChamado?: string | null) {
           .select("*")
           .eq("numero_chamado", ticket)
           .maybeSingle(),
+        supabase
+          .from("secondary_tickets")
+          .select("*")
+          .eq("ticket_number", ticket)
+          .maybeSingle(),
       ]);
 
       if (processoVenda.error) throw processoVenda.error;
       if (geral.error) throw geral.error;
-      if (!processoVenda.data && !geral.data) return null;
+      if (secundario.error) throw secundario.error;
+      if (!processoVenda.data && !geral.data && !secundario.data) return null;
 
       const principal = processoVenda.data ?? geral.data;
       const complementar = processoVenda.data ? geral.data : null;
+      const sec = secundario.data;
 
       return mapChamado0800({
         ...complementar,
         ...principal,
-        nome_cliente: principal?.nome_cliente || complementar?.nome_cliente,
+        numero_chamado: ticket,
+        nome_cliente: principal?.nome_cliente || complementar?.nome_cliente || sec?.client_name,
+        codigo_cliente: principal?.codigo_cliente || sec?.codigo_cliente,
         solicitante: principal?.solicitante || complementar?.solicitante,
-        titulo: principal?.titulo || complementar?.titulo,
-        descricao: principal?.descricao || complementar?.descricao,
+        titulo: principal?.titulo || complementar?.titulo || sec?.titulo_chamado,
+        descricao: principal?.descricao || complementar?.descricao || sec?.observations || sec?.ellevo_last_tramite,
         natureza: principal?.natureza || complementar?.natureza,
-        status: principal?.status || complementar?.status,
+        status: principal?.status || complementar?.status || sec?.ellevo_status || sec?.hub_status,
         criticidade: principal?.criticidade || complementar?.criticidade,
-        software: principal?.software || complementar?.software,
-        produto: principal?.produto || complementar?.produto,
+        software: principal?.software || complementar?.software || sec?.product_name,
+        produto: principal?.produto || complementar?.produto || sec?.product_name,
         equipe_responsavel:
-          principal?.equipe_responsavel || complementar?.equipe_responsavel,
+          principal?.equipe_responsavel || complementar?.equipe_responsavel || sec?.ellevo_team,
         analista_responsavel:
-          principal?.analista_responsavel || complementar?.analista_responsavel,
-        data_abertura: principal?.data_abertura || complementar?.data_abertura,
+          principal?.analista_responsavel || complementar?.analista_responsavel || sec?.ellevo_analyst || sec?.responsible,
+        data_abertura: principal?.data_abertura || complementar?.data_abertura || (sec?.ellevo_opened_at ? sec.ellevo_opened_at.slice(0, 10) : undefined),
         data_encerramento:
-          principal?.data_encerramento || complementar?.data_encerramento,
+          principal?.data_encerramento || complementar?.data_encerramento || (sec?.ellevo_closed_at ? sec.ellevo_closed_at.slice(0, 10) : undefined),
+        aberto_em: principal?.aberto_em || sec?.ellevo_opened_at,
+        encerrado_em: principal?.encerrado_em || sec?.ellevo_closed_at,
+        sla_primeira_resposta_prevista_em: principal?.sla_primeira_resposta_prevista_em,
+        sla_primeira_resposta_real_em: principal?.sla_primeira_resposta_real_em,
+        sla_vencimento_em: principal?.sla_vencimento_em,
+        sla_vencimento_pausado: principal?.sla_vencimento_pausado ?? false,
+        sla_vencimento_manual: principal?.sla_vencimento_manual ?? false,
+        sla_tempo_primeira_resposta_minutos: principal?.sla_tempo_primeira_resposta_minutos,
+        sla_tempo_vencimento_minutos: principal?.sla_tempo_vencimento_minutos,
+        sla_tempo_restante_minutos: principal?.sla_tempo_restante_minutos,
+        sla_retorno_previsto_em: principal?.sla_retorno_previsto_em,
+        sla_retorno_real_em: principal?.sla_retorno_real_em,
+        synced_at: principal?.synced_at || complementar?.synced_at || sec?.ellevo_synced_at,
+        tema_ia: complementar?.tema_ia,
       });
     },
   });

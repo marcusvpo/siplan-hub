@@ -550,7 +550,7 @@ describe("project-calendar-events", () => {
         const dayOfWeek = dt.getDay(); // 0 = Dom, 1..5 = Seg..Sex, 6 = Sab
         expect(dayOfWeek).toBeGreaterThanOrEqual(1);
         expect(dayOfWeek).toBeLessThanOrEqual(5);
-        expect([2026, 2027]).toContain(holiday.year);
+        expect([2026, 2027, 2028]).toContain(holiday.year);
       }
 
       // 15/11/2026 cai no domingo -> não deve estar na lista
@@ -558,6 +558,9 @@ describe("project-calendar-events", () => {
       // 01/05/2027 e 25/12/2027 caem no sábado -> não devem estar na lista
       expect(getWeekdayHoliday("2027-05-01")).toBeNull();
       expect(getWeekdayHoliday("2027-12-25")).toBeNull();
+      // 01/01/2028 cai no sábado -> não deve estar na lista
+      expect(getWeekdayHoliday("2028-01-01")).toBeNull();
+      expect(getWeekdayHoliday("2028-02-28")?.name).toBe("Carnaval (Segunda-feira)");
     });
 
     it("detecta feriados dentro de uma janela de implantação e formata o badge da semana", () => {
