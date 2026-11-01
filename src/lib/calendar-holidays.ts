@@ -11,16 +11,16 @@ export interface WeekdayHoliday {
   weekdayShort: string;
   /** Data curta formatada DD/MM */
   shortDate: string;
-  /** Ano do feriado (2026 ou 2027) */
+  /** Ano do feriado (2026, 2027 ou 2028) */
   year: number;
 }
 
 /**
- * Lista completa dos feriados nacionais e forenses de 2026 e 2027
+ * Lista completa dos feriados nacionais e forenses de 2026, 2027 e 2028
  * que caem estritamente em dias de semana (Segunda a Sexta-feira).
  * Feriados que caem no Sábado ou Domingo foram excluídos conforme regra de negócio.
  */
-export const WEEKDAY_HOLIDAYS_2026_2027: WeekdayHoliday[] = [
+export const WEEKDAY_HOLIDAYS_2026_2028: WeekdayHoliday[] = [
   // ==================== 2026 ====================
   {
     date: "2026-01-01",
@@ -200,10 +200,109 @@ export const WEEKDAY_HOLIDAYS_2026_2027: WeekdayHoliday[] = [
     shortDate: "15/11",
     year: 2027,
   },
+  // ==================== 2028 ====================
+  {
+    date: "2028-02-28",
+    name: "Carnaval (Segunda-feira)",
+    weekdayLabel: "Segunda-feira",
+    weekdayShort: "Seg",
+    shortDate: "28/02",
+    year: 2028,
+  },
+  {
+    date: "2028-02-29",
+    name: "Carnaval (Terça-feira)",
+    weekdayLabel: "Terça-feira",
+    weekdayShort: "Ter",
+    shortDate: "29/02",
+    year: 2028,
+  },
+  {
+    date: "2028-04-14",
+    name: "Paixão de Cristo (Sexta-feira Santa)",
+    weekdayLabel: "Sexta-feira",
+    weekdayShort: "Sex",
+    shortDate: "14/04",
+    year: 2028,
+  },
+  {
+    date: "2028-04-21",
+    name: "Tiradentes",
+    weekdayLabel: "Sexta-feira",
+    weekdayShort: "Sex",
+    shortDate: "21/04",
+    year: 2028,
+  },
+  {
+    date: "2028-05-01",
+    name: "Dia do Trabalho",
+    weekdayLabel: "Segunda-feira",
+    weekdayShort: "Seg",
+    shortDate: "01/05",
+    year: 2028,
+  },
+  {
+    date: "2028-06-15",
+    name: "Corpus Christi",
+    weekdayLabel: "Quinta-feira",
+    weekdayShort: "Qui",
+    shortDate: "15/06",
+    year: 2028,
+  },
+  {
+    date: "2028-09-07",
+    name: "Independência do Brasil",
+    weekdayLabel: "Quinta-feira",
+    weekdayShort: "Qui",
+    shortDate: "07/09",
+    year: 2028,
+  },
+  {
+    date: "2028-10-12",
+    name: "Nossa Senhora Aparecida",
+    weekdayLabel: "Quinta-feira",
+    weekdayShort: "Qui",
+    shortDate: "12/10",
+    year: 2028,
+  },
+  {
+    date: "2028-11-02",
+    name: "Finados",
+    weekdayLabel: "Quinta-feira",
+    weekdayShort: "Qui",
+    shortDate: "02/11",
+    year: 2028,
+  },
+  {
+    date: "2028-11-15",
+    name: "Proclamação da República",
+    weekdayLabel: "Quarta-feira",
+    weekdayShort: "Qua",
+    shortDate: "15/11",
+    year: 2028,
+  },
+  {
+    date: "2028-11-20",
+    name: "Dia da Consciência Negra",
+    weekdayLabel: "Segunda-feira",
+    weekdayShort: "Seg",
+    shortDate: "20/11",
+    year: 2028,
+  },
+  {
+    date: "2028-12-25",
+    name: "Natal",
+    weekdayLabel: "Segunda-feira",
+    weekdayShort: "Seg",
+    shortDate: "25/12",
+    year: 2028,
+  },
 ];
 
+export const WEEKDAY_HOLIDAYS_2026_2027 = WEEKDAY_HOLIDAYS_2026_2028;
+
 const HOLIDAY_BY_ISO_MAP = new Map<string, WeekdayHoliday>(
-  WEEKDAY_HOLIDAYS_2026_2027.map((item) => [item.date, item])
+  WEEKDAY_HOLIDAYS_2026_2028.map((item) => [item.date, item])
 );
 
 /**
@@ -243,7 +342,7 @@ export function getWeekdayHolidaysInRange(
   const start = isBefore(rawEnd, rawStart) ? rawEnd : rawStart;
   const end = endOfDay(isAfter(rawStart, rawEnd) ? rawStart : rawEnd);
 
-  return WEEKDAY_HOLIDAYS_2026_2027.filter((holiday) => {
+  return WEEKDAY_HOLIDAYS_2026_2028.filter((holiday) => {
     const hDate = new Date(`${holiday.date}T12:00:00`);
     return !isBefore(hDate, start) && !isAfter(hDate, end);
   });

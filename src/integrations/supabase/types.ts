@@ -602,8 +602,56 @@ type UntypedSupabaseShape = any;
 
 export type Database = UntypedSupabaseShape;
 
+
+export type AnalystAgendaEntryRow = {
+  id: string;
+  user_id: string;
+  user_name: string;
+  ticket_number: string;
+  ticket_catalog: "orion" | "legacy";
+  client_name: string;
+  client_code: string | null;
+  subject: string;
+  activity_type: string;
+  date: string;
+  start_time: string | null;
+  end_time: string | null;
+  is_all_day: boolean;
+  observations: string | null;
+  ticket_data: Json;
+  bulk_group_id: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AnalystAgendaEntryInsert = {
+  id?: string;
+  user_id: string;
+  user_name: string;
+  ticket_number: string;
+  ticket_catalog?: "orion" | "legacy";
+  client_name: string;
+  client_code?: string | null;
+  subject: string;
+  activity_type?: string;
+  date: string;
+  start_time?: string | null;
+  end_time?: string | null;
+  is_all_day?: boolean;
+  observations?: string | null;
+  ticket_data?: Json;
+  bulk_group_id?: string | null;
+  created_by?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type AnalystAgendaEntryUpdate = Partial<AnalystAgendaEntryInsert>;
+
 export type Tables<TableName extends string> =
-  TableName extends "conversion_engines" ? ConversionEngineRow
+  TableName extends "analyst_agenda_entries" ? AnalystAgendaEntryRow
+    : TableName extends "conversion_engines" ? ConversionEngineRow
     : TableName extends "chamados_processo_venda" ? ChamadoProcessoVendaRow
       : TableName extends "my_day_tasks" ? MyDayTaskRow
         : TableName extends "my_day_preferences" ? MyDayPreferencesRow
@@ -627,7 +675,8 @@ export type Tables<TableName extends string> =
                                     : UntypedSupabaseShape;
 
 export type TablesInsert<TableName extends string> =
-  TableName extends "conversion_engines" ? ConversionEngineInsert
+  TableName extends "analyst_agenda_entries" ? AnalystAgendaEntryInsert
+    : TableName extends "conversion_engines" ? ConversionEngineInsert
     : TableName extends "chamados_processo_venda" ? ChamadoProcessoVendaInsert
       : TableName extends "my_day_tasks" ? MyDayTaskInsert
         : TableName extends "my_day_preferences" ? MyDayPreferencesInsert
@@ -651,7 +700,8 @@ export type TablesInsert<TableName extends string> =
                                     : UntypedSupabaseShape;
 
 export type TablesUpdate<TableName extends string> =
-  TableName extends "conversion_engines" ? ConversionEngineUpdate
+  TableName extends "analyst_agenda_entries" ? AnalystAgendaEntryUpdate
+    : TableName extends "conversion_engines" ? ConversionEngineUpdate
     : TableName extends "chamados_processo_venda" ? ChamadoProcessoVendaUpdate
       : TableName extends "my_day_tasks" ? MyDayTaskUpdate
         : TableName extends "my_day_preferences" ? MyDayPreferencesUpdate

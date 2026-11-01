@@ -80,10 +80,6 @@ export function Breadcrumbs() {
       return { value: "implantacao", to: "/implantacao", name: "Implantação" };
     }
 
-    if (location.pathname === "/agenda-analistas") {
-      return { value: "calendario", to: "/calendario", name: "Calendário" };
-    }
-
     return null;
   })();
 

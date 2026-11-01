@@ -55,6 +55,13 @@ export interface MenuItem {
 
 export const menuItems: MenuItem[] = [
     {
+        title: "Agenda dos Analistas",
+        icon: Calendar,
+        path: "/agenda-analistas",
+        description: "Alocações, implantações e agenda unificada da equipe",
+        permissionKey: "calendar_analysts",
+    },
+    {
         title: "Meu Dia",
         icon: ListTodo,
         path: "/meu-dia",
@@ -183,22 +190,6 @@ export const menuItems: MenuItem[] = [
                 icon: History,
                 description: "Histórico de instalações concluídas",
                 permissionKey: "deployments_latest",
-            },
-        ],
-    },
-    {
-        title: "Calendário",
-        icon: Calendar,
-        path: "/calendario",
-        description: "Visão cronológica de atividades e prazos",
-        permissionKey: "menu_calendario",
-        subItems: [
-            {
-                title: "Agenda dos Analistas",
-                path: "/agenda-analistas",
-                icon: Users,
-                description: "Alocações e agendas da equipe",
-                permissionKey: "calendar_analysts",
             },
         ],
     },

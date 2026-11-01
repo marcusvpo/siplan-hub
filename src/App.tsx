@@ -507,14 +507,7 @@ const App = () => (
                               </RequirePermission>
                             }
                           />
-                          <Route
-                            path="/calendario"
-                            element={
-                              <RequirePermission resource="menu_calendario">
-                                <ModuleOverview moduleName="Calendário" />
-                              </RequirePermission>
-                            }
-                          />
+                          <Route path="/calendario" element={<Navigate to="/agenda-analistas" replace />} />
                           <Route
                             path="/commercial"
                             element={

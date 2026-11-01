@@ -316,6 +316,8 @@ export function extractCleanObservations(
       const joined = chunks.join("");
       if (joined.trim()) {
         workingText = joined;
+      } else {
+        workingText = "";
       }
     } catch {
       // Keep raw string if invalid JSON

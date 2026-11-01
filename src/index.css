@@ -213,8 +213,7 @@
 @layer base {
   * {
     @apply border-border;
-    scrollbar-width: thin;
-    scrollbar-color: hsl(var(--foreground) / 0.15) transparent;
+    
   }
 
   /* Custom scrollbars globally for Chrome/Safari/Edge */
@@ -356,6 +355,15 @@
   }
 
   /* Custom Scrollbar Utilities */
+  .scrollbar-none {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
   }
@@ -658,3 +666,42 @@
   }
 }
 
+
+
+/* ==========================================================================
+   ESTILOS GLOBAIS DE IMPRESSÃO (@media print / EXPORTAÇÃO PDF)
+   ========================================================================== */
+@media print {
+  .no-print,
+  [data-sidebar="sidebar"],
+  aside,
+  header.sticky,
+  .floating-copilot,
+  [data-radix-popper-content-wrapper],
+  button:not(.print-allow),
+  .tooltip-content {
+    display: none !important;
+  }
+
+  html, body, #root, main {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  @page {
+    size: landscape;
+    margin: 10mm 12mm 10mm 12mm;
+  }
+
+  .agenda-print-avoid-break {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}

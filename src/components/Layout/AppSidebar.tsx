@@ -89,10 +89,6 @@ export function AppSidebar() {
       location.pathname === "/deployments/secondary-products" ||
       location.pathname === "/deployments/latest",
   );
-  const [isCalendarioOpen, setIsCalendarioOpen] = useState(
-    location.pathname === "/calendario" ||
-      location.pathname === "/agenda-analistas",
-  );
   const [isOrionTNModelsOpen, setIsOrionTNModelsOpen] = useState(
     location.pathname.startsWith("/orion-tn-models"),
   );
@@ -126,7 +122,7 @@ export function AppSidebar() {
   const { hasAccess: hasCopilotAccess } = useCopilot();
   const { hasPermission } = usePermissions();
   const canViewImplantacao = hasPermission("menu_implantacao", "view");
-  const canViewCalendario = hasPermission("menu_calendario", "view");
+  const canViewAgendaAnalistas = hasPermission("calendar_analysts", "view") || hasPermission("menu_calendario", "view");
   const canViewComercial = hasPermission("menu_comercial", "view");
   const canViewConversao = hasPermission("menu_conversao", "view");
   const canViewOrion = hasPermission("menu_orion", "view");
@@ -166,9 +162,6 @@ export function AppSidebar() {
     ["reports", "/reports"],
     ["deployments_next", "/deployments"],
     ["deployments_latest", "/deployments/latest"],
-  );
-  const rotaCalendario = primeiraRota(
-    ["calendar_analysts", "/agenda-analistas"],
   );
   const rotaComercial = primeiraRota(
     ["commercial_customers", "/commercial/customers"],
@@ -222,7 +215,6 @@ export function AppSidebar() {
 
   const mostrarDashboard = canViewDashboard && !!rotaDashboard;
   const mostrarImplantacao = canViewImplantacao && !!rotaImplantacao;
-  const mostrarCalendario = canViewCalendario && !!rotaCalendario;
   const mostrarComercial = canViewComercial && !!rotaComercial;
   const mostrarConversao = canViewConversao && !!rotaConversao;
   const mostrarSd = canViewSd && !!rotaSd;
@@ -293,6 +285,31 @@ export function AppSidebar() {
             </Button>
           </Link>
         </div>
+
+        {/* Agenda dos Analistas (Destaque Principal com Contorno e Cor Vermelho Leve) */}
+        {canViewAgendaAnalistas && (
+          <div className="px-2">
+            <Link to="/agenda-analistas">
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-3 border transition-all duration-200",
+                  "border-rose-300/70 bg-rose-50/70 text-rose-700 hover:bg-rose-100/80 hover:text-rose-800 hover:border-rose-400",
+                  "dark:border-rose-900/50 dark:bg-rose-950/25 dark:text-rose-300 dark:hover:bg-rose-950/45 dark:hover:text-rose-200 dark:hover:border-rose-800/80",
+                  isActive("/agenda-analistas") &&
+                    "bg-rose-100/90 text-rose-800 font-semibold border-rose-400 shadow-sm dark:bg-rose-900/40 dark:text-rose-100 dark:border-rose-700",
+                  collapsed ? "justify-center px-0" : "",
+                )}
+                title="Agenda dos Analistas"
+              >
+                <CalendarIcon className="h-5 w-5 text-rose-600 dark:text-rose-400 shrink-0" />
+                {!collapsed && (
+                  <span className="font-semibold tracking-tight">Agenda dos Analistas</span>
+                )}
+              </Button>
+            </Link>
+          </div>
+        )}
 
         {/* Central de Trabalho */}
         {canViewWorkCenter && (
@@ -638,79 +655,7 @@ export function AppSidebar() {
         </div>
         )}
 
-        {/* Calendário Group */}
-        {mostrarCalendario && (
-        <div className="px-2">
-          {!collapsed ? (
-            <Collapsible
-              open={isCalendarioOpen}
-              onOpenChange={setIsCalendarioOpen}
-              className="space-y-1"
-            >
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-between hover:bg-muted/50"
-                  title="Calendário"
-                >
-                  <div className="flex items-center gap-3">
-                     <CalendarIcon className="h-5 w-5" />
-                    <span>Calendário</span>
-                  </div>
-                  <ChevronDown
-                    className={cn(
-                      "h-4 w-4 transition-transform",
-                      isCalendarioOpen ? "transform rotate-180" : "",
-                    )}
-                  />
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-1 pl-4 animate-in slide-in-from-top-2">
-                <div className="pt-1 pb-2">
-                  <Link to="/calendario">
-                    <Button
-                      variant={isActive("/calendario") ? "secondary" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start gap-3 h-9"
-                    >
-                      <LayoutDashboard className="h-4 w-4" />
-                      <span>Visão Geral</span>
-                    </Button>
-                  </Link>
-                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pl-4 mb-2 block">
-                    Cronogramas
-                  </span>
-                  {can("calendar_analysts") && (
-                  <Link to="/agenda-analistas">
-                    <Button
-                      variant={isActive("/agenda-analistas") ? "secondary" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start gap-3 h-9"
-                    >
-                      <Users className="h-4 w-4" />
-                      <span>Agenda dos Analistas</span>
-                    </Button>
-                  </Link>
-                  )}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          ) : (
-            <Link to="/calendario">
-              <Button
-                variant={
-                  isActive("/calendario") || isActive("/agenda-analistas") ? "secondary" : "ghost"
-                }
-                className="w-full justify-center px-0"
-                title="Calendário (Agenda dos Analistas)"
-                onClick={() => setIsCalendarioOpen(true)}
-              >
-                <CalendarIcon className="h-5 w-5" />
-              </Button>
-            </Link>
-          )}
-        </div>
-        )}
+        
 
         {/* Commercial Group */}
         {mostrarComercial && (
