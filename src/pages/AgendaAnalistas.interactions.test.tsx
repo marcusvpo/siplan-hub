@@ -263,7 +263,7 @@ describe("AgendaAnalistas — Suíte Abrangente de Interações & Regras de Neg�
 
       // Abre o popover de analistas / responsáveis
       const analystPopoverBtn = screen.getByRole("button", {
-        name: /Filtrar por responsável/i,
+        name: /Filtrar por (analistas|responsável)/i,
       });
       fireEvent.click(analystPopoverBtn);
 
