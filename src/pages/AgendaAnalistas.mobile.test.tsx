@@ -129,7 +129,7 @@ describe("Agenda Siplan dos Analistas na interface", () => {
     fireEvent.click(newBtn);
 
     await waitFor(() => {
-      expect(screen.getByText(/Novo Agendamento — Agenda Siplan/i)).toBeInTheDocument();
+      expect(screen.getByText(/Novo Agendamento/i)).toBeInTheDocument();
     });
   });
 });

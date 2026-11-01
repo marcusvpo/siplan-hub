@@ -137,7 +137,7 @@ export function AgendaSlotFinderDialog({
         }
 
         // Regra 2: Pular feriados oficiais
-        if (Boolean(getWeekdayHoliday(checkDate))) {
+        if (getWeekdayHoliday(checkDate)) {
           // Feriado interrompe sequência contínua de trabalho
           consecutiveFreeDays = [];
           continue;

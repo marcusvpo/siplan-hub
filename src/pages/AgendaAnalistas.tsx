@@ -316,7 +316,10 @@ export default function AgendaAnalistas() {
   });
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-4rem)] p-3 sm:p-5 lg:p-6 space-y-4 max-w-[1600px] mx-auto w-full">
+    <div
+      data-testid="analyst-agenda-page"
+      className="flex flex-col min-h-[calc(100vh-4rem)] p-3 sm:p-5 lg:p-6 space-y-4 max-w-[1600px] mx-auto w-full overflow-x-hidden"
+    >
       {/* CABEÇALHO DA TELA (TÍTULO, DESCRIÇÃO E AÇÕES RÁPIDAS) */}
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border/60 pb-4 print:hidden">
         <div className="space-y-1">
@@ -325,9 +328,14 @@ export default function AgendaAnalistas() {
               <CalendarDays className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
-                Agenda dos Analistas
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
+                  Agenda dos Analistas
+                </h1>
+                <Badge variant="outline" className="text-[11px] font-semibold border-primary/30 text-primary bg-primary/5">
+                  Agenda Siplan
+                </Badge>
+              </div>
               <p className="text-xs sm:text-sm text-muted-foreground">
                 Escala oficial de implantações, homologações, aderências, configurações e atendimentos
               </p>
@@ -471,7 +479,10 @@ export default function AgendaAnalistas() {
           </div>
         ) : selectedUserNames.length === 0 ? (
           /* GATE INICIAL: ALERTA PARA SELECIONAR RESPONSÁVEL (ANTI-SOBRECARGA VISUAL) */
-          <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-to-b from-primary/[0.04] via-card to-background p-8 sm:p-14 text-center space-y-5 animate-in fade-in duration-300">
+          <div
+            data-testid="agenda-analyst-gate"
+            className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-primary/30 bg-gradient-to-b from-primary/[0.04] via-card to-background p-8 sm:p-14 text-center space-y-5 animate-in fade-in duration-300"
+          >
             <div className="relative">
               <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent text-primary shadow-sm border border-primary/25">
                 <Users className="h-8 w-8 sm:h-10 sm:w-10" />
