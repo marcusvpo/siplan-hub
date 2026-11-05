@@ -7,7 +7,10 @@ Este guia funde o Método Karpathy (foco em cautela, simplicidade e mudanças ci
 
 **Não assuma premissas às cegas. Não oculte complexidade. Exponha os trade-offs arquiteturais antes de escrever qualquer linha de código.**
 
-Antes de iniciar a implementação no Siplan HUB, valide mentalmente e com o usuário:
+Antes de iniciar qualquer implementação no Siplan HUB, consulte obrigatoriamente a **fonte mestre de conhecimento operacional** em `docs/CONHECIMENTO_PROCESSOS_E_OPERACAO_HUB.md`.
+Valide mentalmente e com o usuário:
+- **Domínio e Responsabilidades Reais:** Não presuma quem executa determinada ação ou como ocorrem as transições de etapas. O documento mestre detalha a Matriz RACI real dos analistas (Alex Silva, Bruno Fernandes, Ademar Souza, Luciane Lima, Hugo Januário, Maria Santos, Lunna Santana, Julio Araujo, Rodrigo Brites, Ricardo Vieira, etc.), as janelas temporais inflexíveis (Sexta-feira limite vs. Segunda-feira Go-Live), o ciclo de 15 dias corridos de Pós-Implantação em grupos de WhatsApp e a transição para o suporte 0800 (Ellevo).
+- **Auto-Alimentação do Conhecimento:** Se a alteração envolver novas rotas, telas, botões operacionais, mudanças de processos ou redistribuição de responsabilidades, atualize obrigatoriamente `docs/CONHECIMENTO_PROCESSOS_E_OPERACAO_HUB.md`.
 - **Alinhamento de Módulos:** Identifique claramente se a alteração afeta a Fila de Conversão, o módulo de Modelos Editor OrionTN, Comercial, Analytics, Calendário ou o módulo de Administração.
 - **Impacto no Banco/Supabase:** Entenda se a mudança exige novas tabelas, alterações em RLS (Row Level Security) ou novas migrations no Supabase.
 - **Complexidade:** Se uma solução puder ser resolvida com as features nativas do Tailwind CSS v3 e componentes existentes do shadcn/ui, recuse a instalação de bibliotecas externas.
@@ -35,6 +38,15 @@ Para manter o desempenho e evitar gargalos com objetos JSON grandes, respeite a 
 - **Composite Components:** Mantenha modais e telas complexas divididos em abas ou subcomponentes independentes (ex: `GeneralInfoTab`, `StepsTab`) isolando o consumo de contexto para evitar re-renderizações globais na tela.
 - **Estilização e Design System:** Use utilitários do Tailwind CSS. Respeite as variáveis do tema Dark/Light (`next-themes`). A cor de destaque primária do sistema é o Vermelho Bordô (`hsl(346, 84%, 45%)`).
 - **Rich Text:** O editor de texto rico está encapsulado em um componente wrapper interno (Tiptap/Lexical). Nunca quebre os componentes consumidores ao tentar alterar a biblioteca base diretamente.
+
+### 2.4. Geração Oficial de PDFs e Relatórios (@react-pdf/renderer)
+- **Padrão Obrigatório e Exclusivo:** Apenas o `@react-pdf/renderer` deve ser utilizado para construir e exportar documentos e relatórios no sistema. É proibido utilizar manipulação de DOM/HTML estático temporário ou headless browser via CLI.
+- **Camada Modular Centralizada:** Toda emissão deve consumir `@/modules/pdf`:
+  - Tokens e cores: `pdfTokens` (`#881337` bordô Siplan, slate navy `#0f172a`).
+  - Blocos estruturais reutilizáveis: `PdfHeader`, `PdfFooter`, `PdfTable`, `PdfSummarySection`, `PdfStatusBadge`, `PdfSignatureBlock`.
+  - Serviço unificado: `pdfService` (`downloadPdfDocument`, `openPdfPreview`, `generatePdfBlob`, `generatePdfBuffer`).
+  - Templates de referência: `BaseReportTemplate`.
+- **Automações e Scheduled Tasks:** Para automações de relatórios ou workers em background, use sempre `generatePdfBuffer` para obter os bytes de forma headless e limpa sem depender do DOM do navegador.
 
 ---
 

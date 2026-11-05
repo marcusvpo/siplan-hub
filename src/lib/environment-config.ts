@@ -66,6 +66,8 @@ export function formatEnvironmentTargetDate(targetDate: Date | null): string {
   return `${d}/${m}/${y} (${weekdayShort})`;
 }
 
+export { formatDispatchedDate, formatEnvironmentDispatchedDate } from "@/utils/date-formatters";
+
 /**
  * Retorna as classes de cor, alertas e animação pulsante com base na coluna e proximidade da data final.
  * Cores altamente destacadas, nítidas e contrastantes tanto no tema claro quanto no escuro.

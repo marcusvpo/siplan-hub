@@ -491,4 +491,69 @@ describe("DeploymentsEnvironmentConfig Page and Modal", () => {
     // Seção de Timeline
     expect(screen.getByText(/Histórico & Timeline do Ambiente/i)).toBeInTheDocument();
   });
+
+  it("no modal: deve exibir a tag de status de e-mail de solicitação informando se já foi disparado ou se aguarda início", () => {
+    const projectDispatched = {
+      ...mockProjects[0],
+      id: "proj-dispatched-modal",
+      environmentDispatchedAt: "2026-11-04T15:00:00.000Z",
+      environmentDispatchDone: true,
+      stages: {
+        ...mockProjects[0].stages,
+        environment: {
+          ...mockProjects[0].stages.environment,
+          environmentDispatchedAt: "2026-11-04T15:00:00.000Z",
+          environmentDispatchDone: true,
+        },
+      },
+    };
+
+    const { unmount } = render(
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <EnvironmentProjectModal
+            project={projectDispatched as any}
+            isOpen={true}
+            onClose={vi.fn()}
+            columnId="in_progress"
+          />
+        </BrowserRouter>
+      </QueryClientProvider>
+    );
+
+    // Deve indicar que já foi disparado e está bloqueado contra duplicidade
+    expect(screen.getByText(/Bloqueado contra disparos duplicados/i)).toBeInTheDocument();
+    unmount();
+
+    // Quando não disparado
+    const projectPending = {
+      ...mockProjects[0],
+      id: "proj-pending-modal",
+      environmentDispatchedAt: undefined,
+      environmentDispatchDone: false,
+      stages: {
+        ...mockProjects[0].stages,
+        environment: {
+          ...mockProjects[0].stages.environment,
+          environmentDispatchedAt: undefined,
+          environmentDispatchDone: false,
+        },
+      },
+    };
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <EnvironmentProjectModal
+            project={projectPending as any}
+            isOpen={true}
+            onClose={vi.fn()}
+            columnId="not_started"
+          />
+        </BrowserRouter>
+      </QueryClientProvider>
+    );
+
+    expect(screen.getByText(/Aguardando primeiro início da etapa/i)).toBeInTheDocument();
+  });
 });

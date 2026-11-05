@@ -129,6 +129,18 @@ export interface ProjectV2 {
   endDateActual?: Date;
   lastUpdatedAt: Date;
   lastUpdatedBy: string;
+  infraDispatchedAt?: Date;
+  infraDispatchDone?: boolean;
+  infraDispatchedBy?: string;
+  adherenceDispatchedAt?: Date;
+  adherenceDispatchDone?: boolean;
+  adherenceDispatchedBy?: string;
+  environmentDispatchedAt?: Date;
+  environmentDispatchDone?: boolean;
+  environmentDispatchedBy?: string;
+  conversionDispatchedAt?: Date;
+  conversionDispatchDone?: boolean;
+  conversionDispatchedBy?: string;
 
   // Estágios
   stages: {
@@ -213,6 +225,9 @@ export interface InfraStageV2 {
   workstations?: WorkstationInfo[];
   publicLinkClosed?: boolean;
   clientResponsible?: string;
+  infraDispatchedAt?: Date;
+  infraDispatchDone?: boolean;
+  infraDispatchedBy?: string;
 }
 
 export interface AdherenceStageV2 {
@@ -230,6 +245,9 @@ export interface AdherenceStageV2 {
   observations?: string;
   lastUpdatedAt?: Date;
   lastUpdatedBy?: string;
+  adherenceDispatchedAt?: Date;
+  adherenceDispatchDone?: boolean;
+  adherenceDispatchedBy?: string;
 }
 
 export interface RemoteAccessItem {
@@ -309,6 +327,9 @@ export interface EnvironmentStageV2 {
   kanbanStatus?: "not_started" | "in_progress" | "completed";
   hasPendings?: boolean;
   timeline?: EnvironmentTimelineItem[];
+  environmentDispatchedAt?: Date;
+  environmentDispatchDone?: boolean;
+  environmentDispatchedBy?: string;
 }
 
 export interface ConversionStageV2 {
@@ -334,6 +355,9 @@ export interface ConversionStageV2 {
   recordCount?: number;
   lastUpdatedAt?: Date;
   lastUpdatedBy?: string;
+  conversionDispatchedAt?: Date;
+  conversionDispatchDone?: boolean;
+  conversionDispatchedBy?: string;
 }
 
 export type ModelType =

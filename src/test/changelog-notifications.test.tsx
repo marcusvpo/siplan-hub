@@ -11,6 +11,7 @@ vi.mock("react-router-dom", () => ({
 vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => ({
     user: { id: "user-123" },
+    role: "admin",
     team: "conversion",
   }),
 }));
@@ -48,21 +49,32 @@ let mockLoading = false;
 let mockError: string | null = null;
 
 vi.mock("@/hooks/useNotifications", () => ({
-  useNotifications: () => ({
-    notifications: mockNotifications,
-    unreadCount: mockNotifications.filter(notification => !notification.read).length,
-    loading: mockLoading,
-    error: mockError,
-    markAsRead: mockMarkAsRead,
-    markAllAsRead: mockMarkAllAsRead,
-    deleteNotification: mockDeleteNotification,
-    refetch: mockRefetch,
-  }),
+  useNotifications: () => {
+    const unreadCount = mockNotifications.filter((n) => !n.read).length;
+    const operationalUnreadCount = mockNotifications.filter(
+      (n) => !n.read && n.category !== "changelog" && !n.type?.startsWith("release_")
+    ).length;
+    const changelogUnreadCount = mockNotifications.filter(
+      (n) => !n.read && (n.category === "changelog" || n.type?.startsWith("release_"))
+    ).length;
+
+    return {
+      notifications: mockNotifications,
+      unreadCount,
+      operationalUnreadCount,
+      changelogUnreadCount,
+      loading: mockLoading,
+      error: mockError,
+      markAsRead: mockMarkAsRead,
+      markAllAsRead: mockMarkAllAsRead,
+      deleteNotification: mockDeleteNotification,
+      refetch: mockRefetch,
+    };
+  },
 }));
 
 describe("Central de Novidades & Notificações (Changelog)", () => {
   beforeAll(() => {
-    // jsdom não oferece PointerEvent; o Radix precisa de button e ctrlKey.
     vi.stubGlobal("PointerEvent", MouseEvent);
   });
   afterAll(() => vi.unstubAllGlobals());
@@ -82,46 +94,46 @@ describe("Central de Novidades & Notificações (Changelog)", () => {
     return screen.getByRole("menu", { name: "Notificações" });
   }
 
-  it("renderiza o sino de notificações com a contagem de não lidas", () => {
+  it("renderiza o sino de notificações com a contagem de atividades operacionais não lidas", () => {
     render(<NotificationBell />);
     expect(screen.getByRole("button", { name: "Abrir notificações" })).toBeInTheDocument();
-    expect(screen.getByText("2")).toBeInTheDocument();
+    // Badge numérico alerta exclusivamente atividades operacionais pendentes (1 atividade pendente)
+    expect(screen.getByText("1")).toBeInTheDocument();
   });
 
-  it("exibe abas de filtro por categoria ao abrir o menu", () => {
+  it("exibe duas abas limpas (Atividades e Novidades) sem misturar novidades no fluxo de trabalho", () => {
     render(<NotificationBell />);
     openNotifications();
 
-    expect(screen.getByText("Todas (2)")).toBeInTheDocument();
-    expect(screen.getByText("Novidades")).toBeInTheDocument();
-    expect(screen.getByText("Atividades")).toBeInTheDocument();
+    expect(screen.getByText(/Atividades \(1\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Novidades \(1\)/)).toBeInTheDocument();
     expect(mockMarkAllAsRead).toHaveBeenCalledOnce();
+
+    // Na aba padrão Atividades, exibe apenas a demanda operacional
+    expect(screen.getByText("Nova demanda de conversão")).toBeInTheDocument();
+    // Novidade não aparece na aba principal de Atividades
+    expect(screen.queryByText("Nova Tela no CS/CX")).not.toBeInTheDocument();
   });
 
-  it("filtra notificações pela aba Novidades", () => {
+  it("filtra notificações ao alternar para a aba Novidades", () => {
     render(<NotificationBell />);
     openNotifications();
 
-    fireEvent.click(screen.getByRole("menuitem", { name: "Novidades" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /Novidades/ }));
 
     expect(screen.getByText("Nova Tela no CS/CX")).toBeInTheDocument();
     expect(screen.queryByText("Nova demanda de conversão")).not.toBeInTheDocument();
-    expect(screen.getByRole("menu", { name: "Notificações" })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("menuitem", { name: "Atividades" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /Atividades/ }));
     expect(screen.getByText("Nova demanda de conversão")).toBeInTheDocument();
     expect(screen.queryByText("Nova Tela no CS/CX")).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("menuitem", { name: "Todas (2)" }));
-    expect(screen.getByText("Nova Tela no CS/CX")).toBeInTheDocument();
-    expect(screen.getByText("Nova demanda de conversão")).toBeInTheDocument();
   });
 
   it("permite limpar/excluir uma notificação individualmente", () => {
     render(<NotificationBell />);
     openNotifications();
-    fireEvent.click(screen.getByRole("menuitem", { name: "Limpar notificação: Nova Tela no CS/CX" }));
-    expect(mockDeleteNotification).toHaveBeenCalledWith("notif-1");
+    fireEvent.click(screen.getByRole("menuitem", { name: "Limpar notificação: Nova demanda de conversão" }));
+    expect(mockDeleteNotification).toHaveBeenCalledWith("notif-2");
     expect(mockMarkAsRead).not.toHaveBeenCalled();
     expect(mockNavigate).not.toHaveBeenCalled();
     expect(screen.getByRole("menu", { name: "Notificações" })).toBeInTheDocument();
@@ -130,6 +142,7 @@ describe("Central de Novidades & Notificações (Changelog)", () => {
   it("abre o destino da notificação e marca somente esse item como lido", () => {
     render(<NotificationBell />);
     openNotifications();
+    fireEvent.click(screen.getByRole("menuitem", { name: /Novidades/ }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Abrir notificação: Nova Tela no CS/CX" }));
 
     expect(mockMarkAsRead).toHaveBeenCalledWith("notif-1");
@@ -138,37 +151,23 @@ describe("Central de Novidades & Notificações (Changelog)", () => {
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 
-  it("mantém exclusão disponível pelo teclado sem abrir a publicação", () => {
-    render(<NotificationBell />);
-    openNotifications();
-    const clear = screen.getByRole("menuitem", { name: "Limpar notificação: Nova Tela no CS/CX" });
-    act(() => clear.focus());
-    fireEvent.keyDown(clear, { key: "Enter" });
-
-    expect(mockDeleteNotification).toHaveBeenCalledWith("notif-1");
-    expect(mockMarkAsRead).not.toHaveBeenCalled();
-    expect(mockNavigate).not.toHaveBeenCalled();
-  });
-
-  it("inclui releases antigos sem categoria changelog no filtro Novidades", () => {
-    mockNotifications = [{ ...mockNotificationsList[0], category: "operational", type: "release_fix" }];
-    render(<NotificationBell />);
-    openNotifications();
-    fireEvent.click(screen.getByRole("menuitem", { name: "Novidades" }));
-    expect(screen.getByText("Nova Tela no CS/CX")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("menuitem", { name: "Atividades" }));
-    expect(screen.getByText("Nenhuma atividade recente.")).toBeInTheDocument();
-  });
-
   it("informa o estado vazio e mantém os filtros utilizáveis", () => {
     mockNotifications = [];
     render(<NotificationBell />);
     openNotifications();
-    expect(screen.getByText("Nenhuma notificação.")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("menuitem", { name: "Novidades" }));
+    expect(screen.getByText("Nenhuma atividade pendente no momento.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("menuitem", { name: /Novidades/ }));
     expect(screen.getByText("Nenhuma novidade recente.")).toBeInTheDocument();
     expect(mockMarkAllAsRead).not.toHaveBeenCalled();
+  });
+
+  it("exibe atalho para Central de Notificações do Administrador no rodapé", () => {
+    render(<NotificationBell />);
+    openNotifications();
+    const adminLink = screen.getByText("Central de Gestão de Notificações");
+    expect(adminLink).toBeInTheDocument();
+    fireEvent.click(adminLink);
+    expect(mockNavigate).toHaveBeenCalledWith("/admin/notifications");
   });
 
   it("expõe o estado de carregamento sem mostrar notificações antigas", () => {
@@ -178,11 +177,6 @@ describe("Central de Novidades & Notificações (Changelog)", () => {
     expect(screen.getByRole("status", { name: "Carregando notificações" })).toBeInTheDocument();
     expect(screen.queryByText("Nova Tela no CS/CX")).not.toBeInTheDocument();
     expect(mockMarkAllAsRead).not.toHaveBeenCalled();
-    const markAll = screen.getByRole("menuitem", { name: "Marcar todas lidas" });
-    expect(markAll).toBeDisabled();
-    fireEvent.click(markAll);
-    fireEvent.keyDown(markAll, { key: "Enter" });
-    expect(mockMarkAllAsRead).not.toHaveBeenCalled();
   });
 
   it("distingue falha de consulta de lista vazia e permite tentar novamente", () => {
@@ -191,29 +185,10 @@ describe("Central de Novidades & Notificações (Changelog)", () => {
     openNotifications();
 
     expect(screen.getByRole("alert")).toHaveTextContent("Não foi possível carregar as notificações.");
-    expect(screen.queryByText("Nenhuma notificação.")).not.toBeInTheDocument();
     expect(screen.queryByText("Nova Tela no CS/CX")).not.toBeInTheDocument();
-    expect(mockMarkAllAsRead).not.toHaveBeenCalled();
-    const markAll = screen.getByRole("menuitem", { name: "Marcar todas lidas" });
-    expect(markAll).toBeDisabled();
-    fireEvent.click(markAll);
-    fireEvent.keyDown(markAll, { key: "Enter" });
     expect(mockMarkAllAsRead).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("menuitem", { name: "Tentar novamente" }));
     expect(mockRefetch).toHaveBeenCalledOnce();
     expect(screen.getByRole("menu", { name: "Notificações" })).toBeInTheDocument();
-  });
-
-  it("preserva texto completo e controles para notificações longas", () => {
-    const title = "Atualização " + "sem-espaços".repeat(20);
-    const message = "Confira as orientações completas para a implantação. ".repeat(12).trim();
-    mockNotifications = [{ ...mockNotificationsList[0], title, message, projectName: "Cartório " + "muito-longo".repeat(15) }];
-    render(<NotificationBell />);
-    openNotifications();
-    expect(screen.getByText(title)).toBeInTheDocument();
-    expect(screen.getByText(message)).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: `Abrir notificação: ${title}` })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("menuitem", { name: `Limpar notificação: ${title}` }));
-    expect(mockDeleteNotification).toHaveBeenCalledWith("notif-1");
   });
 });

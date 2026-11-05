@@ -1,4 +1,5 @@
 import {
+  BellRing,
   LayoutGrid,
   BarChart3,
   LayoutDashboard,
@@ -2722,6 +2723,44 @@ export const pageHelpData: PageHelpInfo[] = [
         description:
           "Ao clicar em Publicar Notificação, a mensagem será enviada instantaneamente para o sino de notificações dos usuários.",
         icon: Send,
+      },
+    ],
+  },
+  {
+    route: "/admin/notifications",
+    title: "Central de Gestão de Notificações",
+    subtitle: "Monitoramento de Alertas e SLAs por Etapa",
+    moduleName: "Administração",
+    icon: BellRing,
+    description:
+      "Visão executiva e gerencial de todas as notificações e alertas operacionais gerados no sistema, com filtros por etapas dos projetos, acompanhamento de SLAs e governança de leitura.",
+    keyFeatures: [
+      "Filtros de notificações por etapa do projeto (Infra, Aderência, Conversão, Ambiente, Fase 1 e Pós)",
+      "Monitoramento de alertas críticos de SLA, conflitos de cronograma e reprovação de homologações",
+      "Indicadores executivos com tempo médio de leitura (MTTR) e taxa de resolução de alertas",
+      "Histórico estendido de até 90 dias com busca por cliente, equipe e responsável",
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Filtre pela Etapa Desejada",
+        description:
+          "Utilize as abas do topo para alternar entre as etapas de implantação e isolar alertas de Ambiente, Conversão ou Infraestrutura.",
+        icon: Filter,
+      },
+      {
+        stepNumber: 2,
+        title: "Monitore Alertas de SLA e Conflitos",
+        description:
+          "Identifique projetos com estagnação de dias úteis, reprovações de homologação ou handovers travados.",
+        icon: AlertCircle,
+      },
+      {
+        stepNumber: 3,
+        title: "Acesse Diretamente o Projeto",
+        description:
+          "Clique no link do projeto para abrir a tela correspondente com o contexto da notificação pré-selecionado.",
+        icon: CheckCircle2,
       },
     ],
   },

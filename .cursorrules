@@ -10,11 +10,13 @@
 - **Ícones:** Lucide React
 - **Gráficos:** Recharts
 - **Drag & Drop:** @dnd-kit/core
+- **Relatórios & PDFs:** @react-pdf/renderer (padrão único e obrigatório)
 
 ## 2. Padrões de Código e Arquitetura
 
 - **Estrutura de Diretórios:**
   - `/components`: Componentes reutilizáveis (UI, Forms, Widgets).
+  - `/modules/pdf`: Camada oficial de geração de PDFs (@react-pdf/renderer).
   - `/pages`: Componentes de nível de página/rota.
   - `/hooks`: Custom hooks (ex: `useProjectsList`, `useProjectDetails`).
   - `/types`: Definições de tipos TypeScript (ex: `ProjectV2`).
@@ -62,7 +64,13 @@
   - Use elementos semânticos (`<button>`, `<main>`, `<header>`).
   - Mantenha atributos `aria-*` ao usar Radix.
 
-## 4. Fluxo de Trabalho
+## 4. Conhecimento Operacional Obrigatório
+
+- O arquivo `docs/CONHECIMENTO_PROCESSOS_E_OPERACAO_HUB.md` é a **fonte oficial da verdade prática e operacional**.
+- **Consulta Prévia:** Toda IA deve consultá-lo antes de presumir regras sobre etapas, telas, analistas responsáveis (Alex, Bruno, Ademar, Luciane, Hugo, Maria, Lunna, Julio, Rodrigo, Ricardo, etc.), fluxo de homologação ou suporte pós-implantação (15 dias).
+- **Auto-Alimentação:** Qualquer alteração em processos, rotas, telas ou formulários de etapas exige atualização imediata deste documento.
+
+## 5. Fluxo de Trabalho
 
 - Ao criar novas funcionalidades, verifique se existem componentes reutilizáveis na pasta `/ui`.
 - Atualize os tipos em `src/types` antes de implementar a lógica.

@@ -144,3 +144,36 @@ The agent will execute this mental model:
 4. **Create SQL Migration & Trigger**: Define and run the `CREATE TRIGGER` statement.
 5. **Draft the Node Network Manual**: Present and write the resulting Markdown step-by-step guide to `docs/automacoes/[nome_da_automacao].md` containing the exact parameter settings, Mermaid diagram, premium HTML email, and simulation transaction queries.
 
+---
+
+## 7. Integração Direta com n8n MCP Server & CLI Siplan HUB
+
+Com o servidor MCP (`mcp-n8n`) e o utilitário local integrados ao Antigravity, o agente agora pode manipular o n8n do Siplan HUB programaticamente:
+
+### 7.1. Ferramentas MCP Principais
+- **`n8n_list_workflows_summary`**: Listagem econômica (consome 90% menos tokens que `list_workflows`).
+- **`n8n_get_workflow`**: Obtenção da estrutura completa de nós e conexões de um workflow por ID.
+- **`n8n_search_nodes` & `n8n_get_node`**: Pesquisa no catálogo de 560 nós oficiais e inspeção de schemas de parâmetros e credenciais.
+- **`n8n_validate_workflow` & `n8n_autofix_workflow`**: Validação de integridade do JSON antes do deploy e autocorreção de nós/expressões.
+- **`n8n_update_workflow_partial`**: Edições cirúrgicas em nós ou conexões sem reescrever todo o fluxo.
+- **`n8n_trigger_webhook`**: Teste de ponta a ponta com chamada HTTP direta ao webhook do workflow.
+- **`n8n_debug_last_error` & `n8n_get_node_execution_data`**: Inspeção de falhas e logs de nós específicos.
+- **`n8n_rollback_workflow` & `n8n_diff_workflow_snapshot`**: Snapshots automáticos e reversão segura em caso de imprevisto.
+
+### 7.2. Utilitário CLI no Repositório
+O projeto conta com o comando rápido integrado ao `package.json`:
+```bash
+# Testar conectividade com o n8n oficial
+npm run n8n -- test
+
+# Listar workflows existentes com status e contagem de nós
+npm run n8n -- list
+
+# Inspecionar nós de um workflow
+npm run n8n -- get <workflowId>
+
+# Disparar teste de webhook
+npm run n8n -- trigger <webhookPath> [--test]
+```
+
+

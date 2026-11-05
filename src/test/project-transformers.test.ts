@@ -648,5 +648,135 @@ describe("project-transformers", () => {
 
       expect(reconstituted.stages.environment.osCredentials).toEqual(osCredentials);
     });
+
+    it("should correctly map environment dispatch guard columns to domain and DB", () => {
+      const dispatchedAt = "2026-11-04T15:00:00.000Z";
+      const dbRow: any = {
+        id: "proj-dispatch-1",
+        client_name: "Cartório de Teste Disparo",
+        environment_status: "in-progress",
+        environment_dispatched_at: dispatchedAt,
+        environment_dispatch_done: true,
+        environment_dispatched_by: "system_trigger",
+      };
+
+      const project = transformToProjectV3(dbRow);
+      expect(project.environmentDispatchedAt).toEqual(new Date(dispatchedAt));
+      expect(project.environmentDispatchDone).toBe(true);
+      expect(project.stages.environment.environmentDispatchedAt).toEqual(new Date(dispatchedAt));
+      expect(project.stages.environment.environmentDispatchDone).toBe(true);
+
+      const transformedBack = transformToDB(project);
+      expect(transformedBack.environment_dispatched_at).toBe(dispatchedAt);
+      expect(transformedBack.environment_dispatch_done).toBe(true);
+      expect(transformedBack.environment_dispatched_by).toBe("system_trigger");
+    });
+
+    it("should correctly map infra dispatch guard columns to domain and DB", () => {
+      const dispatchedAt = "2026-11-04T10:00:00.000Z";
+      const dbRow: any = {
+        id: "proj-infra-1",
+        client_name: "Cartório Infra Teste",
+        infra_status: "in-progress",
+        infra_dispatched_at: dispatchedAt,
+        infra_dispatch_done: true,
+        infra_dispatched_by: "infra_analyst",
+      };
+
+      const project = transformToProjectV3(dbRow);
+      expect(project.infraDispatchedAt).toEqual(new Date(dispatchedAt));
+      expect(project.infraDispatchDone).toBe(true);
+      expect(project.infraDispatchedBy).toBe("infra_analyst");
+      expect(project.stages.infra.infraDispatchedAt).toEqual(new Date(dispatchedAt));
+      expect(project.stages.infra.infraDispatchDone).toBe(true);
+      expect(project.stages.infra.infraDispatchedBy).toBe("infra_analyst");
+
+      const transformedBack = transformToDB(project);
+      expect(transformedBack.infra_dispatched_at).toBe(dispatchedAt);
+      expect(transformedBack.infra_dispatch_done).toBe(true);
+      expect(transformedBack.infra_dispatched_by).toBe("infra_analyst");
+    });
+
+    it("should correctly map adherence dispatch guard columns to domain and DB", () => {
+      const dispatchedAt = "2026-11-04T11:30:00.000Z";
+      const dbRow: any = {
+        id: "proj-adh-1",
+        client_name: "Cartório Aderência Teste",
+        adherence_status: "in-progress",
+        adherence_dispatched_at: dispatchedAt,
+        adherence_dispatch_done: true,
+        adherence_dispatched_by: "adherence_agent",
+      };
+
+      const project = transformToProjectV3(dbRow);
+      expect(project.adherenceDispatchedAt).toEqual(new Date(dispatchedAt));
+      expect(project.adherenceDispatchDone).toBe(true);
+      expect(project.adherenceDispatchedBy).toBe("adherence_agent");
+      expect(project.stages.adherence.adherenceDispatchedAt).toEqual(new Date(dispatchedAt));
+      expect(project.stages.adherence.adherenceDispatchDone).toBe(true);
+      expect(project.stages.adherence.adherenceDispatchedBy).toBe("adherence_agent");
+
+      const transformedBack = transformToDB(project);
+      expect(transformedBack.adherence_dispatched_at).toBe(dispatchedAt);
+      expect(transformedBack.adherence_dispatch_done).toBe(true);
+      expect(transformedBack.adherence_dispatched_by).toBe("adherence_agent");
+    });
+
+    it("should correctly map conversion dispatch guard columns to domain and DB", () => {
+      const dispatchedAt = "2026-11-04T12:45:00.000Z";
+      const dbRow: any = {
+        id: "proj-conv-1",
+        client_name: "Cartório Conversão Teste",
+        conversion_status: "in-progress",
+        conversion_dispatched_at: dispatchedAt,
+        conversion_dispatch_done: true,
+        conversion_dispatched_by: "conversion_queue",
+      };
+
+      const project = transformToProjectV3(dbRow);
+      expect(project.conversionDispatchedAt).toEqual(new Date(dispatchedAt));
+      expect(project.conversionDispatchDone).toBe(true);
+      expect(project.conversionDispatchedBy).toBe("conversion_queue");
+      expect(project.stages.conversion.conversionDispatchedAt).toEqual(new Date(dispatchedAt));
+      expect(project.stages.conversion.conversionDispatchDone).toBe(true);
+      expect(project.stages.conversion.conversionDispatchedBy).toBe("conversion_queue");
+
+      const transformedBack = transformToDB(project);
+      expect(transformedBack.conversion_dispatched_at).toBe(dispatchedAt);
+      expect(transformedBack.conversion_dispatch_done).toBe(true);
+      expect(transformedBack.conversion_dispatched_by).toBe("conversion_queue");
+    });
+
+    it("should handle all monitored stage dispatches simultaneously without interference", () => {
+      const timeInfra = "2026-11-04T08:00:00.000Z";
+      const timeAdh = "2026-11-04T09:00:00.000Z";
+      const timeEnv = "2026-11-04T10:00:00.000Z";
+      const timeConv = "2026-11-04T11:00:00.000Z";
+
+      const dbRow: any = {
+        id: "proj-all-stages",
+        client_name: "Cartório Todos Estágios",
+        infra_dispatched_at: timeInfra,
+        infra_dispatch_done: true,
+        adherence_dispatched_at: timeAdh,
+        adherence_dispatch_done: true,
+        environment_dispatched_at: timeEnv,
+        environment_dispatch_done: true,
+        conversion_dispatched_at: timeConv,
+        conversion_dispatch_done: true,
+      };
+
+      const project = transformToProjectV3(dbRow);
+      expect(project.infraDispatchDone).toBe(true);
+      expect(project.adherenceDispatchDone).toBe(true);
+      expect(project.environmentDispatchDone).toBe(true);
+      expect(project.conversionDispatchDone).toBe(true);
+
+      const dbResult = transformToDB(project);
+      expect(dbResult.infra_dispatched_at).toBe(timeInfra);
+      expect(dbResult.adherence_dispatched_at).toBe(timeAdh);
+      expect(dbResult.environment_dispatched_at).toBe(timeEnv);
+      expect(dbResult.conversion_dispatched_at).toBe(timeConv);
+    });
   });
 });

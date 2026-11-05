@@ -592,6 +592,91 @@ export type ProjectSecondaryTicketLinkInsert = {
 };
 export type ProjectSecondaryTicketLinkUpdate = Partial<ProjectSecondaryTicketLinkInsert>;
 
+export type AutomationDispatchRow = {
+  id: string;
+  project_id: string | null;
+  client_name: string;
+  system_type: string;
+  automation_type: string;
+  dispatched_at: string;
+  dispatched_by: string | null;
+  metadata: Json | null;
+  created_at: string;
+};
+export type AutomationDispatchInsert = {
+  id?: string;
+  project_id?: string | null;
+  client_name: string;
+  system_type: string;
+  automation_type?: string;
+  dispatched_at?: string;
+  dispatched_by?: string | null;
+  metadata?: Json | null;
+  created_at?: string;
+};
+export type AutomationDispatchUpdate = Partial<AutomationDispatchInsert>;
+
+export type NotificationRow = {
+  id: string;
+  user_id: string | null;
+  project_id: string | null;
+  type: string;
+  category: "operational" | "changelog" | "alert" | "system";
+  stage: "infra" | "adherence" | "conversion" | "environment" | "implementation" | "post" | "general" | null;
+  priority: "urgent" | "high" | "normal" | "low";
+  permission_resource: string | null;
+  title: string;
+  message: string;
+  read: boolean;
+  action_url: string | null;
+  metadata: Json | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type NotificationInsert = {
+  id?: string;
+  user_id?: string | null;
+  project_id?: string | null;
+  type: string;
+  category?: NotificationRow["category"];
+  stage?: NotificationRow["stage"];
+  priority?: NotificationRow["priority"];
+  permission_resource?: string | null;
+  title: string;
+  message: string;
+  read?: boolean;
+  action_url?: string | null;
+  metadata?: Json | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type NotificationUpdate = Partial<NotificationInsert>;
+
+export type UserTopicAffinityRow = {
+  user_id: string;
+  topic: string;
+  action_count: number;
+  total_dwell_seconds: number;
+  affinity_score: number;
+  last_interacted_at: string;
+  updated_at: string;
+};
+
+export type UserTopicAffinityInsert = {
+  user_id: string;
+  topic: string;
+  action_count?: number;
+  total_dwell_seconds?: number;
+  affinity_score?: number;
+  last_interacted_at?: string;
+  updated_at?: string;
+};
+
+export type UserTopicAffinityUpdate = Partial<UserTopicAffinityInsert>;
+
+
 /**
  * O arquivo gerado do projeto estava vazio antes desta mudança. Estes aliases
  * mantêm os consumidores legados sem tipagem até ser possível regenerar todo o
@@ -649,7 +734,64 @@ export type AnalystAgendaEntryInsert = {
 
 export type AnalystAgendaEntryUpdate = Partial<AnalystAgendaEntryInsert>;
 
+
+export type ProjectRow = {
+  id: string;
+  client_name: string;
+  ticket_number?: string | null;
+  system_type?: string | null;
+  specialty?: string | null;
+  global_status?: string | null;
+  overall_progress?: number | null;
+  priority?: string | null;
+  project_leader?: string | null;
+  client_primary_contact?: string | null;
+  client_email?: string | null;
+  client_phone?: string | null;
+  start_date_actual?: string | null;
+  end_date_actual?: string | null;
+  infra_status?: string | null;
+  infra_responsible?: string | null;
+  infra_start_date?: string | null;
+  infra_end_date?: string | null;
+  infra_dispatched_at: string | null;
+  infra_dispatch_done: boolean | null;
+  infra_dispatched_by: string | null;
+  adherence_status?: string | null;
+  adherence_responsible?: string | null;
+  adherence_start_date?: string | null;
+  adherence_end_date?: string | null;
+  adherence_dispatched_at: string | null;
+  adherence_dispatch_done: boolean | null;
+  adherence_dispatched_by: string | null;
+  environment_status?: string | null;
+  environment_responsible?: string | null;
+  environment_start_date?: string | null;
+  environment_end_date?: string | null;
+  environment_dispatched_at: string | null;
+  environment_dispatch_done: boolean | null;
+  environment_dispatched_by: string | null;
+  conversion_status?: string | null;
+  conversion_responsible?: string | null;
+  conversion_start_date?: string | null;
+  conversion_end_date?: string | null;
+  conversion_dispatched_at: string | null;
+  conversion_dispatch_done: boolean | null;
+  conversion_dispatched_by: string | null;
+  is_deleted?: boolean | null;
+  is_archived?: boolean | null;
+  custom_fields?: Json | null;
+  created_at: string;
+  updated_at: string;
+  [key: string]: any;
+};
+
+export type ProjectInsert = Partial<ProjectRow>;
+export type ProjectUpdate = Partial<ProjectRow>;
+
 export type Tables<TableName extends string> =
+  TableName extends "projects" ? ProjectRow
+    :
   TableName extends "analyst_agenda_entries" ? AnalystAgendaEntryRow
     : TableName extends "conversion_engines" ? ConversionEngineRow
     : TableName extends "chamados_processo_venda" ? ChamadoProcessoVendaRow
@@ -672,9 +814,14 @@ export type Tables<TableName extends string> =
                                     : TableName extends "secondary_product_catalog" ? SecondaryProductCatalogRow
                                       : TableName extends "secondary_tickets" ? SecondaryTicketRow
                                         : TableName extends "project_secondary_ticket_links" ? ProjectSecondaryTicketLinkRow
+                                      : TableName extends "automation_dispatches" ? AutomationDispatchRow
+                                         : TableName extends "notifications" ? NotificationRow
+                                           : TableName extends "user_topic_affinities" ? UserTopicAffinityRow
                                     : UntypedSupabaseShape;
 
 export type TablesInsert<TableName extends string> =
+  TableName extends "projects" ? ProjectInsert
+    :
   TableName extends "analyst_agenda_entries" ? AnalystAgendaEntryInsert
     : TableName extends "conversion_engines" ? ConversionEngineInsert
     : TableName extends "chamados_processo_venda" ? ChamadoProcessoVendaInsert
@@ -697,9 +844,14 @@ export type TablesInsert<TableName extends string> =
                                     : TableName extends "secondary_product_catalog" ? SecondaryProductCatalogInsert
                                       : TableName extends "secondary_tickets" ? SecondaryTicketInsert
                                         : TableName extends "project_secondary_ticket_links" ? ProjectSecondaryTicketLinkInsert
+                                      : TableName extends "automation_dispatches" ? AutomationDispatchInsert
+                                         : TableName extends "notifications" ? NotificationInsert
+                                           : TableName extends "user_topic_affinities" ? UserTopicAffinityInsert
                                     : UntypedSupabaseShape;
 
 export type TablesUpdate<TableName extends string> =
+  TableName extends "projects" ? ProjectUpdate
+    :
   TableName extends "analyst_agenda_entries" ? AnalystAgendaEntryUpdate
     : TableName extends "conversion_engines" ? ConversionEngineUpdate
     : TableName extends "chamados_processo_venda" ? ChamadoProcessoVendaUpdate
@@ -722,4 +874,7 @@ export type TablesUpdate<TableName extends string> =
                                     : TableName extends "secondary_product_catalog" ? SecondaryProductCatalogUpdate
                                       : TableName extends "secondary_tickets" ? SecondaryTicketUpdate
                                         : TableName extends "project_secondary_ticket_links" ? ProjectSecondaryTicketLinkUpdate
+                                      : TableName extends "automation_dispatches" ? AutomationDispatchUpdate
+                                         : TableName extends "notifications" ? NotificationUpdate
+                                           : TableName extends "user_topic_affinities" ? UserTopicAffinityUpdate
                                     : UntypedSupabaseShape;

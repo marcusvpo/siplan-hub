@@ -11,6 +11,18 @@ export type QueueStatus =
 
 export type HomologationStatus = 'pending' | 'in_review' | 'approved' | 'issues_found';
 export type NotificationCategory = 'operational' | 'changelog';
+export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
+export type NotificationStage = 
+  | 'infra' 
+  | 'adherence' 
+  | 'conversion' 
+  | 'environment' 
+  | 'modelos_editor' 
+  | 'implementation' 
+  | 'post' 
+  | 'general' 
+  | 'sla_alert';
+
 export type NotificationType = 
   | 'new_demand' 
   | 'assignment' 
@@ -21,10 +33,13 @@ export type NotificationType =
   | 'homologation_approved' 
   | 'homologation_issues' 
   | 'mention'
+  | 'task_completed'
+  | 'schedule_changed'
   | 'release_feature'
   | 'release_fix'
   | 'release_improvement'
   | 'release_screen';
+
 export type TeamArea = 'implementation' | 'conversion' | 'commercial' | 'support';
 export type IssueCategory = 'data_mismatch' | 'missing_data' | 'format_error' | 'duplicates' | 'other';
 export type IssueSeverity = 'critical' | 'high' | 'medium' | 'low';
@@ -47,6 +62,8 @@ export interface Notification {
   projectName?: string;
   permissionResource?: string;
   category?: NotificationCategory;
+  priority?: NotificationPriority;
+  stage?: NotificationStage;
 }
 
 export interface ConversionQueueItem {
@@ -174,4 +191,3 @@ export const TEAM_AREA_LABELS: Record<TeamArea, string> = {
   commercial: 'Comercial',
   support: 'Suporte',
 };
-

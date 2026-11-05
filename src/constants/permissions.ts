@@ -178,6 +178,7 @@ export const PERMISSION_RESOURCES: PermissionResourceDef[] = [
   { resource: "inactive_users", label: "Admin - Usuários Inativos", category: "Administração", actions: ["view"] },
   { resource: "audit_logs", label: "Admin - Logs de Auditoria", category: "Administração", actions: ["view"] },
   { resource: "admin_changelog", label: "Admin - Central de Novidades (Changelog)", category: "Administração", actions: ["view", "manage"] },
+  { resource: "admin_notifications", label: "Admin - Gestão de Notificações", category: "Administração", actions: ["view", "manage"] },
 ];
 
 export const ACTION_LABELS: Record<PermissionAction, string> = {

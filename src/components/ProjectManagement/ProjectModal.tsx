@@ -18,14 +18,13 @@ import { PosImplantacaoTab } from "./Tabs/PosImplantacaoTab";
 import { SecondaryProductsTab } from "./Tabs/SecondaryProductsTab";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, X, Maximize2, ClipboardList, PlayCircle, CheckCircle2, Calendar, ExternalLink, PackageCheck, KeyRound, ShieldCheck } from "lucide-react";
+import { Pencil, X, Maximize2, PlayCircle, CheckCircle2, Calendar, ExternalLink, PackageCheck } from "lucide-react";
+import { format } from "date-fns";
 import { useEffect, useState, useMemo } from "react";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { PosSaudeBadge } from "@/components/ProjectManagement/PosSaudeBadge";
 import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { OrionAdminAnimatedButton } from "./OrionAdminAnimatedButton";
@@ -67,6 +66,21 @@ export function ProjectModal({
     setActiveStepId("environment");
     setTimeout(() => {
       const el = document.getElementById("orion-admin-stage-section");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("ring-2", "ring-primary", "transition-all", "duration-500");
+        setTimeout(() => {
+          el.classList.remove("ring-2", "ring-primary");
+        }, 2500);
+      }
+    }, 280);
+  };
+
+  const handleOpenImplementationStage = () => {
+    setActiveTab("steps");
+    setActiveStepId("implementation");
+    setTimeout(() => {
+      const el = document.querySelector('[data-stage-id="implementation"]');
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
         el.classList.add("ring-2", "ring-primary", "transition-all", "duration-500");
@@ -141,38 +155,7 @@ export function ProjectModal({
 
   const globalStatusBadge = getGlobalStatusBadge(displayProject?.globalStatus);
 
-  const { data: projectChecklist } = useQuery({
-    queryKey: ["project-commercial-checklist", displayProject?.id],
-    queryFn: async () => {
-      if (!displayProject?.id) return null;
-      const { data, error } = await supabase
-        .from("commercial_checklists" as never)
-        .select("id, status")
-        .eq("project_id", displayProject.id)
-        .returns<{ id: string; status: string }[]>()
-        .maybeSingle();
 
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!displayProject?.id && open,
-  });
-
-  const { data: projectDeploymentForm } = useQuery({
-    queryKey: ["project-deployment-form", displayProject?.ticketNumber],
-    queryFn: async () => {
-      if (!displayProject?.ticketNumber) return null;
-      const { data, error } = await supabase
-        .from("deployment_forms" as never)
-        .select("*")
-        .eq("ticket_number", displayProject.ticketNumber)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!displayProject?.ticketNumber && open,
-  });
 
   if (!initialProject && !fullProject) return null;
 
@@ -319,16 +302,9 @@ export function ProjectModal({
                   project={displayProject}
                   onClick={handleOpenOrionAdmin}
                 />
-                <ChecklistStatusButton
-                  projectId={displayProject.id}
-                  checklist={projectChecklist}
-                  onCloseModal={() => onOpenChange(false)}
-                />
-                <DeploymentFormStatusButton
-                  projectId={displayProject.id}
-                  deploymentForm={projectDeploymentForm}
-                  checklistId={projectChecklist ? projectChecklist.id : undefined}
-                  onCloseModal={() => onOpenChange(false)}
+                <Phase1HeaderTag
+                  project={displayProject}
+                  onClick={handleOpenImplementationStage}
                 />
               </>
             )}
@@ -593,110 +569,78 @@ export function ProjectModal({
   );
 }
 
-function ChecklistStatusButton({
-  projectId,
-  checklist,
-  onCloseModal,
-}: {
-  projectId: string;
-  checklist: { id: string; status: string } | null | undefined;
-  onCloseModal: () => void;
-}) {
-  const navigate = useNavigate();
-
-  // If no checklist exists
-  if (!checklist) {
-    return (
-      <Badge
-        variant="outline"
-        className="bg-orange-500/10 text-orange-500 border-orange-500/20 text-[11px] font-semibold px-2 py-0.5 flex items-center gap-1.5 cursor-help shrink-0 animate-border-blink-orange"
-        title="Checklist de implantação ainda não foi gerado pelo comercial."
-      >
-        <div className="h-1.5 w-1.5 rounded-full bg-orange-500" />
-        Checklist: Não Criado
-      </Badge>
-    );
-  }
-
-  // If checklist is pending (sent, awaiting response)
-  if (checklist.status === "pending") {
-    return (
-      <Badge
-        variant="outline"
-        className="bg-blue-500/10 text-blue-500 border-blue-500/20 text-[11px] font-semibold px-2 py-0.5 flex items-center gap-1.5 cursor-help shrink-0 animate-border-blink-blue"
-        title="Link de checklist enviado. Aguardando respostas do cliente."
-      >
-        <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
-        Checklist: Enviado
-      </Badge>
-    );
-  }
-
-  // If checklist is submitted (answered)
-  if (checklist.status === "submitted") {
-    return (
-      <Badge
-        variant="outline"
-        className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[11px] font-semibold px-2.5 py-0.5 flex items-center gap-1.5 cursor-pointer hover:bg-emerald-500/20 transition-colors shadow-sm shrink-0"
-        title="Checklist respondido pelo cliente! Clique para ver as respostas."
-        onClick={() => {
-          navigate(`/commercial/checklists?view=${checklist.id}`);
-          onCloseModal();
-        }}
-      >
-        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-        Checklist: Respondido
-      </Badge>
-    );
-  }
-
-  return null;
+interface Phase1HeaderTagProps {
+  project?: ProjectV2 | null;
+  onClick: () => void;
 }
 
-function DeploymentFormStatusButton({
-  projectId,
-  deploymentForm,
-  checklistId,
-  onCloseModal,
-}: {
-  projectId: string;
-  deploymentForm: { id: string } | null | undefined;
-  checklistId: string | null | undefined;
-  onCloseModal: () => void;
-}) {
-  const navigate = useNavigate();
+export function formatPhase1Date(dateVal?: Date | string | null): string {
+  if (!dateVal) return "";
+  try {
+    if (typeof dateVal === "string") {
+      const datePart = dateVal.split("T")[0];
+      const parts = datePart.split("-");
+      if (parts.length === 3) {
+        const [, month, day] = parts;
+        return `${day.padStart(2, "0")}/${month.padStart(2, "0")}`;
+      }
+    }
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return "";
+    return format(d, "dd/MM");
+  } catch {
+    return "";
+  }
+}
 
-  // If no deployment form exists
-  if (!deploymentForm) {
-    return (
-      <Badge
-        variant="outline"
-        className="bg-orange-500/10 text-orange-500 border-orange-500/20 text-[11px] font-semibold px-2 py-0.5 flex items-center gap-1.5 cursor-help shrink-0 animate-border-blink-orange"
-        title="Formulário de Nova Implantação pendente (não criado)."
-      >
-        <div className="h-1.5 w-1.5 rounded-full bg-orange-500" />
-        Form: Pendente
-      </Badge>
-    );
+export function Phase1HeaderTag({ project, onClick }: Phase1HeaderTagProps) {
+  if (!project) return null;
+
+  const phase1 = project.stages?.implementation?.phase1;
+  const implStage = project.stages?.implementation;
+
+  const responsible =
+    phase1?.responsible?.trim() ||
+    implStage?.responsible?.trim() ||
+    project.responsibleImplementation?.trim() ||
+    "";
+
+  const startDateRaw = phase1?.startDate || implStage?.startDate;
+  const endDateRaw = phase1?.endDate || implStage?.endDate;
+
+  const formattedStart = formatPhase1Date(startDateRaw);
+  const formattedEnd = formatPhase1Date(endDateRaw);
+
+  // Se o projeto não tiver essas informações preenchidas na etapa, não deve aparecer nada
+  if (!responsible || !formattedStart || !formattedEnd) {
+    return null;
   }
 
-  // If deployment form is preenchido/salvo
+  const isConfirmed = Boolean(phase1?.isConfirmed);
+  const statusLabel = isConfirmed ? "confirmada" : "prevista";
+
+  // Padrão solicitado: "Implantação [status (confirmada ou prevista)] de [data de início] a [data de término] - [responsável]"
+  const label = `Implantação ${statusLabel} de ${formattedStart} a ${formattedEnd} - ${responsible}`;
+
   return (
-    <Badge
-      variant="outline"
-      className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[11px] font-semibold px-2.5 py-0.5 flex items-center gap-1.5 cursor-pointer hover:bg-emerald-500/20 transition-colors shadow-sm shrink-0"
-      title="Formulário preenchido! Clique para ver as informações."
-      onClick={() => {
-        if (checklistId) {
-          navigate(`/commercial/checklists?view=${checklistId}&tab=commercial`);
-        } else {
-          navigate(`/commercial/checklists`);
-        }
-        onCloseModal();
-      }}
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold shadow-2xs transition-all duration-150 cursor-pointer hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0 max-w-full sm:max-w-md",
+        isConfirmed
+          ? "bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+          : "bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 dark:text-amber-300 border-amber-500/30"
+      )}
+      title="Clique para abrir a etapa 5. Implantação & Treinamento"
     >
-      <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-      Form: Preenchido
-    </Badge>
+      <span
+        className={cn(
+          "h-2 w-2 rounded-full shrink-0",
+          isConfirmed ? "bg-emerald-500" : "bg-amber-500"
+        )}
+      />
+      <span className="truncate">{label}</span>
+    </button>
   );
 }

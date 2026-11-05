@@ -130,12 +130,51 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     createdAt: new Date(row.created_at as string),
     lastUpdatedAt: new Date(row.updated_at as string),
     lastUpdatedBy: (row.last_update_by as string) || 'Sistema',
+    infraDispatchedAt: (row as any).infra_dispatched_at
+      ? new Date((row as any).infra_dispatched_at as string)
+      : undefined,
+    infraDispatchDone: Boolean((row as any).infra_dispatch_done),
+    infraDispatchedBy: (row as any).infra_dispatched_by as string | undefined,
+    adherenceDispatchedAt: (row as any).adherence_dispatched_at
+      ? new Date((row as any).adherence_dispatched_at as string)
+      : undefined,
+    adherenceDispatchDone: Boolean((row as any).adherence_dispatch_done),
+    adherenceDispatchedBy: (row as any).adherence_dispatched_by as string | undefined,
+    environmentDispatchedAt: (row as any).environment_dispatched_at
+      ? new Date((row as any).environment_dispatched_at as string)
+      : undefined,
+    environmentDispatchDone: Boolean((row as any).environment_dispatch_done),
+    environmentDispatchedBy: (row as any).environment_dispatched_by as string | undefined,
+    conversionDispatchedAt: (row as any).conversion_dispatched_at
+      ? new Date((row as any).conversion_dispatched_at as string)
+      : undefined,
+    conversionDispatchDone: Boolean((row as any).conversion_dispatch_done),
+    conversionDispatchedBy: (row as any).conversion_dispatched_by as string | undefined,
 
     stages: {
-      infra: createStage<InfraStageV2>('infra'),
-      adherence: createStage<AdherenceStageV2>('adherence'),
+      infra: {
+        ...createStage<InfraStageV2>('infra'),
+        infraDispatchedAt: (row as any).infra_dispatched_at
+          ? new Date((row as any).infra_dispatched_at as string)
+          : undefined,
+        infraDispatchDone: Boolean((row as any).infra_dispatch_done),
+        infraDispatchedBy: (row as any).infra_dispatched_by as string | undefined,
+      },
+      adherence: {
+        ...createStage<AdherenceStageV2>('adherence'),
+        adherenceDispatchedAt: (row as any).adherence_dispatched_at
+          ? new Date((row as any).adherence_dispatched_at as string)
+          : undefined,
+        adherenceDispatchDone: Boolean((row as any).adherence_dispatch_done),
+        adherenceDispatchedBy: (row as any).adherence_dispatched_by as string | undefined,
+      },
       environment: {
         ...createStage<EnvironmentStageV2>('environment'),
+        environmentDispatchedAt: (row as any).environment_dispatched_at
+          ? new Date((row as any).environment_dispatched_at as string)
+          : undefined,
+        environmentDispatchDone: Boolean((row as any).environment_dispatch_done),
+        environmentDispatchedBy: (row as any).environment_dispatched_by as string | undefined,
         anydeskId: (row.custom_fields as any)?.environment_anydesk_id || "",
         anydeskPassword: (row.custom_fields as any)?.environment_anydesk_password || "",
         soLogin: (row.custom_fields as any)?.environment_so_login || "",
@@ -169,7 +208,14 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
           ? (row.custom_fields as any).environment_timeline
           : [],
       },
-      conversion: createStage<ConversionStageV2>('conversion'),
+      conversion: {
+        ...createStage<ConversionStageV2>('conversion'),
+        conversionDispatchedAt: (row as any).conversion_dispatched_at
+          ? new Date((row as any).conversion_dispatched_at as string)
+          : undefined,
+        conversionDispatchDone: Boolean((row as any).conversion_dispatch_done),
+        conversionDispatchedBy: (row as any).conversion_dispatched_by as string | undefined,
+      },
       implementation: (() => {
         const impl = createStage<ImplementationStageV2>('implementation');
         if (impl && typeof impl === 'object') {
@@ -306,6 +352,9 @@ function mapInfraStage(infra: InfraStageV2 | undefined, oldInfra?: InfraStageV2)
     infra_server_needed: infra.serverNeeded,
     infra_public_link_closed: infra.publicLinkClosed !== undefined ? infra.publicLinkClosed : oldInfra?.publicLinkClosed,
     infra_client_responsible: infra.clientResponsible,
+    infra_dispatched_at: infra.infraDispatchedAt !== undefined ? formatDateForDB(infra.infraDispatchedAt) : (oldInfra?.infraDispatchedAt !== undefined ? formatDateForDB(oldInfra.infraDispatchedAt) : undefined),
+    infra_dispatch_done: infra.infraDispatchDone !== undefined ? infra.infraDispatchDone : oldInfra?.infraDispatchDone,
+    infra_dispatched_by: infra.infraDispatchedBy !== undefined ? infra.infraDispatchedBy : oldInfra?.infraDispatchedBy,
   };
 
   if (infra.servers !== undefined) {
@@ -340,6 +389,9 @@ function mapAdherenceStage(adherence: AdherenceStageV2 | undefined, oldAdherence
     adherence_gap_priority: adherence.gapPriority,
     adherence_analysis_complete: adherence.analysisComplete,
     adherence_conformity_standards: adherence.conformityStandards,
+    adherence_dispatched_at: adherence.adherenceDispatchedAt !== undefined ? formatDateForDB(adherence.adherenceDispatchedAt) : (oldAdherence?.adherenceDispatchedAt !== undefined ? formatDateForDB(oldAdherence.adherenceDispatchedAt) : undefined),
+    adherence_dispatch_done: adherence.adherenceDispatchDone !== undefined ? adherence.adherenceDispatchDone : oldAdherence?.adherenceDispatchDone,
+    adherence_dispatched_by: adherence.adherenceDispatchedBy !== undefined ? adherence.adherenceDispatchedBy : oldAdherence?.adherenceDispatchedBy,
   };
 }
 
@@ -359,6 +411,9 @@ function mapEnvironmentStage(environment: EnvironmentStageV2 | undefined, oldEnv
     environment_test_available: environment.testAvailable,
     environment_preparation_checklist: environment.preparationChecklist,
     environment_approved_by_infra: environment.approvedByInfra,
+    environment_dispatched_at: environment.environmentDispatchedAt !== undefined ? formatDateForDB(environment.environmentDispatchedAt) : (oldEnvironment?.environmentDispatchedAt !== undefined ? formatDateForDB(oldEnvironment.environmentDispatchedAt) : undefined),
+    environment_dispatch_done: environment.environmentDispatchDone !== undefined ? environment.environmentDispatchDone : oldEnvironment?.environmentDispatchDone,
+    environment_dispatched_by: environment.environmentDispatchedBy !== undefined ? environment.environmentDispatchedBy : oldEnvironment?.environmentDispatchedBy,
   };
 }
 
@@ -385,6 +440,9 @@ function mapConversionStage(conversion: ConversionStageV2 | undefined, oldConver
     conversion_homologation_complete: conversion.homologationComplete,
     conversion_homologation_workflow_status: conversion.homologationWorkflowStatus,
     conversion_record_count: conversion.recordCount,
+    conversion_dispatched_at: conversion.conversionDispatchedAt !== undefined ? formatDateForDB(conversion.conversionDispatchedAt) : (oldConversion?.conversionDispatchedAt !== undefined ? formatDateForDB(oldConversion.conversionDispatchedAt) : undefined),
+    conversion_dispatch_done: conversion.conversionDispatchDone !== undefined ? conversion.conversionDispatchDone : oldConversion?.conversionDispatchDone,
+    conversion_dispatched_by: conversion.conversionDispatchedBy !== undefined ? conversion.conversionDispatchedBy : oldConversion?.conversionDispatchedBy,
   };
 }
 
@@ -559,6 +617,74 @@ export function transformToDB(project: ProjectUpdate, currentProject?: ProjectV2
 
   if (project.startDateActual !== undefined) dbRow.start_date_actual = formatDateForDB(project.startDateActual);
   if (finalEndDateActual !== undefined) dbRow.end_date_actual = formatDateForDB(finalEndDateActual);
+
+  // Infra dispatch guard
+  if (project.stages?.infra?.infraDispatchedAt !== undefined) {
+    dbRow.infra_dispatched_at = formatDateForDB(project.stages.infra.infraDispatchedAt);
+  } else if (project.infraDispatchedAt !== undefined) {
+    dbRow.infra_dispatched_at = formatDateForDB(project.infraDispatchedAt);
+  }
+  if (project.stages?.infra?.infraDispatchDone !== undefined) {
+    dbRow.infra_dispatch_done = project.stages.infra.infraDispatchDone;
+  } else if (project.infraDispatchDone !== undefined) {
+    dbRow.infra_dispatch_done = project.infraDispatchDone;
+  }
+  if (project.stages?.infra?.infraDispatchedBy !== undefined) {
+    dbRow.infra_dispatched_by = project.stages.infra.infraDispatchedBy;
+  } else if (project.infraDispatchedBy !== undefined) {
+    dbRow.infra_dispatched_by = project.infraDispatchedBy;
+  }
+
+  // Adherence dispatch guard
+  if (project.stages?.adherence?.adherenceDispatchedAt !== undefined) {
+    dbRow.adherence_dispatched_at = formatDateForDB(project.stages.adherence.adherenceDispatchedAt);
+  } else if (project.adherenceDispatchedAt !== undefined) {
+    dbRow.adherence_dispatched_at = formatDateForDB(project.adherenceDispatchedAt);
+  }
+  if (project.stages?.adherence?.adherenceDispatchDone !== undefined) {
+    dbRow.adherence_dispatch_done = project.stages.adherence.adherenceDispatchDone;
+  } else if (project.adherenceDispatchDone !== undefined) {
+    dbRow.adherence_dispatch_done = project.adherenceDispatchDone;
+  }
+  if (project.stages?.adherence?.adherenceDispatchedBy !== undefined) {
+    dbRow.adherence_dispatched_by = project.stages.adherence.adherenceDispatchedBy;
+  } else if (project.adherenceDispatchedBy !== undefined) {
+    dbRow.adherence_dispatched_by = project.adherenceDispatchedBy;
+  }
+
+  // Environment dispatch guard
+  if (project.stages?.environment?.environmentDispatchedAt !== undefined) {
+    dbRow.environment_dispatched_at = formatDateForDB(project.stages.environment.environmentDispatchedAt);
+  } else if (project.environmentDispatchedAt !== undefined) {
+    dbRow.environment_dispatched_at = formatDateForDB(project.environmentDispatchedAt);
+  }
+  if (project.stages?.environment?.environmentDispatchDone !== undefined) {
+    dbRow.environment_dispatch_done = project.stages.environment.environmentDispatchDone;
+  } else if (project.environmentDispatchDone !== undefined) {
+    dbRow.environment_dispatch_done = project.environmentDispatchDone;
+  }
+  if (project.stages?.environment?.environmentDispatchedBy !== undefined) {
+    dbRow.environment_dispatched_by = project.stages.environment.environmentDispatchedBy;
+  } else if (project.environmentDispatchedBy !== undefined) {
+    dbRow.environment_dispatched_by = project.environmentDispatchedBy;
+  }
+
+  // Conversion dispatch guard
+  if (project.stages?.conversion?.conversionDispatchedAt !== undefined) {
+    dbRow.conversion_dispatched_at = formatDateForDB(project.stages.conversion.conversionDispatchedAt);
+  } else if (project.conversionDispatchedAt !== undefined) {
+    dbRow.conversion_dispatched_at = formatDateForDB(project.conversionDispatchedAt);
+  }
+  if (project.stages?.conversion?.conversionDispatchDone !== undefined) {
+    dbRow.conversion_dispatch_done = project.stages.conversion.conversionDispatchDone;
+  } else if (project.conversionDispatchDone !== undefined) {
+    dbRow.conversion_dispatch_done = project.conversionDispatchDone;
+  }
+  if (project.stages?.conversion?.conversionDispatchedBy !== undefined) {
+    dbRow.conversion_dispatched_by = project.stages.conversion.conversionDispatchedBy;
+  } else if (project.conversionDispatchedBy !== undefined) {
+    dbRow.conversion_dispatched_by = project.conversionDispatchedBy;
+  }
 
   if (project.tags !== undefined) dbRow.tags = project.tags;
   if (project.priority !== undefined) dbRow.priority = project.priority;

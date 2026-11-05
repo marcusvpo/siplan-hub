@@ -23,16 +23,22 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Megaphone,
+  BellRing,
 } from "lucide-react";
+import { NotificationBell } from "@/components/NotificationBell";
+import { PageHelpDrawer } from "@/components/Layout/PageHelpDrawer";
+import { ModeToggle } from "@/components/mode-toggle";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/hooks/use-theme";
+import { useTelemetryAffinity } from "@/hooks/useTelemetryAffinity";
 import { activityLogger } from "@/services/activityLogger";
 import { AuthLoadError } from "@/components/auth/AuthLoadError";
 
 const ADMIN_SIDEBAR_COLLAPSED_KEY = "admin-sidebar-collapsed";
 
 export default function AdminLayout() {
+  useTelemetryAffinity();
   const { user, role, loading, permissionsLoaded, authError, signOut } = useAuth();
   const { canManageUsers, hasPermission } = usePermissions();
   const { theme } = useTheme();
@@ -120,6 +126,7 @@ export default function AdminLayout() {
     { href: "/admin/infra", label: "Infra & Hardware", icon: Cpu, resource: "infra_hardware" },
     { href: "/admin/audit", label: "Logs", icon: History, resource: "audit_logs" },
     { href: "/admin/changelog", label: "Central de Novidades", icon: Megaphone, resource: "admin_changelog" },
+    { href: "/admin/notifications", label: "Gestão de Notificações", icon: BellRing, resource: "admin_notifications" },
   ].filter((item) => hasPermission(item.resource, "view"));
 
   return (
@@ -290,21 +297,28 @@ export default function AdminLayout() {
 
       {/* Main Content */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-40 flex h-[calc(4rem+env(safe-area-inset-top))] shrink-0 items-center border-b bg-card/80 px-3 pt-[env(safe-area-inset-top)] backdrop-blur-sm sm:h-16 sm:px-4 sm:pt-0 lg:px-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="mr-2 lg:hidden"
-            onClick={() => setMobileSidebarOpen(true)}
-            aria-label="Abrir menu lateral"
-            aria-expanded={mobileSidebarOpen}
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          <h1 className="text-lg font-semibold">
-            {navItems.find((i) => i.href === location.pathname)?.label ||
-              "Painel Administrativo"}
-          </h1>
+        <header className="sticky top-0 z-40 flex h-[calc(4rem+env(safe-area-inset-top))] shrink-0 items-center justify-between border-b bg-card/80 px-3 pt-[env(safe-area-inset-top)] backdrop-blur-sm sm:h-16 sm:px-4 sm:pt-0 lg:px-6">
+          <div className="flex items-center min-w-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="mr-2 lg:hidden shrink-0"
+              onClick={() => setMobileSidebarOpen(true)}
+              aria-label="Abrir menu lateral"
+              aria-expanded={mobileSidebarOpen}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <h1 className="text-lg font-semibold truncate">
+              {navItems.find((i) => i.href === location.pathname)?.label ||
+                "Painel Administrativo"}
+            </h1>
+          </div>
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <NotificationBell />
+            <PageHelpDrawer />
+            <ModeToggle />
+          </div>
         </header>
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-3 pb-[calc(.75rem+env(safe-area-inset-bottom))] sm:p-4 lg:p-8">
           <Outlet />
