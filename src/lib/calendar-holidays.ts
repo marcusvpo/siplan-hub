@@ -318,6 +318,29 @@ export function getWeekdayHoliday(date: Date | string | null | undefined): Weekd
 }
 
 /**
+ * Verifica se uma string de data é completa, válida e pertence a um ano contemporâneo (>= 2024).
+ * Impede que datas parciais geradas enquanto o usuário digita (ex: '0002-11-16') sejam tratadas como completas.
+ */
+export function isCompleteValidDate(val: string | null | undefined): boolean {
+  if (!val || typeof val !== "string") return false;
+  const trimmed = val.trim().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return false;
+  const [yStr, mStr, dStr] = trimmed.split("-");
+  const year = parseInt(yStr, 10);
+  const month = parseInt(mStr, 10);
+  const day = parseInt(dStr, 10);
+  if (year < 2024 || year > 2099) return false;
+  if (month < 1 || month > 12) return false;
+  if (day < 1 || day > 31) return false;
+  const d = new Date(year, month - 1, day);
+  return (
+    d.getFullYear() === year &&
+    d.getMonth() === month - 1 &&
+    d.getDate() === day
+  );
+}
+
+/**
  * Retorna todos os feriados em dia de semana dentro do intervalo [startDate, endDate] (inclusive).
  */
 export function getWeekdayHolidaysInRange(
@@ -326,21 +349,34 @@ export function getWeekdayHolidaysInRange(
 ): WeekdayHoliday[] {
   if (!startDate && !endDate) return [];
 
-  const toDate = (val: Date | string): Date => {
-    if (val instanceof Date) return startOfDay(val);
-    const trimmed = val.trim().slice(0, 10);
-    return startOfDay(new Date(`${trimmed}T12:00:00`));
+  const toValidDate = (val: Date | string | null | undefined): Date | null => {
+    if (!val) return null;
+    let d: Date;
+    if (val instanceof Date) {
+      d = startOfDay(val);
+    } else {
+      const trimmed = val.trim().slice(0, 10);
+      if (!isCompleteValidDate(trimmed)) return null;
+      d = startOfDay(new Date(`${trimmed}T12:00:00`));
+    }
+    if (Number.isNaN(d.getTime())) return null;
+    const year = d.getFullYear();
+    if (year < 2024 || year > 2099) return null;
+    return d;
   };
 
-  const rawStart = startDate ? toDate(startDate) : toDate(endDate!);
-  const rawEnd = endDate ? toDate(endDate) : toDate(startDate!);
+  const rawStart = toValidDate(startDate);
+  const rawEnd = toValidDate(endDate);
 
-  if (Number.isNaN(rawStart.getTime()) || Number.isNaN(rawEnd.getTime())) {
+  if (!rawStart && !rawEnd) {
     return [];
   }
 
-  const start = isBefore(rawEnd, rawStart) ? rawEnd : rawStart;
-  const end = endOfDay(isAfter(rawStart, rawEnd) ? rawStart : rawEnd);
+  const effectiveStart = rawStart || rawEnd!;
+  const effectiveEnd = rawEnd || rawStart!;
+
+  const start = isBefore(effectiveEnd, effectiveStart) ? effectiveEnd : effectiveStart;
+  const end = endOfDay(isAfter(effectiveStart, effectiveEnd) ? effectiveStart : effectiveEnd);
 
   return WEEKDAY_HOLIDAYS_2026_2028.filter((holiday) => {
     const hDate = new Date(`${holiday.date}T12:00:00`);
