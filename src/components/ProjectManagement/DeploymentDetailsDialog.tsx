@@ -239,108 +239,120 @@ export function DeploymentDetailsDialog({
     [startDateStr, endDateStr]
   );
 
-  if (!project) return null;
-
   const handleOpenProject = () => {
+    if (!project) return;
     navigate(`/projects?id=${project.id}`);
     onOpenChange(false);
   };
 
-  const phase1 = project.stages?.implementation?.phase1;
+  const phase1 = project?.stages?.implementation?.phase1;
 
-  const handleUpdatePhase1 = async (updates: {
-    status?: StageStatus;
-    responsible?: string;
-    startDateStr?: string;
-    endDateStr?: string;
-    isConfirmed?: boolean;
-    trainingLocation?: string;
-    additionalResponsibles?: Phase1ResponsibleAssignment[];
-  }) => {
-    if (!project) return;
+  const handleUpdatePhase1 = useCallback(
+    async (updates: {
+      status?: StageStatus;
+      responsible?: string;
+      startDateStr?: string;
+      endDateStr?: string;
+      isConfirmed?: boolean;
+      trainingLocation?: string;
+      additionalResponsibles?: Phase1ResponsibleAssignment[];
+    }) => {
+      if (!project) return;
 
-    const newStatus = updates.status !== undefined ? updates.status : status;
-    const newResp =
-      updates.responsible !== undefined ? updates.responsible : responsible;
-    const newStartStr =
-      updates.startDateStr !== undefined ? updates.startDateStr : startDateStr;
-    const newEndStr =
-      updates.endDateStr !== undefined ? updates.endDateStr : endDateStr;
-    const newConfirmed =
-      updates.isConfirmed !== undefined ? updates.isConfirmed : isConfirmed;
-    const newLocation =
-      updates.trainingLocation !== undefined
-        ? updates.trainingLocation
-        : trainingLocation;
-    const newAdditional =
-      updates.additionalResponsibles !== undefined
-        ? updates.additionalResponsibles
-        : additionalResponsibles;
+      const newStatus = updates.status !== undefined ? updates.status : status;
+      const newResp =
+        updates.responsible !== undefined ? updates.responsible : responsible;
+      const newStartStr =
+        updates.startDateStr !== undefined ? updates.startDateStr : startDateStr;
+      const newEndStr =
+        updates.endDateStr !== undefined ? updates.endDateStr : endDateStr;
+      const newConfirmed =
+        updates.isConfirmed !== undefined ? updates.isConfirmed : isConfirmed;
+      const newLocation =
+        updates.trainingLocation !== undefined
+          ? updates.trainingLocation
+          : trainingLocation;
+      const newAdditional =
+        updates.additionalResponsibles !== undefined
+          ? updates.additionalResponsibles
+          : additionalResponsibles;
 
-    // Local UI update
-    if (updates.status !== undefined) setStatus(newStatus);
-    if (updates.responsible !== undefined) setResponsible(newResp);
-    if (updates.startDateStr !== undefined) setStartDateStr(newStartStr);
-    if (updates.endDateStr !== undefined) setEndDateStr(newEndStr);
-    if (updates.isConfirmed !== undefined) setIsConfirmed(newConfirmed);
-    if (updates.trainingLocation !== undefined)
-      setTrainingLocation(newLocation);
-    if (updates.additionalResponsibles !== undefined)
-      setAdditionalResponsibles(newAdditional);
+      // Local UI update
+      if (updates.status !== undefined) setStatus(newStatus);
+      if (updates.responsible !== undefined) setResponsible(newResp);
+      if (updates.startDateStr !== undefined) setStartDateStr(newStartStr);
+      if (updates.endDateStr !== undefined) setEndDateStr(newEndStr);
+      if (updates.isConfirmed !== undefined) setIsConfirmed(newConfirmed);
+      if (updates.trainingLocation !== undefined)
+        setTrainingLocation(newLocation);
+      if (updates.additionalResponsibles !== undefined)
+        setAdditionalResponsibles(newAdditional);
 
-    const parsedStart = newStartStr
-      ? new Date(newStartStr + "T12:00:00")
-      : undefined;
-    const parsedEnd = newEndStr ? new Date(newEndStr + "T12:00:00") : undefined;
+      const parsedStart = newStartStr
+        ? new Date(newStartStr + "T12:00:00")
+        : undefined;
+      const parsedEnd = newEndStr ? new Date(newEndStr + "T12:00:00") : undefined;
 
-    const currentImpl: ImplementationStageV2 = project.stages
-      ?.implementation || {
-      status: "todo",
-      responsible: "",
-      phase1: { status: "todo", responsible: "" },
-      phase2: { status: "todo", responsible: "" },
-    };
-    const currentPhase1 = currentImpl.phase1 || {
-      status: "todo",
-      responsible: "",
-    };
+      const currentImpl: ImplementationStageV2 = project.stages
+        ?.implementation || {
+        status: "todo",
+        responsible: "",
+        phase1: { status: "todo", responsible: "" },
+        phase2: { status: "todo", responsible: "" },
+      };
+      const currentPhase1 = currentImpl.phase1 || {
+        status: "todo",
+        responsible: "",
+      };
 
-    const updatedPhase1: ImplementationPhase = {
-      ...currentPhase1,
-      status: newStatus,
-      responsible: newResp,
-      startDate: parsedStart,
-      endDate: parsedEnd,
-      isConfirmed: newConfirmed,
-      trainingLocation: newLocation || undefined,
-      additionalResponsibles: newAdditional,
-    };
+      const updatedPhase1: ImplementationPhase = {
+        ...currentPhase1,
+        status: newStatus,
+        responsible: newResp,
+        startDate: parsedStart,
+        endDate: parsedEnd,
+        isConfirmed: newConfirmed,
+        trainingLocation: newLocation || undefined,
+        additionalResponsibles: newAdditional,
+      };
 
-    const updatedImplementation = {
-      ...currentImpl,
-      phase1: updatedPhase1,
-      responsible: newResp || currentImpl.responsible,
-    };
+      const updatedImplementation = {
+        ...currentImpl,
+        phase1: updatedPhase1,
+        responsible: newResp || currentImpl.responsible,
+      };
 
-    setIsSaving(true);
-    try {
-      await updateProject.mutateAsync({
-        projectId: project.id,
-        updates: {
-          stages: {
-            ...project.stages,
-            implementation: updatedImplementation,
+      setIsSaving(true);
+      try {
+        await updateProject.mutateAsync({
+          projectId: project.id,
+          updates: {
+            stages: {
+              ...project.stages,
+              implementation: updatedImplementation,
+            },
           },
-        },
-      });
-      toast.success("Fase 1 (Treinamento & Acompanhamento) atualizada!");
-    } catch (err) {
-      console.error("Erro ao atualizar Fase 1:", err);
-      toast.error("Falha ao salvar alterações da Fase 1");
-    } finally {
-      setIsSaving(false);
-    }
-  };
+        });
+        toast.success("Fase 1 (Treinamento & Acompanhamento) atualizada!");
+      } catch (err) {
+        console.error("Erro ao atualizar Fase 1:", err);
+        toast.error("Falha ao salvar alterações da Fase 1");
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [
+      project,
+      status,
+      responsible,
+      startDateStr,
+      endDateStr,
+      isConfirmed,
+      trainingLocation,
+      additionalResponsibles,
+      updateProject,
+    ]
+  );
 
   // Intercepta alterações de data para verificar se há feriado em dia útil no intervalo
   // Se houver, abre o AlertDialog de segunda confirmação (sem bloquear a operação caso o usuário confirme)
@@ -511,6 +523,8 @@ export function DeploymentDetailsDialog({
     }
     return "bg-slate-500/10 text-slate-600 dark:text-slate-300 border-slate-500/20";
   };
+
+  if (!project) return null;
 
   return (
     <>
