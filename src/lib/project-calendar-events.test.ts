@@ -20,6 +20,7 @@ import {
   getWeekdayHoliday,
   getWeekdayHolidaysForWeek,
   getWeekdayHolidaysInRange,
+  isCompleteValidDate,
 } from "./calendar-holidays";
 
 interface MockProjectOverrides extends Omit<Partial<ProjectV2>, "stages"> {
@@ -578,6 +579,24 @@ describe("project-calendar-events", () => {
       expect(carnaval2026).toHaveLength(2);
       expect(formatWeekHolidayBadge(carnaval2026)).toBe("Seg 16/02 + Ter 17/02");
       expect(formatHolidayAlertDescription(carnaval2026)).toContain("Carnaval");
+    });
+
+    it("ignora datas incompletas ou anos parciais digitados pelo usuário (ex: ano 0002)", () => {
+      expect(isCompleteValidDate("0002-11-16")).toBe(false);
+      expect(isCompleteValidDate("0020-11-16")).toBe(false);
+      expect(isCompleteValidDate("0202-11-16")).toBe(false);
+      expect(isCompleteValidDate("202-11-16")).toBe(false);
+      expect(isCompleteValidDate("2027-11-16")).toBe(true);
+      expect(isCompleteValidDate("")).toBe(false);
+
+      // Não dispara feriados espúrios com ano 0002
+      const partialHolidays = getWeekdayHolidaysInRange("0002-11-16", "2026-11-20");
+      // Como o ano 0002 é descartado, ele analisa apenas 2026-11-20 (Consciência Negra) e NÃO todos os feriados de 2026
+      expect(partialHolidays).toHaveLength(1);
+      expect(partialHolidays[0].date).toBe("2026-11-20");
+
+      // Se ambas as datas forem parciais/inválidas, retorna vazio
+      expect(getWeekdayHolidaysInRange("0002-11-16", "0002-11-20")).toEqual([]);
     });
   });
 });

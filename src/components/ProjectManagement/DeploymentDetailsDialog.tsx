@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect, useMemo } from "react";
+import { useContext, useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { QueryClientContext } from "@tanstack/react-query";
 import {
   Dialog,
@@ -29,6 +29,7 @@ import { CALENDAR_MEMBERS, getMemberShortName } from "@/types/calendar";
 import { resolveCalendarMembersForResponsible } from "@/lib/project-calendar-events";
 import {
   getWeekdayHolidaysInRange,
+  isCompleteValidDate,
   WeekdayHoliday,
 } from "@/lib/calendar-holidays";
 import { Button } from "@/components/ui/button";
@@ -343,23 +344,129 @@ export function DeploymentDetailsDialog({
 
   // Intercepta alterações de data para verificar se há feriado em dia útil no intervalo
   // Se houver, abre o AlertDialog de segunda confirmação (sem bloquear a operação caso o usuário confirme)
-  const handleRequestDateChange = (updates: {
-    startDateStr?: string;
-    endDateStr?: string;
-  }) => {
-    const candidateStart =
-      updates.startDateStr !== undefined ? updates.startDateStr : startDateStr;
-    const candidateEnd =
-      updates.endDateStr !== undefined ? updates.endDateStr : endDateStr;
+  const handleRequestDateChange = useCallback(
+    (updates: {
+      startDateStr?: string;
+      endDateStr?: string;
+    }) => {
+      const candidateStart =
+        updates.startDateStr !== undefined ? updates.startDateStr : startDateStr;
+      const candidateEnd =
+        updates.endDateStr !== undefined ? updates.endDateStr : endDateStr;
 
-    const holidays = getWeekdayHolidaysInRange(candidateStart, candidateEnd);
-    if (holidays.length > 0) {
-      setPendingHolidayConfirmation({ updates, holidays });
-      return;
-    }
+      const holidays = getWeekdayHolidaysInRange(candidateStart, candidateEnd);
+      if (holidays.length > 0) {
+        setPendingHolidayConfirmation({ updates, holidays });
+        return;
+      }
 
-    void handleUpdatePhase1(updates);
-  };
+      void handleUpdatePhase1(updates);
+    },
+    [startDateStr, endDateStr, handleUpdatePhase1]
+  );
+
+  // Timer de debounce para commit de datas após digitação completa ou via date picker
+  const dateCommitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (dateCommitTimeoutRef.current) {
+        clearTimeout(dateCommitTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleCancelHolidayConfirmation = useCallback(() => {
+    const phase1 = project?.stages?.implementation?.phase1;
+    setStartDateStr(
+      phase1?.startDate ? format(new Date(phase1.startDate), "yyyy-MM-dd") : ""
+    );
+    setEndDateStr(
+      phase1?.endDate ? format(new Date(phase1.endDate), "yyyy-MM-dd") : ""
+    );
+    setPendingHolidayConfirmation(null);
+  }, [project]);
+
+  const handleCommitDateChange = useCallback(
+    (field: "startDateStr" | "endDateStr", rawValue?: string) => {
+      if (dateCommitTimeoutRef.current) {
+        clearTimeout(dateCommitTimeoutRef.current);
+        dateCommitTimeoutRef.current = null;
+      }
+
+      const phase1 = project?.stages?.implementation?.phase1;
+      const originalValue =
+        field === "startDateStr"
+          ? phase1?.startDate
+            ? format(new Date(phase1.startDate), "yyyy-MM-dd")
+            : ""
+          : phase1?.endDate
+          ? format(new Date(phase1.endDate), "yyyy-MM-dd")
+          : "";
+
+      const candidateValue =
+        rawValue !== undefined
+          ? rawValue
+          : field === "startDateStr"
+          ? startDateStr
+          : endDateStr;
+
+      // 1. Se o campo estiver em branco
+      if (!candidateValue || candidateValue.trim() === "") {
+        if (originalValue) {
+          handleRequestDateChange({ [field]: "" });
+        }
+        return;
+      }
+
+      // 2. Se a data não for completa e válida (ex: ano incompleto digitado no teclado)
+      if (!isCompleteValidDate(candidateValue)) {
+        if (field === "startDateStr") {
+          setStartDateStr(originalValue);
+        } else {
+          setEndDateStr(originalValue);
+        }
+        return;
+      }
+
+      // 3. Se a data completa for igual ao valor já salvo no projeto
+      if (candidateValue === originalValue) {
+        return;
+      }
+
+      // 4. Data completa e válida -> processa alteração
+      handleRequestDateChange({ [field]: candidateValue });
+    },
+    [project, startDateStr, endDateStr, handleRequestDateChange]
+  );
+
+  const handleDateInputChange = useCallback(
+    (field: "startDateStr" | "endDateStr", value: string) => {
+      if (dateCommitTimeoutRef.current) {
+        clearTimeout(dateCommitTimeoutRef.current);
+        dateCommitTimeoutRef.current = null;
+      }
+
+      // Atualiza o estado local para permitir a digitação contínua sem travas
+      if (field === "startDateStr") {
+        setStartDateStr(value);
+      } else {
+        setEndDateStr(value);
+      }
+
+      // Se a data NÃO for completa (ex: ano '0002', ou dia/mês incompleto), NÃO agenda nada!
+      if (!isCompleteValidDate(value)) {
+        return;
+      }
+
+      // Se a data já for completa e válida (ex: selecionou no calendário popover ou terminou de digitar),
+      // aguarda 800ms de inatividade antes de validar
+      dateCommitTimeoutRef.current = setTimeout(() => {
+        handleCommitDateChange(field, value);
+      }, 800);
+    },
+    [handleCommitDateChange]
+  );
 
   const handleAddAdditionalResponsible = () => {
     const defaultStart = startDateStr ? new Date(startDateStr + "T12:00:00") : undefined;
@@ -748,8 +855,19 @@ export function DeploymentDetailsDialog({
                   type="date"
                   value={startDateStr}
                   onChange={(e) =>
-                    handleRequestDateChange({ startDateStr: e.target.value })
+                    handleDateInputChange("startDateStr", e.target.value)
                   }
+                  onBlur={(e) =>
+                    handleCommitDateChange("startDateStr", e.target.value)
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleCommitDateChange(
+                        "startDateStr",
+                        (e.target as HTMLInputElement).value
+                      );
+                    }
+                  }}
                   disabled={!canEditProjects}
                   className="h-8 text-xs font-medium bg-background border-border"
                 />
@@ -765,8 +883,19 @@ export function DeploymentDetailsDialog({
                   type="date"
                   value={endDateStr}
                   onChange={(e) =>
-                    handleRequestDateChange({ endDateStr: e.target.value })
+                    handleDateInputChange("endDateStr", e.target.value)
                   }
+                  onBlur={(e) =>
+                    handleCommitDateChange("endDateStr", e.target.value)
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleCommitDateChange(
+                        "endDateStr",
+                        (e.target as HTMLInputElement).value
+                      );
+                    }
+                  }}
                   disabled={!canEditProjects}
                   className="h-8 text-xs font-medium bg-background border-border"
                 />
@@ -832,14 +961,21 @@ export function DeploymentDetailsDialog({
                               </Label>
                               <Input
                                 type="date"
-                                value={aStartStr}
-                                onChange={(e) => {
-                                  const nextVal = e.target.value
-                                    ? new Date(e.target.value + "T12:00:00")
-                                    : undefined;
-                                  handleUpdateAdditionalResponsible(index, {
-                                    startDate: nextVal,
-                                  });
+                                defaultValue={aStartStr}
+                                key={`assign-start-${assign.id || index}-${aStartStr}`}
+                                onBlur={(e) => {
+                                  const val = e.target.value;
+                                  if (!val) {
+                                    handleUpdateAdditionalResponsible(index, { startDate: undefined });
+                                    return;
+                                  }
+                                  if (isCompleteValidDate(val)) {
+                                    handleUpdateAdditionalResponsible(index, {
+                                      startDate: new Date(val + "T12:00:00"),
+                                    });
+                                  } else {
+                                    e.target.value = aStartStr;
+                                  }
                                 }}
                                 disabled={!canEditProjects}
                                 className="h-8 text-xs font-medium bg-background border-border"
@@ -853,14 +989,21 @@ export function DeploymentDetailsDialog({
                               </Label>
                               <Input
                                 type="date"
-                                value={aEndStr}
-                                onChange={(e) => {
-                                  const nextVal = e.target.value
-                                    ? new Date(e.target.value + "T12:00:00")
-                                    : undefined;
-                                  handleUpdateAdditionalResponsible(index, {
-                                    endDate: nextVal,
-                                  });
+                                defaultValue={aEndStr}
+                                key={`assign-end-${assign.id || index}-${aEndStr}`}
+                                onBlur={(e) => {
+                                  const val = e.target.value;
+                                  if (!val) {
+                                    handleUpdateAdditionalResponsible(index, { endDate: undefined });
+                                    return;
+                                  }
+                                  if (isCompleteValidDate(val)) {
+                                    handleUpdateAdditionalResponsible(index, {
+                                      endDate: new Date(val + "T12:00:00"),
+                                    });
+                                  } else {
+                                    e.target.value = aEndStr;
+                                  }
                                 }}
                                 disabled={!canEditProjects}
                                 className="h-8 text-xs font-medium bg-background border-border"
@@ -1084,7 +1227,7 @@ export function DeploymentDetailsDialog({
       <AlertDialog
         open={Boolean(pendingHolidayConfirmation)}
         onOpenChange={(isOpen) => {
-          if (!isOpen) setPendingHolidayConfirmation(null);
+          if (!isOpen) handleCancelHolidayConfirmation();
         }}
       >
         <AlertDialogContent
@@ -1128,7 +1271,7 @@ export function DeploymentDetailsDialog({
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">
             <AlertDialogCancel
-              onClick={() => setPendingHolidayConfirmation(null)}
+              onClick={handleCancelHolidayConfirmation}
               className="text-xs font-semibold"
             >
               Cancelar Alteração

@@ -29,6 +29,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNow, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { formatNotificationMessage } from "@/lib/format-notification";
 import type { NotificationPriority, NotificationStage } from "@/types/conversion";
 
 const STAGE_CONFIG: Record<
@@ -339,7 +340,7 @@ export default function AdminNotifications() {
                         </div>
 
                         <p className="text-xs text-muted-foreground leading-relaxed">
-                          {notif.message}
+                          {formatNotificationMessage(notif.message)}
                         </p>
 
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground pt-0.5">

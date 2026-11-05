@@ -39,6 +39,7 @@ import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { formatNotificationMessage } from "@/lib/format-notification";
 import type { NotificationPriority, NotificationStage, TeamArea } from "@/types/conversion";
 
 const NOTIFICATION_TYPE_ICONS: Record<string, LucideIcon> = {
@@ -338,7 +339,7 @@ export function NotificationBell() {
                             )}
                           </span>
                           <span className="block text-xs text-muted-foreground mt-1 leading-relaxed [overflow-wrap:anywhere]">
-                            {notification.message}
+                            {formatNotificationMessage(notification.message)}
                           </span>
                           <span className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-[10px] text-muted-foreground">
                             <span>

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { usePermissions } from '@/hooks/usePermissions';
 import { toast } from 'sonner';
+import { formatNotificationMessage } from '@/lib/format-notification';
 import type { 
   Notification, 
   NotificationCategory, 
@@ -130,7 +131,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
           stage: (n.stage as NotificationStage) ?? 'general',
           priority: (n.priority as NotificationPriority) ?? 'normal',
           title: n.title as string,
-          message: n.message as string,
+          message: formatNotificationMessage(n.message as string),
           actionUrl: (n.action_url as string) ?? undefined,
           read: (n.read as boolean) ?? false,
           createdAt: new Date(n.created_at as string),
@@ -301,7 +302,7 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
             stage: (newNotif.stage as NotificationStage) ?? 'general',
             priority: (newNotif.priority as NotificationPriority) ?? 'normal',
             title: newNotif.title as string,
-            message: newNotif.message as string,
+            message: formatNotificationMessage(newNotif.message as string),
             actionUrl: newNotif.action_url as string | undefined,
             read: false,
             createdAt: new Date(newNotif.created_at as string),
