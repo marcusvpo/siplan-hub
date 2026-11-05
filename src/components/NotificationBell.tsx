@@ -106,8 +106,7 @@ export function NotificationBell() {
   });
 
   const navigate = useNavigate();
-  // Padrão aprovado: "operational" (Atividades) é a aba principal sem novidades misturadas
-  const [activeTab, setActiveTab] = useState<"operational" | "changelog">("operational");
+  const [activeTab, setActiveTab] = useState<"all" | "operational" | "changelog">("all");
   const headingId = useId();
 
   const handleNotificationClick = (notification: (typeof notifications)[0]) => {
@@ -134,7 +133,10 @@ export function NotificationBell() {
     if (activeTab === "changelog") {
       return n.category === "changelog" || n.type.startsWith("release_");
     }
-    return n.category !== "changelog" && !n.type.startsWith("release_");
+    if (activeTab === "operational") {
+      return n.category !== "changelog" && !n.type.startsWith("release_");
+    }
+    return true;
   });
 
   const operationalCount = notifications.filter(
@@ -169,7 +171,7 @@ export function NotificationBell() {
         className="flex w-[430px] min-w-0 flex-col p-0 shadow-2xl border-border"
         style={{
           maxWidth: "calc(100vw - 16px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px))",
-          maxHeight: "min(640px, var(--radix-dropdown-menu-content-available-height), calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)))",
+          maxHeight: "min(600px, var(--radix-dropdown-menu-content-available-height), calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)))",
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
       >
@@ -191,7 +193,7 @@ export function NotificationBell() {
                 variant="ghost"
                 size="sm"
                 disabled={!canMarkAllAsRead}
-                className="h-9 sm:h-9 text-xs text-muted-foreground hover:text-foreground"
+                className="h-11 sm:h-11 min-h-[44px] min-w-[44px] px-3 text-xs text-muted-foreground hover:text-foreground touch-manipulation"
               >
                 <CheckCheck className="h-3.5 w-3.5 mr-1" />
                 Marcar lidas
@@ -200,14 +202,27 @@ export function NotificationBell() {
           )}
         </div>
 
-        {/* Duas Abas Limpas e Isoladas: Atividades vs Novidades */}
-        <div className="grid shrink-0 grid-cols-2 gap-1 px-2 pb-2 border-b border-border/60">
+        {/* Três Abas Limpas: Todas vs Atividades vs Novidades */}
+        <div className="grid shrink-0 grid-cols-3 gap-1 px-2 pb-2 border-b border-border/60">
+          <DropdownMenuItem asChild onSelect={(event) => { event.preventDefault(); setActiveTab("all"); }}>
+            <Button
+              size="sm"
+              variant={activeTab === "all" ? "secondary" : "ghost"}
+              className={cn(
+                "h-11 sm:h-11 min-h-[44px] min-w-[44px] text-xs px-2 rounded-md font-medium touch-manipulation",
+                activeTab === "all" && "font-semibold bg-muted"
+              )}
+              aria-pressed={activeTab === "all"}
+            >
+              Todas ({notifications.length})
+            </Button>
+          </DropdownMenuItem>
           <DropdownMenuItem asChild onSelect={(event) => { event.preventDefault(); setActiveTab("operational"); }}>
             <Button
               size="sm"
               variant={activeTab === "operational" ? "secondary" : "ghost"}
               className={cn(
-                "h-9 sm:h-9 min-w-0 text-xs px-2 rounded-md font-medium",
+                "h-11 sm:h-11 min-h-[44px] min-w-[44px] text-xs px-2 rounded-md font-medium touch-manipulation",
                 activeTab === "operational" && "font-semibold bg-muted"
               )}
               aria-pressed={activeTab === "operational"}
@@ -220,7 +235,7 @@ export function NotificationBell() {
               size="sm"
               variant={activeTab === "changelog" ? "secondary" : "ghost"}
               className={cn(
-                "h-9 sm:h-9 min-w-0 text-xs px-2 rounded-md gap-1.5 font-medium",
+                "h-11 sm:h-11 min-h-[44px] min-w-[44px] text-xs px-2 rounded-md gap-1.5 font-medium touch-manipulation",
                 activeTab === "changelog" && "font-semibold bg-muted"
               )}
               aria-pressed={activeTab === "changelog"}
@@ -243,7 +258,7 @@ export function NotificationBell() {
             <div className="space-y-3 p-4 text-center" role="alert">
               <p className="text-sm text-muted-foreground">Não foi possível carregar as notificações.</p>
               <DropdownMenuItem asChild onSelect={(event) => { event.preventDefault(); void refetch(); }}>
-                <Button variant="outline" className="h-11 sm:h-11">Tentar novamente</Button>
+                <Button variant="outline" className="h-11 sm:h-11 min-h-[44px] min-w-[44px]">Tentar novamente</Button>
               </DropdownMenuItem>
             </div>
           ) : filteredNotifications.length === 0 ? (
@@ -252,7 +267,9 @@ export function NotificationBell() {
               <p className="text-sm text-muted-foreground">
                 {activeTab === "changelog"
                   ? "Nenhuma novidade recente."
-                  : "Nenhuma atividade pendente no momento."}
+                  : activeTab === "operational"
+                    ? "Nenhuma atividade pendente no momento."
+                    : "Nenhuma notificação."}
               </p>
             </div>
           ) : (
@@ -353,11 +370,11 @@ export function NotificationBell() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-9 w-9 sm:h-9 sm:w-9 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        className="h-11 w-11 sm:h-11 sm:w-11 min-h-[44px] min-w-[44px] shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 touch-manipulation"
                         title="Limpar notificação"
                         aria-label={`Limpar notificação: ${notification.title}`}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </DropdownMenuItem>
                   </div>
@@ -372,15 +389,16 @@ export function NotificationBell() {
           <>
             <DropdownMenuSeparator className="m-0" />
             <div className="p-2 bg-muted/20">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-between text-xs h-8 text-primary hover:text-primary font-medium"
-                onClick={() => navigate("/admin/notifications")}
-              >
-                <span>Central de Gestão de Notificações</span>
-                <ArrowUpRight className="h-3.5 w-3.5" />
-              </Button>
+              <DropdownMenuItem asChild onSelect={() => navigate("/admin/notifications")}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-between text-xs h-11 sm:h-11 min-h-[44px] min-w-[44px] px-3 text-primary hover:text-primary font-medium touch-manipulation"
+                >
+                  <span>Central de Gestão de Notificações</span>
+                  <ArrowUpRight className="h-4 w-4" />
+                </Button>
+              </DropdownMenuItem>
             </div>
           </>
         )}

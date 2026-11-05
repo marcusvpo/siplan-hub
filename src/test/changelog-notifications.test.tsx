@@ -101,18 +101,18 @@ describe("Central de Novidades & Notificações (Changelog)", () => {
     expect(screen.getByText("1")).toBeInTheDocument();
   });
 
-  it("exibe duas abas limpas (Atividades e Novidades) sem misturar novidades no fluxo de trabalho", () => {
+  it("exibe as abas de filtro (Todas, Atividades e Novidades) ao abrir o menu", () => {
     render(<NotificationBell />);
     openNotifications();
 
+    expect(screen.getByText(/Todas \(2\)/)).toBeInTheDocument();
     expect(screen.getByText(/Atividades \(1\)/)).toBeInTheDocument();
     expect(screen.getByText(/Novidades \(1\)/)).toBeInTheDocument();
     expect(mockMarkAllAsRead).toHaveBeenCalledOnce();
 
-    // Na aba padrão Atividades, exibe apenas a demanda operacional
+    // Na aba padrão Todas, exibe tanto atividade quanto novidade
     expect(screen.getByText("Nova demanda de conversão")).toBeInTheDocument();
-    // Novidade não aparece na aba principal de Atividades
-    expect(screen.queryByText("Nova Tela no CS/CX")).not.toBeInTheDocument();
+    expect(screen.getByText("Nova Tela no CS/CX")).toBeInTheDocument();
   });
 
   it("filtra notificações ao alternar para a aba Novidades", () => {
@@ -127,6 +127,10 @@ describe("Central de Novidades & Notificações (Changelog)", () => {
     fireEvent.click(screen.getByRole("menuitem", { name: /Atividades/ }));
     expect(screen.getByText("Nova demanda de conversão")).toBeInTheDocument();
     expect(screen.queryByText("Nova Tela no CS/CX")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("menuitem", { name: /Todas/ }));
+    expect(screen.getByText("Nova demanda de conversão")).toBeInTheDocument();
+    expect(screen.getByText("Nova Tela no CS/CX")).toBeInTheDocument();
   });
 
   it("permite limpar/excluir uma notificação individualmente", () => {
@@ -155,6 +159,8 @@ describe("Central de Novidades & Notificações (Changelog)", () => {
     mockNotifications = [];
     render(<NotificationBell />);
     openNotifications();
+    expect(screen.getByText("Nenhuma notificação.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("menuitem", { name: /Atividades/ }));
     expect(screen.getByText("Nenhuma atividade pendente no momento.")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("menuitem", { name: /Novidades/ }));
     expect(screen.getByText("Nenhuma novidade recente.")).toBeInTheDocument();
