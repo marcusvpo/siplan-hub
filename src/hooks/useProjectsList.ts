@@ -20,6 +20,26 @@ import { ViewPreset } from "@/stores/filterStore";
 import { normalizeSpecialty } from "@/utils/projectSpecialty";
 import { sanitizeOrionAdminConfig } from "@/lib/secondary-products";
 
+let lastAutoFinishCheck = 0;
+async function triggerAutoFinishCheckIfNeeded() {
+  const now = Date.now();
+  if (now - lastAutoFinishCheck < 15 * 60 * 1000) return;
+  lastAutoFinishCheck = now;
+  try {
+    const sessionKey = 'siplan_last_auto_finish_check';
+    const lastSession = typeof window !== 'undefined' ? sessionStorage.getItem(sessionKey) : null;
+    if (lastSession && now - Number(lastSession) < 15 * 60 * 1000) {
+      return;
+    }
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(sessionKey, String(now));
+    }
+    await (supabase.rpc as any)('fn_auto_finish_expired_deployments');
+  } catch (err) {
+    console.warn('Erro silencioso ao verificar expiração de implantação:', err);
+  }
+}
+
 export const useProjectsList = (
   searchQuery: string = "",
   viewPreset: ViewPreset = "active"
@@ -32,16 +52,19 @@ export const useProjectsList = (
     queryKey: ["projectsList", viewPreset],
     staleTime: 1000 * 60 * 5, // 5 minutos de cache (filtro de busca e ordenação são aplicados no cliente)
     queryFn: async () => {
+      // Dispara verificação de implantações expiradas com throttle de 15min
+      await triggerAutoFinishCheckIfNeeded();
+
       // Start building the query
       let query = supabase
         .from("projects")
         .select(`
           id, client_name, ticket_number, system_type, specialty, global_status, updated_at, 
           project_leader, client_primary_contact, overall_progress, priority, is_deleted, created_at,
-          infra_status, infra_start_date, infra_end_date, infra_responsible,
-          adherence_status, adherence_start_date, adherence_end_date, adherence_responsible, adherence_has_product_gap, adherence_gap_description,
-          environment_status, environment_start_date, environment_end_date, environment_responsible,
-          conversion_status, conversion_start_date, conversion_end_date, conversion_sent_at, conversion_finished_at, conversion_responsible,
+          infra_status, infra_start_date, infra_end_date, infra_responsible, infra_dispatched_at, infra_dispatch_done, infra_dispatched_by,
+          adherence_status, adherence_start_date, adherence_end_date, adherence_responsible, adherence_has_product_gap, adherence_gap_description, adherence_dispatched_at, adherence_dispatch_done, adherence_dispatched_by,
+          environment_status, environment_start_date, environment_end_date, environment_responsible, environment_dispatched_at, environment_dispatch_done, environment_dispatched_by,
+          conversion_status, conversion_start_date, conversion_end_date, conversion_sent_at, conversion_finished_at, conversion_responsible, conversion_dispatched_at, conversion_dispatch_done, conversion_dispatched_by,
           modelos_editor_status, modelos_editor_start_date, modelos_editor_end_date, modelos_editor_responsible,
           implementation_status, implementation_start_date, implementation_end_date, implementation_responsible, implementation_phase1,
           post_status, post_start_date, post_end_date, post_responsible,
@@ -101,11 +124,23 @@ interface ProjectRow {
     overall_progress: number;
     priority: string; 
     infra_status?: string;
+    infra_dispatched_at?: string;
+    infra_dispatch_done?: boolean;
+    infra_dispatched_by?: string;
     adherence_status?: string;
     adherence_has_product_gap?: boolean;
     adherence_gap_description?: string;
+    adherence_dispatched_at?: string;
+    adherence_dispatch_done?: boolean;
+    adherence_dispatched_by?: string;
     environment_status?: string;
+    environment_dispatched_at?: string;
+    environment_dispatch_done?: boolean;
+    environment_dispatched_by?: string;
     conversion_status?: string;
+    conversion_dispatched_at?: string;
+    conversion_dispatch_done?: boolean;
+    conversion_dispatched_by?: string;
     modelos_editor_status?: string;
     implementation_status?: string;
     post_status?: string;
@@ -173,6 +208,26 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
         secondaryProductsNames: Array.isArray(row.secondary_products_names)
           ? (row.secondary_products_names as string[])
           : [],
+        infraDispatchedAt: row.infra_dispatched_at
+          ? new Date(row.infra_dispatched_at as string)
+          : undefined,
+        infraDispatchDone: Boolean(row.infra_dispatch_done),
+        infraDispatchedBy: row.infra_dispatched_by as string | undefined,
+        adherenceDispatchedAt: row.adherence_dispatched_at
+          ? new Date(row.adherence_dispatched_at as string)
+          : undefined,
+        adherenceDispatchDone: Boolean(row.adherence_dispatch_done),
+        adherenceDispatchedBy: row.adherence_dispatched_by as string | undefined,
+        environmentDispatchedAt: row.environment_dispatched_at
+          ? new Date(row.environment_dispatched_at as string)
+          : undefined,
+        environmentDispatchDone: Boolean(row.environment_dispatch_done),
+        environmentDispatchedBy: row.environment_dispatched_by as string | undefined,
+        conversionDispatchedAt: row.conversion_dispatched_at
+          ? new Date(row.conversion_dispatched_at as string)
+          : undefined,
+        conversionDispatchDone: Boolean(row.conversion_dispatch_done),
+        conversionDispatchedBy: row.conversion_dispatched_by as string | undefined,
         customFields: (row.custom_fields as Record<string, unknown>) || {},
         // Stages with complete date tracking for bottleneck detection
         stages: {
@@ -180,7 +235,12 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
                 status: row.infra_status || 'todo',
                 startDate: row.infra_start_date ? new Date(row.infra_start_date as string) : undefined,
                 endDate: row.infra_end_date ? new Date(row.infra_end_date as string) : undefined,
-                responsible: row.infra_responsible as string | undefined
+                responsible: row.infra_responsible as string | undefined,
+                infraDispatchedAt: row.infra_dispatched_at
+                  ? new Date(row.infra_dispatched_at as string)
+                  : undefined,
+                infraDispatchDone: Boolean(row.infra_dispatch_done),
+                infraDispatchedBy: row.infra_dispatched_by as string | undefined,
             } as InfraStageV2,
             adherence: { 
                 status: row.adherence_status || 'todo',
@@ -188,7 +248,12 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
                 endDate: row.adherence_end_date ? new Date(row.adherence_end_date as string) : undefined,
                 responsible: row.adherence_responsible as string | undefined,
                 hasProductGap: Boolean(row.adherence_has_product_gap),
-                gapDescription: (row.adherence_gap_description as string) || undefined
+                gapDescription: (row.adherence_gap_description as string) || undefined,
+                adherenceDispatchedAt: row.adherence_dispatched_at
+                  ? new Date(row.adherence_dispatched_at as string)
+                  : undefined,
+                adherenceDispatchDone: Boolean(row.adherence_dispatch_done),
+                adherenceDispatchedBy: row.adherence_dispatched_by as string | undefined,
             } as AdherenceStageV2,
             environment: { 
                 status: row.environment_status || 'todo',
@@ -201,6 +266,11 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
                   ? (((row.custom_fields as any)?.environment_kanban_status as ("not_started" | "in_progress" | "completed") | undefined) || (row.environment_status === 'done' ? 'completed' : 'not_started'))
                   : undefined,
                 hasPendings: Boolean((row.custom_fields as any)?.environment_has_pendings),
+                environmentDispatchedAt: row.environment_dispatched_at
+                  ? new Date(row.environment_dispatched_at as string)
+                  : undefined,
+                environmentDispatchDone: Boolean(row.environment_dispatch_done),
+                environmentDispatchedBy: row.environment_dispatched_by as string | undefined,
                 timeline: Array.isArray((row.custom_fields as any)?.environment_timeline)
                   ? (row.custom_fields as any).environment_timeline
                   : [],
@@ -215,7 +285,12 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
                     ? new Date(row.conversion_finished_at as string)
                     : (row.conversion_end_date ? new Date(row.conversion_end_date as string) : undefined),
                 finishedAt: row.conversion_finished_at ? new Date(row.conversion_finished_at as string) : undefined,
-                responsible: row.conversion_responsible as string | undefined
+                responsible: row.conversion_responsible as string | undefined,
+                conversionDispatchedAt: row.conversion_dispatched_at
+                  ? new Date(row.conversion_dispatched_at as string)
+                  : undefined,
+                conversionDispatchDone: Boolean(row.conversion_dispatch_done),
+                conversionDispatchedBy: row.conversion_dispatched_by as string | undefined,
             } as ConversionStageV2,
             modelosEditor: {
                 status: row.modelos_editor_status || 'todo',

@@ -18,6 +18,9 @@ import {
   Layers,
   Trash2,
   ExternalLink,
+  ShieldAlert,
+  CalendarClock,
+  ArrowUpRight,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,6 +30,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -35,7 +39,7 @@ import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import type { TeamArea } from "@/types/conversion";
+import type { NotificationPriority, NotificationStage, TeamArea } from "@/types/conversion";
 
 const NOTIFICATION_TYPE_ICONS: Record<string, LucideIcon> = {
   new_demand: Inbox,
@@ -45,8 +49,10 @@ const NOTIFICATION_TYPE_ICONS: Record<string, LucideIcon> = {
   client_response: MessageSquare,
   conversion_complete: CheckCircle2,
   homologation_approved: PartyPopper,
-  homologation_issues: AlertTriangle,
+  homologation_issues: ShieldAlert,
   mention: Megaphone,
+  task_completed: CheckCircle2,
+  schedule_changed: CalendarClock,
   release_feature: Sparkles,
   release_fix: Wrench,
   release_improvement: TrendingUp,
@@ -60,16 +66,48 @@ const RELEASE_BADGES: Record<string, { label: string; className: string }> = {
   release_screen: { label: "Nova tela", className: "bg-amber-500/15 text-amber-400 border-amber-500/30" },
 };
 
+const STAGE_LABELS: Record<NotificationStage, string> = {
+  infra: "1. Infra",
+  adherence: "2. Aderência",
+  conversion: "3. Conversão",
+  environment: "4. Ambiente",
+  modelos_editor: "5. Modelos",
+  implementation: "6. Implantação",
+  post: "7. Pós",
+  general: "Geral",
+  sla_alert: "Alerta SLA",
+};
+
+const PRIORITY_BADGES: Record<NotificationPriority, { label: string; className: string } | null> = {
+  urgent: { label: "Urgente", className: "bg-red-500/15 text-red-500 border-red-500/30" },
+  high: { label: "Alta", className: "bg-amber-500/15 text-amber-500 border-amber-500/30" },
+  normal: null,
+  low: null,
+};
+
 export function NotificationBell() {
-  const { user, team } = useAuth();
-  const { notifications, unreadCount, loading, error, markAsRead, markAllAsRead, deleteNotification, refetch } =
-    useNotifications({
-      userId: user?.id,
-      team: team as TeamArea | undefined,
-      limit: 50,
-    });
+  const { user, role, team } = useAuth();
+  const { 
+    notifications, 
+    unreadCount, 
+    operationalUnreadCount, 
+    changelogUnreadCount, 
+    loading, 
+    error, 
+    markAsRead, 
+    markAllAsRead, 
+    deleteNotification, 
+    refetch 
+  } = useNotifications({
+    userId: user?.id,
+    team: team as TeamArea | undefined,
+    limit: 50,
+    showToasts: true,
+  });
+
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"all" | "changelog" | "operational">("all");
+  // Padrão aprovado: "operational" (Atividades) é a aba principal sem novidades misturadas
+  const [activeTab, setActiveTab] = useState<"operational" | "changelog">("operational");
   const headingId = useId();
 
   const handleNotificationClick = (notification: (typeof notifications)[0]) => {
@@ -96,11 +134,12 @@ export function NotificationBell() {
     if (activeTab === "changelog") {
       return n.category === "changelog" || n.type.startsWith("release_");
     }
-    if (activeTab === "operational") {
-      return n.category !== "changelog" && !n.type.startsWith("release_");
-    }
-    return true;
+    return n.category !== "changelog" && !n.type.startsWith("release_");
   });
+
+  const operationalCount = notifications.filter(
+    (n) => n.category !== "changelog" && !n.type.startsWith("release_")
+  ).length;
 
   const changelogCount = notifications.filter(
     (n) => n.category === "changelog" || n.type.startsWith("release_")
@@ -111,10 +150,15 @@ export function NotificationBell() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative h-11 w-11 sm:h-11 sm:w-11" aria-label="Abrir notificações">
           <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
+          {/* Badge numérico alerta exclusivamente atividades operacionais pendentes */}
+          {operationalUnreadCount > 0 && (
             <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white rounded-full text-[10px]">
-              {unreadCount > 99 ? "99+" : unreadCount}
+              {operationalUnreadCount > 99 ? "99+" : operationalUnreadCount}
             </Badge>
+          )}
+          {/* Bolinha discreta para novidades se não houver alerta operacional urgente */}
+          {operationalUnreadCount === 0 && changelogUnreadCount > 0 && (
+            <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-purple-500 animate-pulse" />
           )}
         </Button>
       </DropdownMenuTrigger>
@@ -122,19 +166,19 @@ export function NotificationBell() {
         align="end"
         collisionPadding={8}
         aria-labelledby={headingId}
-        className="flex w-[420px] min-w-0 flex-col p-0 shadow-2xl border-border"
+        className="flex w-[430px] min-w-0 flex-col p-0 shadow-2xl border-border"
         style={{
           maxWidth: "calc(100vw - 16px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px))",
-          maxHeight: "min(600px, var(--radix-dropdown-menu-content-available-height), calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)))",
+          maxHeight: "min(640px, var(--radix-dropdown-menu-content-available-height), calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)))",
           paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
       >
         <div className="flex shrink-0 flex-wrap items-center justify-between gap-1 px-3 pt-2 pb-1">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <DropdownMenuLabel id={headingId} className="p-0 font-bold text-base">Notificações</DropdownMenuLabel>
-            {changelogCount > 0 && (
-              <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20">
-                {changelogCount} novidades
+            {operationalUnreadCount > 0 && (
+              <Badge variant="outline" className="text-[10px] bg-red-500/10 text-red-500 border-red-500/20">
+                {operationalUnreadCount} pendente{operationalUnreadCount > 1 ? "s" : ""}
               </Badge>
             )}
           </div>
@@ -147,25 +191,28 @@ export function NotificationBell() {
                 variant="ghost"
                 size="sm"
                 disabled={!canMarkAllAsRead}
-                className="h-11 sm:h-11 text-xs text-muted-foreground hover:text-foreground"
+                className="h-9 sm:h-9 text-xs text-muted-foreground hover:text-foreground"
               >
                 <CheckCheck className="h-3.5 w-3.5 mr-1" />
-                Marcar todas lidas
+                Marcar lidas
               </Button>
             </DropdownMenuItem>
           )}
         </div>
 
-        {/* Tab Filters */}
-        <div className="grid shrink-0 grid-cols-3 gap-1 px-2 pb-2 border-b border-border/60">
-          <DropdownMenuItem asChild onSelect={(event) => { event.preventDefault(); setActiveTab("all"); }}>
+        {/* Duas Abas Limpas e Isoladas: Atividades vs Novidades */}
+        <div className="grid shrink-0 grid-cols-2 gap-1 px-2 pb-2 border-b border-border/60">
+          <DropdownMenuItem asChild onSelect={(event) => { event.preventDefault(); setActiveTab("operational"); }}>
             <Button
               size="sm"
-              variant={activeTab === "all" ? "secondary" : "ghost"}
-              className="h-11 sm:h-11 min-w-0 whitespace-normal text-[11px] px-1 rounded-md"
-              aria-pressed={activeTab === "all"}
+              variant={activeTab === "operational" ? "secondary" : "ghost"}
+              className={cn(
+                "h-9 sm:h-9 min-w-0 text-xs px-2 rounded-md font-medium",
+                activeTab === "operational" && "font-semibold bg-muted"
+              )}
+              aria-pressed={activeTab === "operational"}
             >
-              Todas ({notifications.length})
+              Atividades ({operationalCount})
             </Button>
           </DropdownMenuItem>
           <DropdownMenuItem asChild onSelect={(event) => { event.preventDefault(); setActiveTab("changelog"); }}>
@@ -173,23 +220,16 @@ export function NotificationBell() {
               size="sm"
               variant={activeTab === "changelog" ? "secondary" : "ghost"}
               className={cn(
-                "h-11 sm:h-11 min-w-0 whitespace-normal text-[11px] px-1 rounded-md gap-1",
-                activeTab === "changelog" && "font-semibold"
+                "h-9 sm:h-9 min-w-0 text-xs px-2 rounded-md gap-1.5 font-medium",
+                activeTab === "changelog" && "font-semibold bg-muted"
               )}
               aria-pressed={activeTab === "changelog"}
             >
-              <Sparkles className="h-3 w-3 text-amber-400" />
-              Novidades
-            </Button>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild onSelect={(event) => { event.preventDefault(); setActiveTab("operational"); }}>
-            <Button
-              size="sm"
-              variant={activeTab === "operational" ? "secondary" : "ghost"}
-              className="h-11 sm:h-11 min-w-0 whitespace-normal text-[11px] px-1 rounded-md"
-              aria-pressed={activeTab === "operational"}
-            >
-              Atividades
+              <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+              Novidades ({changelogCount})
+              {changelogUnreadCount > 0 && (
+                <span className="h-1.5 w-1.5 rounded-full bg-purple-500" />
+              )}
             </Button>
           </DropdownMenuItem>
         </div>
@@ -208,13 +248,11 @@ export function NotificationBell() {
             </div>
           ) : filteredNotifications.length === 0 ? (
             <div className="p-8 text-center">
-              <Bell className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
+              <Bell className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
               <p className="text-sm text-muted-foreground">
                 {activeTab === "changelog"
                   ? "Nenhuma novidade recente."
-                  : activeTab === "operational"
-                    ? "Nenhuma atividade recente."
-                    : "Nenhuma notificação."}
+                  : "Nenhuma atividade pendente no momento."}
               </p>
             </div>
           ) : (
@@ -224,15 +262,18 @@ export function NotificationBell() {
                   notification.category === "changelog" ||
                   notification.type.startsWith("release_");
                 const releaseBadge = RELEASE_BADGES[notification.type];
+                const priorityBadge = notification.priority ? PRIORITY_BADGES[notification.priority] : null;
+                const stageLabel = notification.stage ? STAGE_LABELS[notification.stage] : null;
                 const Icon = NOTIFICATION_TYPE_ICONS[notification.type] || Pin;
 
                 return (
                   <div
                     key={notification.id}
                     className={cn(
-                      "relative flex items-start gap-1 p-2 transition-colors hover:bg-muted/50 sm:gap-2 sm:p-3",
+                      "relative flex items-start gap-1 p-2.5 transition-colors hover:bg-muted/50 sm:gap-2 sm:p-3",
                       notification.read ? "opacity-75" : "bg-primary/[0.03]",
-                      isChangelog && !notification.read && "border-l-2 border-amber-500 bg-amber-500/[0.04]"
+                      notification.priority === 'urgent' && !notification.read && "border-l-2 border-red-500 bg-red-500/[0.04]",
+                      isChangelog && !notification.read && "border-l-2 border-purple-500 bg-purple-500/[0.04]"
                     )}
                   >
                     <DropdownMenuItem asChild className="min-h-11 min-w-0 flex-1 items-start gap-2.5 p-0 text-left" onSelect={() => handleNotificationClick(notification)}>
@@ -241,8 +282,10 @@ export function NotificationBell() {
                           className={cn(
                             "mt-0.5 p-1.5 rounded-lg shrink-0",
                             isChangelog
-                              ? "bg-amber-500/10 text-amber-500"
-                              : "bg-muted text-muted-foreground"
+                              ? "bg-purple-500/10 text-purple-400"
+                              : notification.priority === 'urgent'
+                                ? "bg-red-500/10 text-red-500"
+                                : "bg-muted text-muted-foreground"
                           )}
                         >
                           <Icon className="h-4 w-4" />
@@ -258,6 +301,22 @@ export function NotificationBell() {
                                 className={cn("text-[9px] px-1.5 py-0 h-4 font-normal", releaseBadge.className)}
                               >
                                 {releaseBadge.label}
+                              </Badge>
+                            )}
+                            {priorityBadge && (
+                              <Badge
+                                variant="outline"
+                                className={cn("text-[9px] px-1.5 py-0 h-4 font-normal", priorityBadge.className)}
+                              >
+                                {priorityBadge.label}
+                              </Badge>
+                            )}
+                            {stageLabel && stageLabel !== "Geral" && (
+                              <Badge
+                                variant="secondary"
+                                className="text-[9px] px-1.5 py-0 h-4 font-normal text-muted-foreground"
+                              >
+                                {stageLabel}
                               </Badge>
                             )}
                           </span>
@@ -294,7 +353,7 @@ export function NotificationBell() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-11 w-11 sm:h-11 sm:w-11 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        className="h-9 w-9 sm:h-9 sm:w-9 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                         title="Limpar notificação"
                         aria-label={`Limpar notificação: ${notification.title}`}
                       >
@@ -307,6 +366,24 @@ export function NotificationBell() {
             </div>
           )}
         </div>
+
+        {/* Rodapé Exclusivo para Administradores: Acesso Direto à Central de Notificações */}
+        {role === "admin" && (
+          <>
+            <DropdownMenuSeparator className="m-0" />
+            <div className="p-2 bg-muted/20">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-between text-xs h-8 text-primary hover:text-primary font-medium"
+                onClick={() => navigate("/admin/notifications")}
+              >
+                <span>Central de Gestão de Notificações</span>
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

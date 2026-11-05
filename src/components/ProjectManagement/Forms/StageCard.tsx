@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { ObservationsWithAI } from "@/components/ProjectManagement/Forms/ObservationsWithAI";
+import { StageDispatchBadge } from "@/components/ProjectManagement/StageDispatchBadge";
 
 interface StageCardProps {
   id: string;
@@ -66,6 +67,12 @@ interface StageCardProps {
 
   // Torna o bloco de campos especificos colapsavel (recolhido por padrao).
   collapsibleSpecificFields?: boolean;
+
+  // Automação e blindagem de idempotência de disparo
+  dispatchDone?: boolean;
+  dispatchedAt?: Date | string | number | null;
+  dispatchedBy?: string;
+  showDispatchBadge?: boolean;
 }
 
 export function StageCard({
@@ -93,8 +100,13 @@ export function StageCard({
   beforeObservations,
   specificFieldsTitle = "Campos Específicos",
   collapsibleSpecificFields = false,
+  dispatchDone,
+  dispatchedAt,
+  dispatchedBy,
+  showDispatchBadge,
 }: StageCardProps) {
   const [specificOpen, setSpecificOpen] = useState(false);
+  const isMonitoredStage = showDispatchBadge ?? ["infra", "adherence", "conversion", "environment"].includes(id);
   const getStatusColor = (s: StageStatus) => {
     switch (s) {
       case "done":
@@ -230,6 +242,19 @@ export function StageCard({
             </Badge>
           )}
 
+          {/* Dispatch Farol Compacto no Header */}
+          {isMonitoredStage && (
+            <div className="hidden sm:flex items-center mr-1">
+              <StageDispatchBadge
+                compact
+                dispatchDone={dispatchDone}
+                dispatchedAt={dispatchedAt}
+                dispatchedBy={dispatchedBy}
+                stageId={id}
+              />
+            </div>
+          )}
+
           {/* Status Badge with gradient */}
           <Badge
             className={cn(
@@ -243,6 +268,18 @@ export function StageCard({
       </AccordionTrigger>
 
       <AccordionContent className="px-4 pt-1.5 pb-4 space-y-4">
+        {/* Farol / Tag discreto de Notificação para etapas monitoradas */}
+        {isMonitoredStage && (
+          <div className="pt-0.5">
+            <StageDispatchBadge
+              dispatchDone={dispatchDone}
+              dispatchedAt={dispatchedAt}
+              dispatchedBy={dispatchedBy}
+              stageId={id}
+            />
+          </div>
+        )}
+
         {isReadyToStart && status === "todo" && readinessReason && (
           <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20 p-3 rounded-lg border border-emerald-200 dark:border-emerald-800/50 flex items-start gap-2.5">
             <Rocket className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
@@ -262,7 +299,7 @@ export function StageCard({
           </div>
         )}
         
-        {status === "in-progress" && automationNotice && (
+        {!isMonitoredStage && status === "in-progress" && automationNotice && (
           <div className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-950/10 dark:to-indigo-950/10 p-2.5 rounded-lg border border-blue-100 dark:border-blue-900/30 flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-blue-500 shrink-0 animate-pulse" />
             <p className="text-xs text-blue-700 dark:text-blue-400 font-medium">

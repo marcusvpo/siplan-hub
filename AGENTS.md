@@ -26,6 +26,10 @@ O Siplan Hub é um sistema de gestão de projetos de implantação para cartóri
 - Mantenha os formulários de estágio isolados em `src/components/ProjectManagement/Forms/StageForms/`.
 - Ao trabalhar no worker, preserve a separação entre filas, processamento Codex/Ollama e frontend.
 - Não introduza integração, configuração, hook, skill ou fallback para Claude/Anthropic. Novas automações de IA devem seguir o runtime Codex vigente, salvo pedido explícito do usuário.
+- **Padrão Oficial de Documentos e PDFs:** O `@react-pdf/renderer` é a **única ferramenta oficial e obrigatória** para criação e exportação de documentos e relatórios em PDF no projeto Siplan HUB.
+  - É **estritamente proibido** criar scripts avulsos, arquivos HTML estáticos temporários (ex: via headless Chrome/Edge com CLI) ou manipulações de DOM/captura de tela (`html2canvas`) / `window.print()` do navegador para gerar relatórios.
+  - Qualquer novo relatório solicitado (manual via interface ou automatizado via *scheduled tasks* / workers) deve consumir os componentes e serviços da arquitetura oficial localizada em `@/modules/pdf` (`PdfHeader`, `PdfFooter`, `PdfTable`, `PdfSummarySection`, `PdfStatusBadge`, `PdfSignatureBlock`, `pdfService`, `BaseReportTemplate`).
+  - Tokens visuais e estilos devem respeitar `@/modules/pdf/styles/tokens` (bordô primário `#881337`, neutros slate `#0f172a`, tipografia Helvetica) para manter a identidade visual corporativa do sistema.
 
 ## Checklist obrigatório para nova tela, rota ou módulo
 
@@ -43,6 +47,16 @@ Antes de considerar uma nova tela, rota ou módulo concluído, verifique todos o
 10. **Documentação e testes:** atualize a documentação relevante e rode as validações proporcionais à mudança, incluindo os testes de permissões quando houver alteração de RBAC.
 11. **Informativo de Ajuda da Tela (ⓘ):** cadastre ou atualize a entrada referente à nova rota em `src/constants/pageHelpRegistry.ts`, fornecendo o módulo, título, prévia do que a tela faz (`description`), recursos principais e o tutorial passo a passo (`steps`). Nenhuma nova tela ou rota deve ser considerada concluída sem o seu informativo de ajuda cadastrado.
 12. **Notificação de Novidades / Changelog:** ao concluir a implementação de qualquer nova tela, módulo, melhoria relevante ou correção, insira na migration do trabalho (em `supabase/migrations/`) o registro da notificação em `public.notifications` com `category = 'changelog'`. Defina obrigatoriamente `type` (`'release_feature'`, `'release_fix'`, `'release_improvement'`, `'release_screen'`), `permission_resource` (para restringir aos usuários autorizados), `title`, `message` (resumo claro em PT-BR do que foi construído) e `action_url` (rota da novidade).
+13. **Atualização do Conhecimento Operacional:** se a alteração envolver novas telas, novas ações operacionais, alterações em formulários de etapas, novos responsáveis ou fluxos de trabalho, atualize obrigatoriamente o documento mestre em `docs/CONHECIMENTO_PROCESSOS_E_OPERACAO_HUB.md`.
+
+## Conhecimento Operacional Obrigatório e Auto-Alimentável
+
+O arquivo `docs/CONHECIMENTO_PROCESSOS_E_OPERACAO_HUB.md` é a **fonte única da verdade prática e operacional do Siplan HUB**.
+
+- **Consulta Prévia Obrigatória:** Antes de propor alterações, criar automações, definir regras de transição ou supor premissas sobre etapas, responsáveis, telas ou fluxos de trabalho, toda IA **deve consultar obrigatoriamente** esse documento. Não faça suposições às cegas sobre quem faz o quê ou como funcionam os processos reais.
+- **Responsabilidades e Regras Reais:** O documento documenta a Matriz RACI real dos analistas (Alex Silva, Bruno Fernandes, Ademar Souza, Luciane Lima, Hugo Januário, Maria Santos, Lunna Santana, Julio Araujo, Rodrigo Brites, Ricardo Vieira, etc.), as janelas temporais inflexíveis (Sexta-feira limite vs. Segunda-feira Go-Live), o ciclo estrito de 15 dias corridos de Pós-Implantação em grupos de WhatsApp e a transição para o suporte 0800 (Ellevo).
+- **Auto-Alimentação Contínua:** Sempre que uma tarefa modificar fluxos operacionais, criar ou reorganizar telas, alterar responsáveis ou regras de negócio, a IA atuante deve **obrigatoriamente atualizar** `docs/CONHECIMENTO_PROCESSOS_E_OPERACAO_HUB.md`, mantendo o repositório perpetuamente sincronizado e inteligente para as próximas sessões.
+
 
 Referência detalhada: `docs/PERMISSOES_RBAC.md`. A sincronização com a tela inicial também está documentada em `docs/MANUAL_DESENVOLVEDOR.md`.
 

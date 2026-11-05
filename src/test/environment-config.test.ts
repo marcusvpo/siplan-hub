@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   calculateEnvironmentTargetDate,
   formatEnvironmentTargetDate,
+  formatEnvironmentDispatchedDate,
   getEnvironmentUrgency,
   canManageEnvironmentConfig,
   isUserCurrentResponsible,
@@ -48,6 +49,22 @@ describe("environment-config helpers", () => {
 
     it("deve retornar 'Aguardando Datas' quando nulo", () => {
       expect(formatEnvironmentTargetDate(null)).toBe("Aguardando Datas");
+    });
+  });
+
+  describe("formatEnvironmentDispatchedDate", () => {
+    it("deve formatar data e hora do disparo de e-mail em PT-BR", () => {
+      const dateStr = "2026-11-04T15:30:00.000Z";
+      const formatted = formatEnvironmentDispatchedDate(dateStr);
+      expect(formatted).not.toBeNull();
+      expect(formatted).toContain("/2026 às ");
+    });
+
+    it("deve retornar null para strings vazias ou nulas", () => {
+      expect(formatEnvironmentDispatchedDate(null)).toBeNull();
+      expect(formatEnvironmentDispatchedDate(undefined)).toBeNull();
+      expect(formatEnvironmentDispatchedDate("")).toBeNull();
+      expect(formatEnvironmentDispatchedDate("data-invalida")).toBeNull();
     });
   });
 

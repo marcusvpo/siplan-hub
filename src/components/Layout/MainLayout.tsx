@@ -2,6 +2,7 @@ import { lazy, ReactNode, Suspense } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { Breadcrumbs } from "./Breadcrumbs";
 import { ModeToggle } from "@/components/mode-toggle";
+import { useTelemetryAffinity } from "@/hooks/useTelemetryAffinity";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
@@ -26,6 +27,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { hasPermission } = usePermissions();
+  useTelemetryAffinity();
   const normalizedPathname = location.pathname.replace(/\/+$/, "");
 
   const isProjectsPage = location.pathname === "/projects";

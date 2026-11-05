@@ -316,25 +316,27 @@ export function StepsTab({
             <div data-stage-id="infra">
               <StageCard
                 id="infra"
-              projectId={project.id}
-              requestedBy={currentUserName}
-              label="1. Análise de Infraestrutura"
-              icon={Server}
-              status={stagesData.infra.status}
-              responsible={stagesData.infra.responsible}
-              startDate={stagesData.infra.startDate}
-              endDate={stagesData.infra.endDate}
-              observations={stagesData.infra.observations}
-              onUpdate={(u) => updateStage("infra", u)}
-              isReadyToStart={
-                stageReadiness.find((r) => r.stageId === "infra")?.isReady
-              }
-              readinessReason={
-                stageReadiness.find((r) => r.stageId === "infra")?.reason
-              }
-              canEditProjects={canEditProjects}
-              automationNotice="Automação Ativa: Um e-mail de notificação foi enviado solicitando o início desta análise de infraestrutura."
-              extraHeaderField={
+                projectId={project.id}
+                requestedBy={currentUserName}
+                label="1. Análise de Infraestrutura"
+                icon={Server}
+                status={stagesData.infra.status}
+                responsible={stagesData.infra.responsible}
+                startDate={stagesData.infra.startDate}
+                endDate={stagesData.infra.endDate}
+                observations={stagesData.infra.observations}
+                onUpdate={(u) => updateStage("infra", u)}
+                isReadyToStart={
+                  stageReadiness.find((r) => r.stageId === "infra")?.isReady
+                }
+                readinessReason={
+                  stageReadiness.find((r) => r.stageId === "infra")?.reason
+                }
+                canEditProjects={canEditProjects}
+                dispatchDone={stagesData.infra.infraDispatchDone ?? project.infraDispatchDone}
+                dispatchedAt={stagesData.infra.infraDispatchedAt ?? project.infraDispatchedAt}
+                dispatchedBy={stagesData.infra.infraDispatchedBy ?? project.infraDispatchedBy}
+                extraHeaderField={
                 <div className="space-y-1.5">
                   <Label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                     <User className="h-3 w-3 text-muted-foreground" />
@@ -357,54 +359,58 @@ export function StepsTab({
             <div data-stage-id="adherence">
               <StageCard
                 id="adherence"
-              projectId={project.id}
-              requestedBy={currentUserName}
-              label="2. Análise de Aderência"
-              icon={CheckCircle2}
-              status={stagesData.adherence.status}
-              responsible={stagesData.adherence.responsible}
-              startDate={stagesData.adherence.startDate}
-              endDate={stagesData.adherence.endDate}
-              observations={stagesData.adherence.observations}
-              onUpdate={(u) => updateStage("adherence", u)}
-              isReadyToStart={
-                stageReadiness.find((r) => r.stageId === "adherence")?.isReady
-              }
-              readinessReason={
-                stageReadiness.find((r) => r.stageId === "adherence")?.reason
-              }
-              canEditProjects={canEditProjects}
-              automationNotice="Automação Ativa: Um e-mail de notificação foi enviado solicitando o início desta análise de aderência."
-            >
-              <AdherenceStageForm projectId={project.id} systemType={project.systemType} stage={stagesData.adherence} canEditProjects={canEditProjects} onUpdate={(u) => updateStage("adherence", u)} />
-            </StageCard>
-          </div>
+                projectId={project.id}
+                requestedBy={currentUserName}
+                label="2. Análise de Aderência"
+                icon={CheckCircle2}
+                status={stagesData.adherence.status}
+                responsible={stagesData.adherence.responsible}
+                startDate={stagesData.adherence.startDate}
+                endDate={stagesData.adherence.endDate}
+                observations={stagesData.adherence.observations}
+                onUpdate={(u) => updateStage("adherence", u)}
+                isReadyToStart={
+                  stageReadiness.find((r) => r.stageId === "adherence")?.isReady
+                }
+                readinessReason={
+                  stageReadiness.find((r) => r.stageId === "adherence")?.reason
+                }
+                canEditProjects={canEditProjects}
+                dispatchDone={stagesData.adherence.adherenceDispatchDone ?? project.adherenceDispatchDone}
+                dispatchedAt={stagesData.adherence.adherenceDispatchedAt ?? project.adherenceDispatchedAt}
+                dispatchedBy={stagesData.adherence.adherenceDispatchedBy ?? project.adherenceDispatchedBy}
+              >
+                <AdherenceStageForm projectId={project.id} systemType={project.systemType} stage={stagesData.adherence} canEditProjects={canEditProjects} onUpdate={(u) => updateStage("adherence", u)} />
+              </StageCard>
+            </div>
 
             <div data-stage-id="conversion">
               <StageCard
                 id="conversion"
-              projectId={project.id}
-              requestedBy={currentUserName}
-              label="3. Conversão de Dados"
-              icon={RefreshCw}
-              status={stagesData.conversion.status}
-              responsible={stagesData.conversion.responsible}
-              startDate={stagesData.conversion.startDate}
-              endDate={stagesData.conversion.endDate}
-              observations={stagesData.conversion.observations}
-              onUpdate={(u) => updateStage("conversion", u)}
-              isReadyToStart={
-                stageReadiness.find((r) => r.stageId === "conversion")?.isReady
-              }
-              readinessReason={
-                stageReadiness.find((r) => r.stageId === "conversion")?.reason
-              }
-              canEditProjects={canEditProjects}
-              automationNotice="Automação Ativa: Projeto adicionado automaticamente à fila de conversão e e-mail de início enviado."
-            >
-              <ConversionStageForm stage={stagesData.conversion} canEditProjects={canEditProjects} isInConversionQueue={isInConversionQueue} sendingToConversion={sendingToConversion} queueLoading={queueLoading} conversionItem={conversionItem} projectId={project.id} onUpdate={(u) => updateStage("conversion", u)} onSendToConversion={handleSendToConversion} onRemoveFromQueue={removeFromQueue} />
-            </StageCard>
-          </div>
+                projectId={project.id}
+                requestedBy={currentUserName}
+                label="3. Conversão de Dados"
+                icon={RefreshCw}
+                status={stagesData.conversion.status}
+                responsible={stagesData.conversion.responsible}
+                startDate={stagesData.conversion.startDate}
+                endDate={stagesData.conversion.endDate}
+                observations={stagesData.conversion.observations}
+                onUpdate={(u) => updateStage("conversion", u)}
+                isReadyToStart={
+                  stageReadiness.find((r) => r.stageId === "conversion")?.isReady
+                }
+                readinessReason={
+                  stageReadiness.find((r) => r.stageId === "conversion")?.reason
+                }
+                canEditProjects={canEditProjects}
+                dispatchDone={stagesData.conversion.conversionDispatchDone ?? project.conversionDispatchDone}
+                dispatchedAt={stagesData.conversion.conversionDispatchedAt ?? project.conversionDispatchedAt}
+                dispatchedBy={stagesData.conversion.conversionDispatchedBy ?? project.conversionDispatchedBy}
+              >
+                <ConversionStageForm stage={stagesData.conversion} canEditProjects={canEditProjects} isInConversionQueue={isInConversionQueue} sendingToConversion={sendingToConversion} queueLoading={queueLoading} conversionItem={conversionItem} projectId={project.id} onUpdate={(u) => updateStage("conversion", u)} onSendToConversion={handleSendToConversion} onRemoveFromQueue={removeFromQueue} />
+              </StageCard>
+            </div>
 
             <div data-stage-id="environment">
               <StageCard
@@ -428,7 +434,9 @@ export function StepsTab({
                 canEditProjects={canEditProjects}
                 specificFieldsTitle="Dados de conexão"
                 collapsibleSpecificFields={true}
-                automationNotice="Automação Ativa: Um e-mail de notificação foi enviado solicitando a preparação deste ambiente."
+                dispatchDone={stagesData.environment?.environmentDispatchDone ?? project.environmentDispatchDone}
+                dispatchedAt={stagesData.environment?.environmentDispatchedAt ?? project.environmentDispatchedAt}
+                dispatchedBy={stagesData.environment?.environmentDispatchedBy ?? project.environmentDispatchedBy}
                 beforeObservations={
                   <OrionAdminSection
                     stage={stagesData.environment}

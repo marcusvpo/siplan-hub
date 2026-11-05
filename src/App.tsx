@@ -145,6 +145,7 @@ const SystemStorage = lazy(() => import("./pages/admin/SystemStorage"));
 const SystemInfrastructure = lazy(() => import("./pages/admin/SystemInfrastructure"));
 const InactiveUsers = lazy(() => import("./pages/admin/InactiveUsers"));
 const AdminChangelog = lazy(() => import("./pages/admin/AdminChangelog"));
+const AdminNotifications = lazy(() => import("./pages/admin/AdminNotifications"));
 const ProjectDetails = lazy(() => import("./pages/ProjectDetails"));
 const ProjectAdherenceForm = lazy(() => import("./pages/ProjectAdherenceForm"));
 const ProjectsKanban = lazy(() => import("./pages/ProjectsKanban"));
@@ -448,6 +449,16 @@ const App = () => (
                     <Suspense fallback={<PageLoader />}>
                       <RequirePermission resource="admin_changelog">
                         <AdminChangelog />
+                      </RequirePermission>
+                    </Suspense>
+                  }
+                />
+                <Route
+                  path="notifications"
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <RequirePermission resource="admin_notifications">
+                        <AdminNotifications />
                       </RequirePermission>
                     </Suspense>
                   }

@@ -38,20 +38,29 @@ dist-ssr
 # TypeScript build info & temp files
 *.tsbuildinfo
 *.tmp
+*.lockb
 lint_report.txt
-/artifacts/cs-cx-user-mapping.csv
-/artifacts/cs-cx-user-map.json
+report_temp.html
+*.tmp.html
+*.tmp.pdf
+scratch/
+.fallow/
+Nova pasta/
+
+# Artefatos temporarios e dumps de QA (nao versionar)
+artifacts/
 
 # Documentos binarios de referencia (nao versionar)
 *.docx
 *.pdf
 *.xlsx
 
-# Graphify AST cache (regenerable, machine-specific hashes)
+# Graphify AST cache & snapshots antigos (regeneraveis)
 graphify-out/cache/
 graphify-out/20??-??-??/
+graphify-out/memory/
 graphify-out/graph.html
-graphify-out-full/cache/
+graphify-out-full/
 src/graphify-out/cache/
 
 # Supabase CLI local state (link do projeto, machine-specific)

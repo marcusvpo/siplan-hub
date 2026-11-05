@@ -40,6 +40,8 @@ import {
   Copy,
   Check,
   History,
+  Mail,
+  MailCheck,
 } from "lucide-react";
 import { ProjectV2, EnvironmentStageV2, StageStatus } from "@/types/ProjectV2";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
@@ -51,6 +53,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   calculateEnvironmentTargetDate,
   formatEnvironmentTargetDate,
+  formatEnvironmentDispatchedDate,
   getEnvironmentUrgency,
   canManageEnvironmentConfig,
   isUserCurrentResponsible,
@@ -139,6 +142,21 @@ export function EnvironmentProjectModal({
   const urgency = useMemo(
     () => getEnvironmentUrgency(targetDate, columnId, hasPendings),
     [targetDate, columnId, hasPendings]
+  );
+
+  // Status do Disparo de E-mail de Solicitação
+  const emailDispatchedAt =
+    envStage.environmentDispatchedAt ||
+    currentProject?.environmentDispatchedAt ||
+    null;
+  const isEmailDispatched = Boolean(
+    envStage.environmentDispatchDone ||
+    currentProject?.environmentDispatchDone ||
+    emailDispatchedAt
+  );
+  const dispatchedFormattedDate = useMemo(
+    () => formatEnvironmentDispatchedDate(emailDispatchedAt),
+    [emailDispatchedAt]
   );
 
   // Produtos Secundários
@@ -478,6 +496,39 @@ export function EnvironmentProjectModal({
                     : "Não Iniciado"}
                 </Badge>
               </div>
+            </div>
+          </div>
+
+          {/* Tag de Status do Disparo de E-mail de Solicitação */}
+          <div className="mt-3 pt-2.5 border-t border-border/50 flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                {isEmailDispatched ? (
+                  <MailCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                ) : (
+                  <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                )}
+                E-mail de Solicitação:
+              </span>
+              {isEmailDispatched ? (
+                <Badge
+                  variant="outline"
+                  className="bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/40 text-[11px] font-semibold flex items-center gap-1.5 shadow-2xs"
+                >
+                  <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                  <span>
+                    Disparado{dispatchedFormattedDate ? ` em ${dispatchedFormattedDate}` : ""} (Bloqueado contra disparos duplicados)
+                  </span>
+                </Badge>
+              ) : (
+                <Badge
+                  variant="outline"
+                  className="bg-muted/40 text-muted-foreground border-border text-[11px] font-medium flex items-center gap-1.5"
+                >
+                  <Clock className="h-3 w-3 text-muted-foreground" />
+                  <span>Aguardando primeiro início da etapa (Em Andamento)</span>
+                </Badge>
+              )}
             </div>
           </div>
         </DialogHeader>
