@@ -99,7 +99,7 @@ interface DTCTicket {
 }
 
 interface RemoteAccessItem {
-  system: "AnyDesk" | "TeamViewer" | "RustDesk" | "Outro";
+  system: "AnyDesk" | "TeamViewer" | "RustDesk" | "VPN" | "Outro" | string;
   id: string;
   password?: string;
 }

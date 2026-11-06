@@ -9,6 +9,7 @@ import {
   extractCleanObservations,
   extractUnscheduledPhase1Projects,
   isExcludedTimelineMember,
+  isModelosTNProject,
   normalizeText,
   packEventsIntoLanes,
   resolveCalendarMembersForResponsible,
@@ -261,12 +262,20 @@ describe("project-calendar-events", () => {
     });
   });
 
-  describe("classifySystemCategory", () => {
-    it("classifica estritamente REG, PRO, TN e OTHER conforme o sistema único do projeto", () => {
+  describe("classifySystemCategory e isModelosTNProject", () => {
+    it("identifica corretamente projetos de Modelos TN como excluídos e categoria other", () => {
+      expect(isModelosTNProject("Modelos TN")).toBe(true);
+      expect(isModelosTNProject("Modelos / Notas")).toBe(true);
+      expect(isModelosTNProject("Modelos Editor")).toBe(true);
+      expect(isModelosTNProject("Orion TN")).toBe(false);
+      expect(isModelosTNProject("Orion REG")).toBe(false);
+      expect(isModelosTNProject("Orion PRO")).toBe(false);
+
       expect(classifySystemCategory("Orion REG")).toBe("reg");
       expect(classifySystemCategory("Orion PRO")).toBe("pro");
       expect(classifySystemCategory("Orion TN")).toBe("tn");
-      expect(classifySystemCategory("Modelos / Notas")).toBe("tn");
+      expect(classifySystemCategory("Modelos TN")).toBe("other");
+      expect(classifySystemCategory("Modelos / Notas")).toBe("other");
       expect(classifySystemCategory("Financeiro")).toBe("other");
     });
   });
@@ -422,6 +431,29 @@ describe("project-calendar-events", () => {
         timelineMembers.some((m) => m.id === UNASSIGNED_CALENDAR_MEMBER.id)
       ).toBe(true);
     });
+
+    it("ignora completamente projetos cujo sistema for 'Modelos TN' ou variações de modelos", () => {
+      const projectModelos = createMockProject({
+        id: "proj-modelos-1",
+        clientName: "Cartório Modelo de Teste",
+        systemType: "Modelos TN",
+        implementation: {
+          status: "in-progress",
+          phase1: {
+            status: "in-progress",
+            responsible: "Analista Temporário Modelos",
+            startDate: new Date("2026-05-11T12:00:00"),
+            endDate: new Date("2026-05-15T12:00:00"),
+          },
+        },
+      });
+
+      const events = buildProjectCalendarEvents([projectModelos]);
+      expect(events).toHaveLength(0);
+
+      const timelineMembers = deriveTimelineMembers([projectModelos], events);
+      expect(timelineMembers.some((m) => m.name.includes("Modelos"))).toBe(false);
+    });
   });
 
   describe("extractUnscheduledPhase1Projects", () => {
@@ -474,11 +506,24 @@ describe("project-calendar-events", () => {
         globalStatus: "done",
       });
 
+      const modelosProj = createMockProject({
+        id: "proj-backlog-modelos",
+        systemType: "Modelos TN",
+        implementation: {
+          status: "todo",
+          phase1: {
+            status: "todo",
+            responsible: "Vieira",
+          },
+        },
+      });
+
       const list = extractUnscheduledPhase1Projects([
         unscheduledProj,
         excludedBacklogProj,
         scheduledProj,
         doneProj,
+        modelosProj,
       ]);
 
       expect(list).toHaveLength(1);

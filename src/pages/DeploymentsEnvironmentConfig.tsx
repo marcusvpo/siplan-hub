@@ -12,6 +12,7 @@ import {
   FolderKanban,
   CheckCircle2,
   AlertTriangle,
+  Table,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ import {
 } from "@/lib/environment-config";
 import { EnvironmentKanbanBoard } from "@/components/EnvironmentConfig/EnvironmentKanbanBoard";
 import { EnvironmentProjectModal } from "@/components/EnvironmentConfig/EnvironmentProjectModal";
+import { EnvironmentListDialog } from "@/components/EnvironmentConfig/EnvironmentListDialog";
 import { cn } from "@/lib/utils";
 
 type ResponsibleFilter = "all" | "bruno" | "alex" | "unassigned" | string;
@@ -77,6 +79,7 @@ export default function DeploymentsEnvironmentConfig() {
   const [selectedProject, setSelectedProject] = useState<ProjectV2 | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<EnvironmentKanbanColumnId>("not_started");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isListOpen, setIsListOpen] = useState(false);
 
   // 1. Filtrar apenas projetos elegíveis para a fila de Configuração de Ambiente
   // Regras:
@@ -399,8 +402,8 @@ export default function DeploymentsEnvironmentConfig() {
           </p>
         </div>
 
-        {/* Status de Permissão e Botão de Atualizar */}
-        <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-center">
+        {/* Status de Permissão, Botão Lista de Ambientes e Botão de Atualizar */}
+        <div className="flex items-center gap-2.5 shrink-0 self-start sm:self-center flex-wrap">
           {!canEdit && (
             <Badge variant="secondary" className="gap-1 text-xs font-semibold py-1">
               <Eye className="h-3.5 w-3.5 text-muted-foreground" />
@@ -408,13 +411,26 @@ export default function DeploymentsEnvironmentConfig() {
             </Badge>
           )}
 
+          {/* Botão de Destaque: Lista de Ambientes (Vermelho e Bordas Pulsando) */}
+          <Button
+            type="button"
+            size="default"
+            onClick={() => setIsListOpen(true)}
+            data-testid="environment-list-button"
+            className="h-9 px-4 gap-2 text-xs sm:text-sm font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-md border-2 border-rose-400 ring-2 ring-rose-500/50 animate-pulse transition-all cursor-pointer"
+            title="Abrir Lista Geral de Ambientes cadastrados"
+          >
+            <Table className="h-4 w-4 shrink-0" />
+            Lista de Ambientes
+          </Button>
+
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={handleRefresh}
             disabled={isRefreshing || isLoading}
-            className="h-8 gap-1.5 text-xs font-semibold"
+            className="h-9 gap-1.5 text-xs font-semibold"
           >
             <RefreshCw className={cn("h-3.5 w-3.5", (isRefreshing || isLoading) && "animate-spin")} />
             Atualizar
@@ -652,6 +668,24 @@ export default function DeploymentsEnvironmentConfig() {
           columnId={selectedColumn}
         />
       )}
+
+      {/* Modal Lista de Ambientes em Formato de Planilha */}
+      <EnvironmentListDialog
+        open={isListOpen}
+        onOpenChange={setIsListOpen}
+        projects={allProjects}
+        onSelectProject={(project) => {
+          const env = project.stages?.environment;
+          const colId: EnvironmentKanbanColumnId =
+            env?.kanbanStatus ||
+            (env?.status === "done"
+              ? "completed"
+              : env?.status === "in-progress"
+              ? "in_progress"
+              : "not_started");
+          handleCardClick(project, colId);
+        }}
+      />
     </div>
   );
 }

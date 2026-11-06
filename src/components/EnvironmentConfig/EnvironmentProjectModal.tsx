@@ -645,6 +645,7 @@ export function EnvironmentProjectModal({
               canEditProjects={canEditFields}
               onUpdate={handleSaveStageUpdates}
               infraServers={currentProject.stages?.infra?.servers}
+              projectId={currentProject.id}
             />
           </div>
 
