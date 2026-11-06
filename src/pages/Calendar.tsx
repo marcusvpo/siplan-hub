@@ -34,6 +34,7 @@ import {
   deriveTimelineMembers,
   extractUnscheduledPhase1Projects,
   isExcludedTimelineMember,
+  isModelosTNProject,
   resolveCalendarMembersForResponsible,
 } from "@/lib/project-calendar-events";
 import {
@@ -127,9 +128,15 @@ export default function Calendar() {
 
   const timelineScrollRef = useRef<HTMLDivElement>(null);
 
-  const { projects = [], isLoading } = useProjectsV2();
+  const { projects: rawProjects = [], isLoading } = useProjectsV2();
   const { vacations = [], checkVacationConflict } = useVacations();
   const { toast } = useToast();
+
+  // Regra Oficial do Calendário de Projetos: NUNCA considerar projetos com sistema "Modelos TN" em nenhuma visualização ou timeline
+  const projects = useMemo(
+    () => rawProjects.filter((p) => !isModelosTNProject(p)),
+    [rawProjects]
+  );
 
   const { hasPermission } = usePermissions();
   const canCreateEvents = hasPermission("calendar_projects", "create");

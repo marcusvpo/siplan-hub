@@ -23,6 +23,7 @@ import {
   buildProjectCalendarEvents,
   extractUnscheduledPhase1Projects,
   isExcludedTimelineMember,
+  isModelosTNProject,
   resolveCalendarMembersForResponsible,
 } from "@/lib/project-calendar-events";
 import { CalendarEvent } from "@/types/calendar";
@@ -36,8 +37,14 @@ const QUARTER_LABELS: Record<1 | 2 | 3 | 4, string> = {
 
 function HomeCalendarKpiStripContent() {
   const navigate = useNavigate();
-  const { projects = [], isLoading } = useProjectsV2();
+  const { projects: rawProjects = [], isLoading } = useProjectsV2();
   const { vacations = [] } = useVacations();
+
+  // Regra Oficial do Calendário de Projetos: NUNCA considerar projetos com sistema "Modelos TN"
+  const projects = useMemo(
+    () => rawProjects.filter((p) => !isModelosTNProject(p)),
+    [rawProjects]
+  );
 
   const viewMode = useCalendarStore((state) => state.viewMode);
   const selectedYear = useCalendarStore((state) => state.selectedYear);

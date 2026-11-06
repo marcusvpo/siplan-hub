@@ -396,9 +396,35 @@ export function extractCleanObservations(
   };
 }
 
+/**
+ * Regra Oficial do Calendário de Projetos:
+ * Projetos cujo sistema principal for "Modelos TN" (ou qualquer variação de Modelos)
+ * NUNCA devem ser considerados na timeline, na lista de sem data (backlog) ou em filtros/KPIs.
+ */
+export function isModelosTNProject(
+  projectOrSystemType?: ProjectV2 | string | null
+): boolean {
+  if (!projectOrSystemType) return false;
+  const sys =
+    typeof projectOrSystemType === "string"
+      ? projectOrSystemType
+      : projectOrSystemType.systemType;
+  if (!sys) return false;
+  const normalized = normalizeText(sys);
+  return (
+    normalized.includes("modelo") ||
+    normalized.includes("modelos tn") ||
+    normalized.includes("modelostn")
+  );
+}
+
 export function classifySystemCategory(
   systemType: string | null | undefined
 ): CalendarSystemCategory {
+  if (isModelosTNProject(systemType)) {
+    return "other";
+  }
+
   const normalized = normalizeText(systemType);
   if (!normalized) {
     return "other";
@@ -415,8 +441,7 @@ export function classifySystemCategory(
   const hasTn =
     /\btn\b/.test(normalized) ||
     normalized.includes("orion tn") ||
-    normalized.includes("notas") ||
-    normalized.includes("modelo");
+    normalized.includes("notas");
 
   if (hasReg) {
     return "reg";
@@ -473,7 +498,7 @@ export function buildProjectCalendarEvents(
   const events: CalendarEvent[] = [];
 
   projects.forEach((project) => {
-    if (!project || project.isDeleted) return;
+    if (!project || project.isDeleted || isModelosTNProject(project)) return;
 
     const phase1 = project.stages?.implementation?.phase1;
     const rawStart = toLocalCalendarDate(phase1?.startDate);
@@ -660,7 +685,8 @@ export function extractUnscheduledPhase1Projects(
       project.isDeleted ||
       project.isArchived ||
       project.globalStatus === "done" ||
-      project.globalStatus === "archived"
+      project.globalStatus === "archived" ||
+      isModelosTNProject(project)
     ) {
       return;
     }
@@ -740,7 +766,7 @@ export function deriveTimelineMembers(
   }
 
   for (const project of projects) {
-    if (!project || project.isDeleted) continue;
+    if (!project || project.isDeleted || isModelosTNProject(project)) continue;
     const responsibleRaw = resolvePhase1ResponsibleRaw(project);
     if (responsibleRaw && !hasOnlyExcludedMembers(responsibleRaw)) {
       const resolved = resolveCalendarMembersForResponsible(responsibleRaw);

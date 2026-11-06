@@ -460,7 +460,8 @@ export function StepsTab({
                   stage={stagesData.environment} 
                   canEditProjects={canEditProjects} 
                   onUpdate={(u) => updateStage("environment", u)} 
-                  infraServers={data.stages.infra?.servers} 
+                  infraServers={data.stages.infra?.servers}
+                  projectId={project.id}
                 />
               </StageCard>
             </div>

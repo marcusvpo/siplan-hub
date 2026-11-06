@@ -357,4 +357,106 @@ describe("EnvironmentStageForm - Blocos de Acesso e Credenciais do SO", () => {
     expect(screen.getByDisplayValue("123456789")).toBeInTheDocument();
     expect(screen.getByDisplayValue("team_pass")).toBeInTheDocument();
   });
+
+  it("permite selecionar a opção VPN e exibe a seção de anexar arquivos de configuração", () => {
+    const stageWithVpn: EnvironmentStageV2 = {
+      ...baseStage,
+      remoteAccessList: [
+        {
+          system: "VPN",
+          id: "vpn_user",
+          password: "vpn_password",
+          vpnFiles: [
+            {
+              id: "file-1",
+              name: "cliente_vpn.ovpn",
+              path: "projects/p1/vpn/cliente_vpn.ovpn",
+              size: 15420,
+              uploadedAt: "2026-11-06T12:00:00Z",
+            },
+          ],
+        },
+      ],
+    };
+
+    render(
+      <EnvironmentStageForm
+        stage={stageWithVpn}
+        canEditProjects={true}
+        onUpdate={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText(/Arquivos de Configuração da VPN/i)).toBeInTheDocument();
+    expect(screen.getByText("cliente_vpn.ovpn")).toBeInTheDocument();
+    expect(screen.getByText("Anexar Arquivo VPN")).toBeInTheDocument();
+  });
+
+  it("espelha automaticamente o IP do bloco de servidor para o campo Local de Instalação (IP / Porta) com sufixo :5432", () => {
+    const onUpdateMock = vi.fn();
+    const stageWithBlock: EnvironmentStageV2 = {
+      ...baseStage,
+      osCredentials: [
+        {
+          id: "blk-1",
+          title: "Servidor Linux",
+          fields: [{ id: "f-ip", label: "IP", value: "" }],
+        },
+      ],
+    };
+
+    render(
+      <EnvironmentStageForm
+        stage={stageWithBlock}
+        canEditProjects={true}
+        onUpdate={onUpdateMock}
+      />
+    );
+
+    const ipInput = screen.getByPlaceholderText("Valor de IP");
+    fireEvent.change(ipInput, { target: { value: "121.1.1.225" } });
+
+    expect(onUpdateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        postgresHost: "121.1.1.225:5432",
+      })
+    );
+  });
+
+  it("exibe 'postgres' por padrão no Usuário do Banco e permite edição", () => {
+    const onUpdateMock = vi.fn();
+    render(
+      <EnvironmentStageForm
+        stage={baseStage}
+        canEditProjects={true}
+        onUpdate={onUpdateMock}
+      />
+    );
+
+    const userPgInput = screen.getByDisplayValue("postgres");
+    expect(userPgInput).toBeInTheDocument();
+
+    fireEvent.change(userPgInput, { target: { value: "cartorio_admin" } });
+    expect(onUpdateMock).toHaveBeenCalledWith({
+      postgresUser: "cartorio_admin",
+    });
+  });
+
+  it("renderiza opções de versão do PostgreSQL (Versão 12, 17, 18, Outro) e campo manual ao escolher Outro", () => {
+    const stageWithCustomPg: EnvironmentStageV2 = {
+      ...baseStage,
+      postgresVersion: "PostgreSQL 15 Custom",
+    };
+
+    render(
+      <EnvironmentStageForm
+        stage={stageWithCustomPg}
+        canEditProjects={true}
+        onUpdate={vi.fn()}
+      />
+    );
+
+    // Como é customizada, o select vira "Outro" e o input de texto exibe o valor
+    expect(screen.getByDisplayValue("PostgreSQL 15 Custom")).toBeInTheDocument();
+  });
 });

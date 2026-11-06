@@ -7,6 +7,7 @@ import {
 import type { ProjectV2 } from "@/types/ProjectV2";
 import {
   deriveTimelineMembers,
+  isModelosTNProject,
   normalizeText,
   packEventsIntoLanes,
 } from "@/lib/project-calendar-events";
@@ -197,6 +198,11 @@ function matchesEventFilters(
   systemFilter: string,
   statusFilter: string
 ): boolean {
+  // Regra Oficial do Calendário: NUNCA exibir projetos de Modelos TN
+  if (isModelosTNProject(event.systemType)) {
+    return false;
+  }
+
   if (searchQuery.trim()) {
     const q = normalizeText(searchQuery);
     const haystack = normalizeText(
@@ -253,6 +259,11 @@ function matchesBacklogFilters(
   systemFilter: string,
   hiddenResourceIds: string[]
 ): boolean {
+  // Regra Oficial do Calendário: NUNCA exibir projetos de Modelos TN no Pipeline Sem Data
+  if (isModelosTNProject(item.systemType)) {
+    return false;
+  }
+
   if (
     item.resolvedMembers.length > 0 &&
     item.resolvedMembers.every((m) => hiddenResourceIds.includes(m.id))

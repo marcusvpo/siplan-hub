@@ -250,10 +250,20 @@ export interface AdherenceStageV2 {
   adherenceDispatchedBy?: string;
 }
 
+export interface RemoteAccessVpnFile {
+  id: string;
+  name: string;
+  path: string; // caminho no bucket project-files
+  size?: number;
+  uploadedAt?: string;
+  uploadedBy?: string;
+}
+
 export interface RemoteAccessItem {
-  system: "AnyDesk" | "TeamViewer" | "RustDesk" | "Outro";
+  system: "AnyDesk" | "TeamViewer" | "RustDesk" | "VPN" | "Outro" | string;
   id: string;
   password?: string;
+  vpnFiles?: RemoteAccessVpnFile[];
 }
 
 export interface OsCredentialField {
