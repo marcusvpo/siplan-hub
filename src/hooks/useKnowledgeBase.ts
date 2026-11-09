@@ -8,6 +8,7 @@ import {
   insertNewArticleIntoDocument,
   deleteArticleFromDocument,
   normalizeMarkdown,
+  ensureCrlf,
 } from "@/services/markdownKnowledgeService";
 import { computeTextDiff, formatBackupFilePath } from "@/services/diffService";
 import type {
@@ -272,12 +273,17 @@ export function useKnowledgeBase() {
           s.toLowerCase().includes(q),
         );
 
+        const matchSymptoms = article.metadata.sintomas_comuns?.some((s) =>
+          s.toLowerCase().includes(q),
+        );
+
         return (
           matchId ||
           matchTitle ||
           matchObjective ||
           matchTags ||
           matchQuestions ||
+          matchSymptoms ||
           matchSynonyms
         );
       }
@@ -415,10 +421,12 @@ export function useKnowledgeBase() {
       }
 
       // 3. Reconstruir o arquivo final unindo o frontmatter intocado + corpo novo
-      const finalFileContent = updateArticleInDocument(
-        docData.rawContent,
-        articleId,
-        updatedBody,
+      const finalFileContent = ensureCrlf(
+        updateArticleInDocument(
+          docData.rawContent,
+          articleId,
+          updatedBody,
+        ),
       );
 
       // 4. Upload para o Supabase Storage na raiz (arquivo atual)
@@ -545,12 +553,14 @@ export function useKnowledgeBase() {
       }
 
       // 3. Inserir cirurgicamente a nova rotina no documento mestre
-      const finalFileContent = insertNewArticleIntoDocument(docData.rawContent, {
-        metadata,
-        body,
-        sectionIndex,
-        hasVideo,
-      });
+      const finalFileContent = ensureCrlf(
+        insertNewArticleIntoDocument(docData.rawContent, {
+          metadata,
+          body,
+          sectionIndex,
+          hasVideo,
+        }),
+      );
 
       // 4. Upload para o Supabase Storage na raiz
       const contentBlob = new Blob([finalFileContent], {
@@ -628,6 +638,135 @@ export function useKnowledgeBase() {
     },
   });
 
+  // Mutação para Atualizar Metadados e Corpo de uma Rotina Existente
+  const updateRoutineMutation = useMutation({
+    mutationFn: async ({
+      articleId,
+      metadata,
+      body,
+      customSummary,
+    }: {
+      articleId: string;
+      metadata: KnowledgeArticleMetadata;
+      body: string;
+      customSummary?: string;
+    }) => {
+      if (!docData) throw new Error("Documento não carregado");
+
+      setSaveStep("saving_storage");
+      setSyncErrorMessage(null);
+      setSyncedFileId(null);
+
+      // 1. Obter próximo número sequencial de versão
+      let nextVersionNum = 1;
+      try {
+        const { data: numData } = await supabase.rpc("get_next_knowledge_version_number");
+        if (typeof numData === "number") {
+          nextVersionNum = numData;
+        }
+      } catch (err) {
+        console.warn("Erro ao obter número de versão:", err);
+      }
+
+      // 2. Salvar backup do estado anterior
+      const backupPath = formatBackupFilePath(nextVersionNum, "OrionTN pos");
+      const previousBlob = new Blob([ensureCrlf(docData.rawContent)], {
+        type: "text/markdown;charset=utf-8",
+      });
+
+      const { error: backupError } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(backupPath, previousBlob, {
+          upsert: true,
+          contentType: "text/markdown",
+        });
+
+      if (backupError) {
+        throw new Error(`Falha ao criar backup em ${backupPath}: ${backupError.message}`);
+      }
+
+      // 3. Atualizar documento mestre com novos metadados e corpo
+      const finalFileContent = ensureCrlf(
+        updateArticleInDocument(docData.rawContent, articleId, body, metadata),
+      );
+
+      // 4. Upload no Storage
+      const contentBlob = new Blob([finalFileContent], {
+        type: "text/markdown;charset=utf-8",
+      });
+
+      const { error: uploadError } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(STORAGE_FILE_PATH, contentBlob, {
+          upsert: true,
+          contentType: "text/markdown",
+        });
+
+      if (uploadError) {
+        throw new Error(`Erro ao salvar arquivo atualizado no Storage: ${uploadError.message}`);
+      }
+
+      // 5. Registrar versão no banco
+      const summaryText =
+        customSummary && customSummary.trim() !== ""
+          ? customSummary.trim()
+          : `Atualizada rotina ${metadata.id}: ${metadata.titulo}`;
+
+      let generatedVersionId: string | null = null;
+      try {
+        const { data: vId } = await supabase.rpc("register_knowledge_version" as any, {
+          p_backup_file_path: backupPath,
+          p_article_id: metadata.id,
+          p_article_title: metadata.titulo,
+          p_summary_changes: summaryText,
+          p_diff_summary: {
+            action: "update_routine",
+            article_id: metadata.id,
+            title: metadata.titulo,
+          } as any,
+          p_content_size_bytes: contentBlob.size,
+          p_is_restoration: false,
+          p_metadata: {
+            article_id: metadata.id,
+            tags: metadata.tags || [],
+            has_video: Boolean(metadata.video?.tem_video),
+            author_email: user?.email,
+          },
+        });
+        generatedVersionId = vId as unknown as string;
+      } catch (logErr) {
+        console.warn("Aviso ao registrar versão no banco:", logErr);
+      }
+
+      const versionTag = `v${nextVersionNum}`;
+
+      // 6. Entrar em status de sincronização
+      setSaveStep("syncing_openai");
+      if (generatedVersionId) {
+        setActiveVersionId(generatedVersionId);
+        startSyncStatusPolling(generatedVersionId, versionTag);
+      }
+
+      // 7. Selecionar artigo atualizado
+      setSelectedArticleId(metadata.id);
+      setIsDirty(false);
+      await queryClient.invalidateQueries({ queryKey: ["assistant_knowledge_doc"] });
+
+      return {
+        articleId: metadata.id,
+        versionId: generatedVersionId,
+        versionTag,
+      };
+    },
+    onError: (err: Error) => {
+      setSaveStep("failed");
+      setSyncErrorMessage(err.message);
+      toast.error("Falha ao atualizar rotina", {
+        description: err.message,
+      });
+    },
+  });
+
   // 7. Mutação para Excluir Completamente uma Rotina
   const deleteRoutineMutation = useMutation({
     mutationFn: async (articleId: string) => {
@@ -671,7 +810,7 @@ export function useKnowledgeBase() {
       }
 
       // 3. Remover cirurgicamente a rotina do documento mestre
-      const finalFileContent = deleteArticleFromDocument(docData.rawContent, articleId);
+      const finalFileContent = ensureCrlf(deleteArticleFromDocument(docData.rawContent, articleId));
 
       // 4. Upload do arquivo atualizado
       const contentBlob = new Blob([finalFileContent], {
@@ -984,11 +1123,14 @@ export function useKnowledgeBase() {
     saveCurrentArticle,
     createNewRoutine: createRoutineMutation.mutateAsync,
     isCreatingRoutine: createRoutineMutation.isPending,
+    updateRoutine: updateRoutineMutation.mutateAsync,
+    isUpdatingRoutine: updateRoutineMutation.isPending,
     deleteRoutine: deleteRoutineMutation.mutateAsync,
     isDeletingRoutine: deleteRoutineMutation.isPending,
     isSaving:
       saveMutation.isPending ||
       createRoutineMutation.isPending ||
+      updateRoutineMutation.isPending ||
       deleteRoutineMutation.isPending ||
       saveStep === "saving_storage" ||
       saveStep === "syncing_openai",

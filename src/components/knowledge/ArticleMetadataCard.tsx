@@ -18,6 +18,9 @@ import {
   Clock,
   Film,
   Link2,
+  Pencil,
+  AlertCircle,
+  Stethoscope,
 } from "lucide-react";
 import { toast } from "sonner";
 import { parseTimestampToSeconds } from "@/services/markdownKnowledgeService";
@@ -33,6 +36,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -50,12 +54,14 @@ import type { KnowledgeArticle } from "@/types/knowledge";
 
 interface ArticleMetadataCardProps {
   article: KnowledgeArticle;
+  onEditRoutine?: (article: KnowledgeArticle) => void;
   onDeleteRoutine?: (articleId: string) => Promise<any>;
   isDeleting?: boolean;
 }
 
 export function ArticleMetadataCard({
   article,
+  onEditRoutine,
   onDeleteRoutine,
   isDeleting = false,
 }: ArticleMetadataCardProps) {
@@ -66,6 +72,7 @@ export function ArticleMetadataCard({
   const { metadata } = article;
   const hasVideo = metadata.video && metadata.video.tem_video;
   const hasQuestions = metadata.perguntas_usuario && metadata.perguntas_usuario.length > 0;
+  const hasSintomas = metadata.sintomas_comuns && metadata.sintomas_comuns.length > 0;
   const hasSynonyms = metadata.sinonimos && metadata.sinonimos.length > 0;
 
   const handleConfirmDelete = async () => {
@@ -81,7 +88,7 @@ export function ArticleMetadataCard({
   return (
     <>
       <Card className="mb-4 min-w-0 overflow-hidden border-border/60 bg-muted/20 shadow-sm sm:mb-6">
-        {/* Top Bar with ID, Status, Video Button and 3-dots Menu */}
+        {/* Top Bar with ID, Status, Edit, Video Button and 3-dots Menu */}
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 bg-muted/40 px-3 py-2.5 sm:gap-3 sm:px-4">
           <div className="flex min-w-0 items-center gap-2 sm:gap-2.5">
             <Badge
@@ -102,6 +109,20 @@ export function ArticleMetadataCard({
               <span className="hidden min-[360px]:inline">YAML Protegido</span>
             </div>
 
+            {/* Botão de Edição Completa da Rotina */}
+            {onEditRoutine && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEditRoutine(article)}
+                className="h-7 text-xs gap-1.5 border-primary/30 text-primary hover:bg-primary/10 font-semibold"
+                title="Editar todos os metadados e corpo desta rotina"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Editar Rotina</span>
+              </Button>
+            )}
+
             {hasVideo && (
               <Button
                 variant="outline"
@@ -115,30 +136,42 @@ export function ArticleMetadataCard({
             )}
 
             {/* Menu de 3 Pontinhos (Ações da Rotina) */}
-            {onDeleteRoutine && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                    title="Mais opções da rotina"
-                    disabled={isDeleting}
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                  title="Mais opções da rotina"
+                  disabled={isDeleting}
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {onEditRoutine && (
                   <DropdownMenuItem
-                    onClick={() => setIsDeleteDialogOpen(true)}
-                    className="text-destructive focus:text-destructive focus:bg-destructive/10 gap-2 cursor-pointer text-xs font-semibold"
+                    onClick={() => onEditRoutine(article)}
+                    className="gap-2 cursor-pointer text-xs font-medium"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    <span>Excluir Rotina</span>
+                    <Pencil className="h-3.5 w-3.5 text-primary" />
+                    <span>Editar Rotina e Metadados</span>
                   </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+                )}
+                {onDeleteRoutine && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => setIsDeleteDialogOpen(true)}
+                      className="text-destructive focus:text-destructive focus:bg-destructive/10 gap-2 cursor-pointer text-xs font-semibold"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span>Excluir Rotina</span>
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -155,7 +188,7 @@ export function ArticleMetadataCard({
             <div className="flex items-start gap-2.5 rounded-lg bg-background/80 border border-border/50 p-3 text-xs leading-relaxed">
               <Target className="h-4 w-4 shrink-0 text-primary mt-0.5" />
               <div className="space-y-0.5">
-                <span className="font-semibold text-foreground block">Objetivo:</span>
+                <span className="font-semibold text-foreground block">Objetivo da Rotina:</span>
                 <p className="text-muted-foreground">{metadata.objetivo}</p>
               </div>
             </div>
@@ -180,8 +213,8 @@ export function ArticleMetadataCard({
             </div>
           )}
 
-          {/* Collapsible Details (Perguntas de Usuário, Sinônimos e Bunny ID) */}
-          {(hasQuestions || hasSynonyms || hasVideo) && (
+          {/* Collapsible Details (Perguntas de Usuário, Sintomas Comuns, Sinônimos e Bunny ID) */}
+          {(hasQuestions || hasSintomas || hasSynonyms || hasVideo) && (
             <Collapsible open={isDetailsOpen} onOpenChange={setIsDetailsOpen} className="pt-1">
               <CollapsibleTrigger asChild>
                 <Button
@@ -191,7 +224,7 @@ export function ArticleMetadataCard({
                 >
                   <Sparkles className="h-3.5 w-3.5 text-primary" />
                   <span>
-                    {isDetailsOpen ? "Ocultar Metadados Avançados" : "Ver Metadados Avançados (IA & Vídeo)"}
+                    {isDetailsOpen ? "Ocultar Metadados Avançados" : "Ver Metadados Avançados (Sintomas, Dúvidas & Vídeo)"}
                   </span>
                   <ChevronDown
                     className={`h-3.5 w-3.5 transition-transform duration-200 ${
@@ -202,13 +235,34 @@ export function ArticleMetadataCard({
               </CollapsibleTrigger>
 
               <CollapsibleContent className="space-y-3 pt-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-lg border border-border/40 bg-background/50 p-3.5 text-xs">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 rounded-lg border border-border/40 bg-background/50 p-3.5 text-xs">
+                  {/* ⭐ Sintomas Comuns de Dor (Dores / O que o escrevente reclama) */}
+                  {hasSintomas && (
+                    <div className="space-y-1.5 md:col-span-2 p-2.5 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                      <span className="font-semibold text-foreground flex items-center gap-1.5 text-amber-800 dark:text-amber-200">
+                        <Stethoscope className="h-3.5 w-3.5 text-amber-500" />
+                        ⭐ Sintomas Comuns de Dor (O que o escrevente reclama / termos de busca):
+                      </span>
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {metadata.sintomas_comuns?.map((sintoma, idx) => (
+                          <Badge
+                            key={idx}
+                            variant="outline"
+                            className="text-[11px] font-medium border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-200 py-0.5 px-2.5"
+                          >
+                            {sintoma}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Perguntas Frequentes do Usuário */}
                   {hasQuestions && (
                     <div className="space-y-1.5">
                       <span className="font-semibold text-foreground flex items-center gap-1.5">
                         <HelpCircle className="h-3.5 w-3.5 text-primary" />
-                        Perguntas que ativam esta rotina:
+                        Perguntas do Usuário (Dúvidas Completas):
                       </span>
                       <ul className="space-y-1 text-muted-foreground pl-1">
                         {metadata.perguntas_usuario?.map((pergunta, idx) => (
@@ -247,7 +301,7 @@ export function ArticleMetadataCard({
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-foreground flex items-center gap-1.5">
                           <Film className="h-3.5 w-3.5 text-rose-500" />
-                          Metadados do Vídeo Tutorial (Bunny.net):
+                          Metadados do Vídeo Tutorial (Bunny.net Stream):
                         </span>
                         <Badge
                           variant="outline"

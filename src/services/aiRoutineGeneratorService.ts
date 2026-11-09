@@ -1,8 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import {
   suggestNextArticleId,
+  stripIdPrefixFromTitle,
   SIPLAN_HUB_SECTION_INDEX,
   SIPLAN_HUB_SECTION_TITLE,
+  RoutinePrefix,
 } from "@/services/markdownKnowledgeService";
 import type { KnowledgeArticle, KnowledgeSection } from "@/types/knowledge";
 
@@ -14,24 +16,26 @@ export interface GeneratedRoutineMetadata {
   objetivo: string;
   tags: string[];
   perguntas_usuario: string[];
+  sintomas_comuns: string[]; // ⭐ NOVO CAMPO OBRIGATÓRIO (3 a 5 termos curtos sem ?)
   sinonimos: string[];
 }
 
 /**
  * Analisa o texto do procedimento e gera automaticamente os metadados
  * técnicos necessários para a base de conhecimento do Orion TN.
- * Novas rotinas do Siplan HUB são alocadas na SEÇÃO PRINCIPAL 5 com prefixo S-5.X.
  */
 export async function generateRoutineMetadataWithAi({
   bodyMarkdown,
   articles,
   sections,
   preferredSectionIndex = SIPLAN_HUB_SECTION_INDEX,
+  preferredPrefix = "D",
 }: {
   bodyMarkdown: string;
   articles: KnowledgeArticle[];
   sections: KnowledgeSection[];
   preferredSectionIndex?: number;
+  preferredPrefix?: RoutinePrefix;
 }): Promise<GeneratedRoutineMetadata> {
   const existingIds = articles.map((a) => a.id);
 
@@ -43,34 +47,53 @@ export async function generateRoutineMetadataWithAi({
         existingIds,
         sections,
         sectionIndex: preferredSectionIndex,
+        prefix: preferredPrefix,
       },
     });
 
     if (!error && data?.success && data?.metadata) {
       const meta = data.metadata;
-      // Validar se o ID sugerido pela IA não conflita, se conflitar, recalcula
       const isIdTaken = existingIds.some(
         (id) => id.toLowerCase() === (meta.id || "").trim().toLowerCase(),
       );
 
       const targetSec = meta.sectionIndex || preferredSectionIndex;
       const finalId =
-        meta.id && !isIdTaken && meta.id.toUpperCase().startsWith("S-")
+        meta.id && !isIdTaken && meta.id.toUpperCase().startsWith(`${preferredPrefix}-`)
           ? meta.id.trim().toUpperCase()
-          : suggestNextArticleId(articles, targetSec);
+          : suggestNextArticleId(articles, preferredPrefix);
+
+      const cleanTitle = stripIdPrefixFromTitle(meta.titulo?.trim() || "Como Executar Procedimento no Orion TN");
+
+      const sintomas = Array.isArray(meta.sintomas_comuns)
+        ? meta.sintomas_comuns
+            .map((s: string) => String(s).replace(/\?/g, "").trim())
+            .filter(Boolean)
+            .slice(0, 5)
+        : [];
 
       return {
         id: finalId,
-        titulo: meta.titulo?.trim() || "Como Executar Procedimento no Orion TN",
+        titulo: cleanTitle,
         sectionIndex: targetSec,
         secao: meta.secao || SIPLAN_HUB_SECTION_TITLE,
         objetivo: meta.objetivo?.trim() || "Procedimento operacional do sistema Orion TN.",
-        tags: Array.isArray(meta.tags) ? meta.tags.map((t: string) => t.trim()).filter(Boolean) : ["orion_tn"],
+        tags: Array.isArray(meta.tags)
+          ? meta.tags.map((t: string) => t.trim()).filter(Boolean).slice(0, 7)
+          : ["orion_tn"],
         perguntas_usuario: Array.isArray(meta.perguntas_usuario)
-          ? meta.perguntas_usuario.map((p: string) => p.trim()).filter(Boolean)
+          ? meta.perguntas_usuario.map((p: string) => p.trim()).filter(Boolean).slice(0, 5)
           : [],
+        sintomas_comuns:
+          sintomas.length >= 3
+            ? sintomas
+            : [
+                "não consigo executar na tela",
+                "onde acho opção no menu",
+                "dúvida ao salvar registro",
+              ],
         sinonimos: Array.isArray(meta.sinonimos)
-          ? meta.sinonimos.map((s: string) => s.trim()).filter(Boolean)
+          ? meta.sinonimos.map((s: string) => s.trim()).filter(Boolean).slice(0, 5)
           : [],
       };
     }
@@ -78,12 +101,13 @@ export async function generateRoutineMetadataWithAi({
     console.warn("Aviso: Falha ao chamar Edge function de IA, utilizando gerador heurístico local:", err);
   }
 
-  // 2. Fallback Heurístico Local Robusto (sempre funciona, mesmo offline)
+  // 2. Fallback Heurístico Local Robusto
   return generateHeuristicMetadata({
     bodyMarkdown,
     articles,
     sections,
     sectionIndex: preferredSectionIndex,
+    preferredPrefix,
   });
 }
 
@@ -95,15 +119,16 @@ function generateHeuristicMetadata({
   articles,
   sections,
   sectionIndex = SIPLAN_HUB_SECTION_INDEX,
+  preferredPrefix = "D",
 }: {
   bodyMarkdown: string;
   articles: KnowledgeArticle[];
   sections: KnowledgeSection[];
   sectionIndex?: number;
+  preferredPrefix?: RoutinePrefix;
 }): GeneratedRoutineMetadata {
   const lines = bodyMarkdown.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
 
-  // Extrair título do primeiro cabeçalho Markdown (# Titulo ou ## Titulo) ou da primeira linha
   let extractedTitle = "Como Executar Procedimento no Orion TN";
   for (const line of lines) {
     if (line.startsWith("#")) {
@@ -120,10 +145,10 @@ function generateHeuristicMetadata({
     extractedTitle = `Como ${extractedTitle}`;
   }
 
-  // Sugerir ID sequencial no padrão S-5.X para a Seção 5
-  const suggestedId = suggestNextArticleId(articles, sectionIndex);
+  extractedTitle = stripIdPrefixFromTitle(extractedTitle);
 
-  // Gerar tags a partir de palavras-chave do texto
+  const suggestedId = suggestNextArticleId(articles, preferredPrefix);
+
   const textLower = bodyMarkdown.toLowerCase();
   const tagKeywords: Record<string, string> = {
     "inteiro teor": "Certidões",
@@ -131,11 +156,10 @@ function generateHeuristicMetadata({
     casamento: "Registro Civil",
     nascimento: "Registro Civil",
     óbito: "Registro Civil",
-    firma: "Reconhecimento de Firma",
+    firma: "Firmas",
     autenticação: "Autenticação",
-    selo: "Selagem",
+    selo: "Estoque",
     livro: "Livros",
-    "registro civil": "Registro Civil",
     notas: "Notas",
     procuração: "Procurações",
     escritura: "Escrituras",
@@ -146,50 +170,59 @@ function generateHeuristicMetadata({
     backup: "Configurações",
     configuração: "Configurações",
     orçamento: "Orçamentos",
-    negócio: "Negócios",
     cadastro: "Cadastros",
-    desistência: "Atendimento",
-    consulta: "Consultas",
-    balcão: "Balcão",
+    qualificação: "Qualificação",
+    editor: "Editor",
+    scanner: "Digitalização",
+    impressão: "Impressão",
   };
 
-  const detectedTags = new Set<string>();
+  const detectedTags: string[] = [];
   for (const [kw, tag] of Object.entries(tagKeywords)) {
-    if (textLower.includes(kw)) {
-      detectedTags.add(tag);
+    if (textLower.includes(kw) && !detectedTags.includes(tag)) {
+      detectedTags.push(tag);
     }
+    if (detectedTags.length >= 5) break;
   }
 
-  if (detectedTags.size === 0) {
-    detectedTags.add("Procedimentos");
-    detectedTags.add("Configurações");
+  if (detectedTags.length < 3) {
+    if (!detectedTags.includes("Orion TN")) detectedTags.push("Orion TN");
+    if (!detectedTags.includes("Geral")) detectedTags.push("Geral");
+    if (!detectedTags.includes("Atendimento")) detectedTags.push("Atendimento");
   }
 
-  // Objetivo
-  const cleanTitle = extractedTitle.replace(/^como\s+/i, "");
-  const objetivo = `Orientar o usuário no passo a passo para ${cleanTitle.toLowerCase()} no sistema Orion TN.`;
+  const cleanSubject = extractedTitle.replace(/^como\s+/i, "");
 
-  // Perguntas do usuário
-  const perguntas_usuario = [
-    `Como realizar o procedimento de ${cleanTitle.toLowerCase()}?`,
-    `Onde fica a opção de ${cleanTitle.toLowerCase()} no Orion TN?`,
-    `Passo a passo para ${cleanTitle.toLowerCase()}`,
+  const generatedQuestions = [
+    `Como fazer para ${cleanSubject}?`,
+    `Onde encontro a tela de ${cleanSubject} no Orion TN?`,
+    `Qual o passo a passo para ${cleanSubject}?`,
   ];
 
-  // Sinônimos
-  const words = cleanTitle.split(/\s+/).filter((w) => w.length > 3);
-  const sinonimos = [cleanTitle.toLowerCase(), ...words.slice(0, 4)];
+  // ⭐ Sintomas comuns heurísticos (sem '?')
+  const generatedSymptoms = [
+    `não consigo ${cleanSubject.slice(0, 30)}`,
+    `opção de ${cleanSubject.slice(0, 25)} não aparece`,
+    `erro ao processar ${cleanSubject.slice(0, 25)}`,
+  ];
 
-  const targetSection = sections.find((s) => s.index === sectionIndex);
+  const generatedSynonyms = [
+    cleanSubject,
+    `rotina de ${cleanSubject}`,
+    `procedimento ${cleanSubject}`,
+  ];
+
+  const section = sections.find((s) => s.index === sectionIndex);
 
   return {
     id: suggestedId,
     titulo: extractedTitle,
     sectionIndex,
-    secao: targetSection?.title || SIPLAN_HUB_SECTION_TITLE,
-    objetivo,
-    tags: Array.from(detectedTags),
-    perguntas_usuario,
-    sinonimos,
+    secao: section?.title || SIPLAN_HUB_SECTION_TITLE,
+    objetivo: `Orientar o usuário no processo de ${cleanSubject} no sistema Orion TN.`,
+    tags: detectedTags.slice(0, 7),
+    perguntas_usuario: generatedQuestions,
+    sintomas_comuns: generatedSymptoms,
+    sinonimos: generatedSynonyms,
   };
 }
