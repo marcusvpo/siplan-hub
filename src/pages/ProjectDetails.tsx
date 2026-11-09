@@ -23,6 +23,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { cn } from "@/lib/utils";
 import { OrionAdminAnimatedButton } from "@/components/ProjectManagement/OrionAdminAnimatedButton";
+import { SiplanSkillsHeaderButton } from "@/components/ProjectManagement/SiplanSkillsHeaderButton";
 
 export default function ProjectDetails() {
   const { id } = useParams<{ id: string }>();
@@ -155,6 +156,9 @@ export default function ProjectDetails() {
         </div>
 
         <div className="flex items-center gap-2 shrink-0 mt-0.5">
+          <SiplanSkillsHeaderButton
+            project={project}
+          />
           <OrionAdminAnimatedButton
             project={project}
             onClick={handleOpenOrionAdmin}

@@ -759,6 +759,7 @@ export const pageHelpData: PageHelpInfo[] = [
       "Filtros avançados por etapa, status da etapa, Health Score, sistema e analista",
       "Barra de pesquisa rápida com busca por serventia e CNS",
       "Modal de detalhes com abas organizadas por Estágios, Notas e Histórico",
+      "Criação e sincronização automática de cartório, usuário padronizado e conteúdos no Siplan Skills com 1 clique",
       "Recurso de Autosave automático com salvamento contínuo em segundo plano",
     ],
     steps: [
@@ -778,6 +779,13 @@ export const pageHelpData: PageHelpInfo[] = [
       },
       {
         stepNumber: 3,
+        title: "Gere e Copie o Acesso do Siplan Skills",
+        description:
+          "Em projetos Orion TN, Orion PRO ou Orion REG, clique em 'Criar Acesso Skills' no cabeçalho ou no card da aba Informações Gerais para cadastrar automaticamente o cartório, o usuário padronizado e liberar as vídeo-aulas, copiando as credenciais em 1 clique.",
+        icon: Sparkles,
+      },
+      {
+        stepNumber: 4,
         title: "Preencha as Etapas",
         description:
           "Atualize as datas, checklists e observações. As alterações são salvas automaticamente pelo Autosave.",

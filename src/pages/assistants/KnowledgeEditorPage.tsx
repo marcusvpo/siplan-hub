@@ -177,14 +177,20 @@ export default function KnowledgeEditorPage() {
   const handleUpdateRoutine = async (params: {
     articleId: string;
     metadata: KnowledgeArticleMetadata;
-    body: string;
+    body?: string;
     customSummary?: string;
   }) => {
     setIsCreateModalOpen(false);
-    setEditingArticle(null);
+    const bodyToSave =
+      (params.articleId === selectedArticleId && draftBody)
+        ? draftBody
+        : (params.body || editingArticle?.body || "");
     setEditingArticle(null);
     setIsConfirmModalOpen(true);
-    return updateRoutine(params);
+    return updateRoutine({
+      ...params,
+      body: bodyToSave,
+    });
   };
 
   const handleCreateRoutine = async (params: {

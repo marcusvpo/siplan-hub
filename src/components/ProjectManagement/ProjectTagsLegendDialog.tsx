@@ -105,6 +105,29 @@ export function ProjectTagsLegendDialog() {
               </h4>
               <div className="grid grid-cols-1 gap-2">
                 <div className="flex items-start gap-3 p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/60">
+                  <Badge className="text-[9px] px-2 py-0.5 font-bold bg-indigo-600 text-white shrink-0 mt-0.5 flex items-center gap-1.5">
+                    <span>Skills: 01tn.osasco</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-black/25 px-1.5 py-0 text-[8.5px]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                      <span>Online</span>
+                    </span>
+                  </Badge>
+                  <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Cartório já possui usuário e token ativos no Siplan Skills, exibindo junto o farol de atividade em tempo real (Online, há X dias ou Nunca acessou).
+                  </p>
+                </div>
+
+                <div className="flex items-start gap-3 p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/60">
+                  <Badge className="text-[9px] px-2 py-0.5 font-bold bg-orange-600 text-white shrink-0 mt-0.5 flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                    <span>Skills: Sem Acesso</span>
+                  </Badge>
+                  <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Projeto Orion ainda não possui acesso criado no Siplan Skills. Pode ser criado com 1 clique no botão do cabeçalho do modal.
+                  </p>
+                </div>
+
+                <div className="flex items-start gap-3 p-2 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/60">
                   <Badge className="text-[9px] px-2 py-0.5 font-bold bg-purple-600 text-white shrink-0 mt-0.5">
                     Autom. N8N
                   </Badge>
