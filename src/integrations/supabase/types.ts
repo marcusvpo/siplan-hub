@@ -676,6 +676,20 @@ export type UserTopicAffinityInsert = {
 
 export type UserTopicAffinityUpdate = Partial<UserTopicAffinityInsert>;
 
+export type InternalIntegrationSecretRow = {
+  key_name: string;
+  secret_value: string;
+  updated_at: string;
+};
+
+export type InternalIntegrationSecretInsert = {
+  key_name: string;
+  secret_value: string;
+  updated_at?: string;
+};
+
+export type InternalIntegrationSecretUpdate = Partial<InternalIntegrationSecretInsert>;
+
 
 /**
  * O arquivo gerado do projeto estava vazio antes desta mudança. Estes aliases

@@ -358,17 +358,25 @@ export function CreateRoutineModal({
 
   // Auto-Preenchimento com IA a partir do Passo a Passo
   const handleGenerateWithAi = async () => {
-    if (!stepByStepBody.trim() || stepByStepBody.trim().length < 15) {
-      toast.warning("Preencha o Passo a Passo primeiro", {
-        description: "Escreva as instruções do procedimento para que a IA possa analisar e sugerir os metadados.",
-      });
+    const effectiveBody = (isEditMode ? initialArticle?.body : null) || stepByStepBody;
+    if (!effectiveBody.trim() || effectiveBody.trim().length < 15) {
+      toast.warning(
+        isEditMode
+          ? "Rotina sem passo a passo suficiente"
+          : "Preencha o Passo a Passo primeiro",
+        {
+          description: isEditMode
+            ? "A rotina selecionada não possui instruções suficientes para a IA analisar os metadados."
+            : "Escreva as instruções do procedimento para que a IA possa analisar e sugerir os metadados.",
+        },
+      );
       return;
     }
 
     setIsGeneratingAi(true);
     try {
       const result = await generateRoutineMetadataWithAi({
-        bodyMarkdown: stepByStepBody,
+        bodyMarkdown: effectiveBody,
         articles,
         sections,
         preferredSectionIndex: selectedSectionIndex,
@@ -530,8 +538,8 @@ export function CreateRoutineModal({
       return;
     }
 
-    // 8. Validação do Corpo
-    if (!bodyValidation.isValid) {
+    // 8. Validação do Corpo (apenas em modo de cadastro de nova rotina)
+    if (!isEditMode && !bodyValidation.isValid) {
       toast.error("Corpo da Rotina Inválido", {
         description: bodyValidation.message,
       });
@@ -574,7 +582,9 @@ export function CreateRoutineModal({
       video: videoData,
     };
 
-    const cleanBody = sanitizeRoutineBody(stepByStepBody.trim());
+    const cleanBody = isEditMode
+      ? (initialArticle?.body || "")
+      : sanitizeRoutineBody(stepByStepBody.trim());
 
     try {
       if (isEditMode && onUpdateRoutine && initialArticle) {
@@ -582,7 +592,7 @@ export function CreateRoutineModal({
           articleId: initialArticle.id,
           metadata,
           body: cleanBody,
-          customSummary: `Atualizada rotina ${routineId.trim().toUpperCase()}: ${cleanTitle}`,
+          customSummary: `Atualizados metadados da rotina ${routineId.trim().toUpperCase()}: ${cleanTitle}`,
         });
       } else {
         await onCreateRoutine({
@@ -617,7 +627,7 @@ export function CreateRoutineModal({
                 </DialogTitle>
                 <DialogDescription className="text-xs text-muted-foreground truncate">
                   {isEditMode
-                    ? `Editando rotina ${initialArticle?.id}: ${initialArticle?.metadata?.titulo || initialArticle?.titulo}`
+                    ? `Edição dos metadados da rotina ${initialArticle?.id}: ${initialArticle?.metadata?.titulo || initialArticle?.titulo} (o passo a passo continua sendo editado na tela principal)`
                     : "Cadastro e padronização estruturada de rotinas e tutoriais da base oficial"}
                 </DialogDescription>
               </div>
@@ -633,7 +643,7 @@ export function CreateRoutineModal({
                     : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-xs"
                 }
               >
-                {isEditMode ? "Modo Edição" : "Nova Rotina"}
+                {isEditMode ? "Edição de Metadados" : "Nova Rotina"}
               </Badge>
             </div>
           </div>
@@ -652,7 +662,13 @@ export function CreateRoutineModal({
                 </Badge>
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Escreva o <strong>Passo a Passo</strong> no final deste formulário e clique aqui para gerar Título, Objetivo, Tags, Perguntas, Sintomas Comuns e Sinônimos automaticamente.
+                {isEditMode ? (
+                  "Clique aqui para a IA analisar o passo a passo da rotina e sugerir/atualizar Objetivo, Tags, Perguntas, Sintomas Comuns e Sinônimos automaticamente."
+                ) : (
+                  <>
+                    Escreva o <strong>Passo a Passo</strong> no final deste formulário e clique aqui para gerar Título, Objetivo, Tags, Perguntas, Sintomas Comuns e Sinônimos automaticamente.
+                  </>
+                )}
               </p>
             </div>
 
@@ -1246,7 +1262,8 @@ export function CreateRoutineModal({
             )}
           </div>
 
-          {/* ================= SEÇÃO D: CORPO DA ROTINA (MARKDOWN FORMATADO) ================= */}
+          {/* ================= SEÇÃO D: CORPO DA ROTINA (MARKDOWN FORMATADO) - APENAS MODO CRIAÇÃO ================= */}
+          {!isEditMode && (
           <div className="rounded-xl border border-primary/20 bg-card p-4 space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-2">
               <div className="space-y-0.5">
@@ -1312,6 +1329,7 @@ export function CreateRoutineModal({
               />
             </div>
           </div>
+          )}
         </div>
 
         {/* ===================== FOOTER ===================== */}
@@ -1342,7 +1360,7 @@ export function CreateRoutineModal({
             ) : (
               <>
                 <CheckCircle2 className="h-4 w-4" />
-                {isEditMode ? "Salvar Alterações na Rotina" : "Salvar Rotina"}
+                {isEditMode ? "Salvar Metadados" : "Salvar Rotina"}
               </>
             )}
           </Button>

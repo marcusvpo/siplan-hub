@@ -221,6 +221,14 @@ Abaixo está o quadro dos 28 colaboradores com permissão/atuação em SD cadast
 * **Público-Alvo:** Focado na equipe Comercial, que passa a maior parte do tempo em deslocamento/visitas a clientes e necessita de uma visão limpa e resumida sem precisar entrar em cada projeto do HUB.
 * **Tratativa:** A palavra final é do Comercial em contato com o cliente. O gestor de implantação acompanha o status e atualiza manualmente a pendência na etapa correspondente em `/projects`.
 
+### 6.4. Integração e Provisionamento Automático Siplan Skills (`/projects`)
+* **Escopo Exclusivo:** Habilitado para projetos cujo `system_type` seja **`Orion TN`**, **`Orion PRO`** ou **`Orion REG`** (projetos `Modelos TN` e `WEB RC` são ignorados).
+* **Automação em 1 Clique das 3 Etapas do Wizard do Siplan Skills:**
+  1. **Etapa 1 (Cartório e Token):** Cadastra ou reaproveita o cartório no banco do Siplan Skills (`bnulocsnxiffavvabfdj`) com `estado = 'SP'`, `cidade = null`, token `CART...` com validade automática para **`31/12/(ano_atual + 1)`** e frase padrão de `Observações` gerada conforme os sistemas liberados (`"Acesso para Demonstração e Treinamento Orion TN..."`).
+  2. **Etapa 2 (Usuário Padronizado):** Gera automaticamente o `username` seguindo a regra `<numero_2_digitos_opcional><sigla_serventia>.<cidade_ou_sigla>` (ex.: `01tnpt.araraquara`, `02tn.sjc`, `rctn.jandira`, `ri.carapicuiba`), permitindo edição rápida inline do `username` pelo HUB.
+  3. **Etapa 3 (Acesso ao Conteúdo):** Vincula automaticamente apenas os produtos correspondentes nos módulos **Demonstrações** (`Orion TN (Demo)`, `Orion PRO (Demo)`, `Orion REG TDPJ (Demo)`) e **Orion - Treinamentos** (`Orion TN - Treinamento de Rotinas`, `Orion PRO - Treinamento de Rotinas`, `Orion REG TDPJ - Treinamento de Rotinas`).
+* **Unificação Multi-Projeto:** Quando o mesmo cartório possui projetos distintos no HUB (ex.: `Orion TN` + `Orion PRO`), o provisionamento unifica todos os sistemas em 1 único acesso no Siplan Skills e sincroniza as credenciais (`Usuário` + `Token`) automaticamente em todos os projetos irmãos do cartório no HUB.
+
 ---
 
 ## 7. CS/CX, Pesquisa NPS e Termômetro Pós-Implantação
@@ -302,6 +310,43 @@ O módulo de CS/CX (`/cs-cx/registros` e `/cs-cx/nps`) acompanha o relacionament
 | **Admin** | `/admin/roles` | `RolesManagement.tsx` | `roles` | Administradores | Matriz dinâmica de permissões RBAC com reflexo no RLS do banco |
 | **Admin** | `/admin/vacations` | `VacationManagement.tsx` | `vacations` | Administradores / Gestão | Cadastro de períodos de férias alinhados com Josiane |
 | **Admin** | `/admin/notifications` | `AdminNotifications.tsx`| `admin_notifications` | Administradores | Central de gestão de notificações e alertas operacionais por etapa |
+
+### 8.3. Integração e Provisionamento Automático do Siplan Skills (em `/projects`)
+
+O modal de detalhes do projeto em `/projects` (`ProjectModal.tsx`), os cards da listagem (`ProjectCardV3.tsx`) e a página `/projects/:id` (`ProjectDetails.tsx`) contam com integração direta e bidirecional com o banco de dados do **Siplan Skills** (`https://skills.siplan.com.br/` — Supabase `bnulocsnxiffavvabfdj`) por meio da Edge Function `siplan-skills-integration` (no HUB) e da ponte `hub-skills-bridge` / RPCs `hub_provision_cartorio_skills`, `hub_get_cartorio_skills_status` e `hub_get_all_cartorios_activity` (no Skills):
+
+* **Botão Animado no Cabeçalho do Modal + Popup Dedicado (`SiplanSkillsHeaderButton.tsx`):**
+  * Segue a mesma animação pulsante Uiverse do botão `Orion Admin`, porém com cores exclusivas (**Indigo** quando ativo/provisionado `Skills: [username]`, **Orange** quando pendente `Skills: Sem Acesso`), acompanhado do **Farol de Atividade** e do botão rápido de cópia.
+  * Para não poluir a aba "Informações Gerais" e manter o campo de "Observações Gerais" acessível no topo, toda a seção `"Siplan Skills — Acesso do Cartório"` (`SiplanSkillsCard.tsx`) abre dentro de um **Modal/Popup dedicado** exclusivamente ao clicar no botão `"Skills: [username]"` (ou `"Skills: Sem Acesso"`) no cabeçalho.
+* **Tag Dinâmica nos Cards de `/projects` (`SiplanSkillsCardBadge.tsx`):**
+  * Nos cards de projetos Orion em `/projects`, exibe uma tag exclusiva no canto superior direito:
+    * **Indigo (`bg-indigo-600`):** Quando o cartório já possui acesso criado (`Skills: [username]`), trazendo embutido o **Farol de Atividade em tempo real** (`Online`, `há Xm/h/d` ou `Nunca acessou`) alimentado por consulta única compartilhada (`useSkillsBatchActivity`).
+    * **Orange (`bg-orange-600`):** Quando o cartório ainda não possui acesso no Siplan Skills (`Skills: Sem Acesso`).
+* **Provisionamento 1-Clique e Unificação Multi-Projetos:**
+  * Ao clicar em **"Criar Acesso Skills"** (ou **"Sincronizar"**) dentro do popup, o HUB provisiona automaticamente o cartório no Siplan Skills com:
+    * **Nome do Cartório:** Nome do cliente do projeto no HUB (`client_name`), Estado padrão `SP`, Expiração em `31/12/(ano_atual + 1)`.
+    * **Geração Inteligente de Usuário (`skills-username-generator.ts`):** Extrai número ordinal (`01`, `02`), sigla de especialidade (`tn`, `tnpt`, `pt`, `rc`, `rctn`, `ri`, `ritdpj`, `tdpj`) e cidade ou sigla oficial (`sjc`, `sjrp`, `sbc`, `sbo`, `RP`, `SP`, etc.), gerando o login no padrão `[num][tipo].[cidade]` (ex.: `02tn.sjc`, `01tnpt.araraquara`, `rctn.jandira`). Permite edição manual rápida no painel do popup.
+    * **Liberação Automática de Conteúdos (`cartorio_acesso_conteudo`):** Vincula exclusivamente os módulos **Demonstrações** e **Orion - Treinamentos** correspondentes aos sistemas Orion do cartório (`Orion TN`, `Orion PRO`, `Orion REG`), consolidando múltiplos projetos ativos do mesmo cartório (mesmo `cns` ou `client_name`) em um único cadastro e espelhando as credenciais em `custom_fields` de todos os projetos irmãos no HUB.
+    * **Observações Automáticas:** Preenche `observacoes` no padrão `"Acesso para Demonstração e Treinamento Orion ..."` após consolidar os sistemas liberados.
+* **Farol de Atividade em Tempo Real (`SiplanSkillsActivityIndicator.tsx`):**
+  * Espelha exatamente o indicador de atividade do Siplan Skills (`public.cartorio_sessions`) tanto nos cards de `/projects`, quanto no botão do cabeçalho do modal e dentro do popup do Siplan Skills:
+    * **Verde pulsante (`Online`):** `is_active = true` e última atividade há menos de 2 minutos.
+    * **Azul (`há X min/h/d`):** Última atividade há menos de 5 dias.
+    * **Âmbar (`há Xd`):** Última atividade entre 5 e 13 dias.
+    * **Rosa (`há Xd`):** Inativo há 14 dias ou mais.
+    * **Cinza (`Nunca acessou`):** Cartório ainda não realizou login no Siplan Skills.
+    * Exibe também o carimbo exato de data e hora (`Último acesso: DD/MM/AAAA, HH:MM:SS`).
+* **Padrão Oficial de Cópia de Credenciais ("Copiar Acesso"):**
+  * O botão **"Copiar Acesso"** copia para a área de transferência exatamente o formato padronizado de envio ao cliente:
+    ```text
+    https://skills.siplan.com.br/
+
+    [Nome do cliente/usuário]
+    Usuário: [username gerado]
+    Token de Acesso: [token de acesso gerado]
+    ```
+* **Sincronização Retroativa de Cartórios Existentes:**
+  * Todos os projetos Orion do HUB que já possuíam cadastro prévio no Siplan Skills (inclusive aqueles cadastrados manualmente com nomes abreviados no Skills, como `"1TN Osasco"` para `"OSASCO - TABELIONATO DE NOTAS 01"`) têm suas credenciais (`skills_cartorio_id`, `skills_user_id`, `skills_username`, `skills_login_token`, `skills_last_activity`, `skills_session_is_active`) sincronizadas em `public.projects.custom_fields`.
 
 ---
 

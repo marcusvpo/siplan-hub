@@ -28,6 +28,7 @@ import { useNavigate } from "react-router-dom";
 import { PosSaudeBadge } from "@/components/ProjectManagement/PosSaudeBadge";
 import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { OrionAdminAnimatedButton } from "./OrionAdminAnimatedButton";
+import { SiplanSkillsHeaderButton } from "./SiplanSkillsHeaderButton";
 import { cn } from "@/lib/utils";
 
 interface ProjectModalProps {
@@ -90,6 +91,7 @@ export function ProjectModal({
       }
     }, 280);
   };
+
   const [activeStepId, setActiveStepId] = useState<string | undefined>(undefined);
   const { canEditProjects } = usePermissions();
   const navigate = useNavigate();
@@ -298,6 +300,9 @@ export function ProjectModal({
           <div className="flex w-full shrink-0 flex-wrap items-center gap-1.5 sm:mr-8 sm:mt-0 sm:w-auto sm:gap-2">
             {displayProject?.id && (
               <>
+                <SiplanSkillsHeaderButton
+                  project={displayProject}
+                />
                 <OrionAdminAnimatedButton
                   project={displayProject}
                   onClick={handleOpenOrionAdmin}

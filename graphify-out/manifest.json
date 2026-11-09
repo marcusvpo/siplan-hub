@@ -174,9 +174,9 @@
     "semantic_hash": ""
   },
   "src/components/NotificationBell.tsx": {
-    "mtime": 1793818531.1066127,
-    "seen": 1793820209.6578987,
-    "ast_hash": "3f39ad6f9f4ce545e729e3fbdd1c141d",
+    "mtime": 1793907363.9357045,
+    "seen": 1794253238.2926178,
+    "ast_hash": "8438d5efb58b14a663c725bd40de7806",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/AdvancedFilters.tsx": {
@@ -192,9 +192,9 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/DeploymentDetailsDialog.tsx": {
-    "mtime": 1793291043.6632488,
-    "seen": 1793301766.0104342,
-    "ast_hash": "14f8689f651daf82bf88b641f225df6a",
+    "mtime": 1793909635.7042382,
+    "seen": 1794253238.293698,
+    "ast_hash": "172599bc9c27de085464728eff2192b0",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/PostObservations.tsx": {
@@ -228,9 +228,9 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/StageForms/EnvironmentStageForm.tsx": {
-    "mtime": 1793199987.4844007,
-    "seen": 1793301766.0104527,
-    "ast_hash": "879723826c84d496450684097a00b6fe",
+    "mtime": 1793987976.7533855,
+    "seen": 1794253238.2964232,
+    "ast_hash": "d4ad3a1f8af35f688cc0cc7f327d49e2",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/StageForms/ImplementationStageForm.tsx": {
@@ -264,9 +264,9 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/ProjectCardV3.tsx": {
-    "mtime": 1793390375.774071,
-    "seen": 1793390993.992331,
-    "ast_hash": "9c7e1630591ba61517a9186bf398539d",
+    "mtime": 1794267327.1915145,
+    "seen": 1794267535.3429391,
+    "ast_hash": "07df29bf883645cb841adf449e9ba382",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/ProjectGrid.tsx": {
@@ -276,9 +276,9 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/ProjectModal.tsx": {
-    "mtime": 1793812510.505419,
-    "seen": 1793812632.4490461,
-    "ast_hash": "901eeceba239cd58dcf091be52194d34",
+    "mtime": 1794267233.0725281,
+    "seen": 1794267535.3434434,
+    "ast_hash": "14d14b88b0b36fa9ac3124a039eb87fa",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/RoadmapManager.tsx": {
@@ -306,8 +306,8 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Tabs/GeneralInfoTab.tsx": {
-    "mtime": 1793328727.684964,
-    "seen": 1793329239.276081,
+    "mtime": 1794267136.6913733,
+    "seen": 1794267535.3456373,
     "ast_hash": "4a3ac24f579e720ce59f8b2eaa92a25f",
     "semantic_hash": ""
   },
@@ -318,9 +318,9 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Tabs/StepsTab.tsx": {
-    "mtime": 1793819519.9114764,
-    "seen": 1793820209.6683085,
-    "ast_hash": "ec2b2a9f46be5335c50b594f687b9f8f",
+    "mtime": 1793987781.1217494,
+    "seen": 1794253238.3004713,
+    "ast_hash": "32dac824ff8b5b18aaf2dcbaa5fcd91f",
     "semantic_hash": ""
   },
   "src/components/ProtectedRoute.tsx": {
@@ -396,9 +396,9 @@
     "semantic_hash": ""
   },
   "src/components/calendar/CalendarGrid.tsx": {
-    "mtime": 1793042470.3334613,
-    "seen": 1793301766.0105462,
-    "ast_hash": "e8d622bbb29363b836f80f54410b1d6c",
+    "mtime": 1793990546.0027256,
+    "seen": 1794253238.3104298,
+    "ast_hash": "91b13545c53dc04bd95e4f48512a58ef",
     "semantic_hash": ""
   },
   "src/components/calendar/DraggableTeamMember.tsx": {
@@ -924,9 +924,9 @@
     "semantic_hash": ""
   },
   "src/hooks/useNotifications.ts": {
-    "mtime": 1793819857.4373474,
-    "seen": 1793820209.720629,
-    "ast_hash": "f4b883e17bdd0e1d2890bde33c2518c8",
+    "mtime": 1793907343.1411476,
+    "seen": 1794253238.3432314,
+    "ast_hash": "f2ee3a6355c17731a7757c46e762118d",
     "semantic_hash": ""
   },
   "src/hooks/usePermissions.ts": {
@@ -960,9 +960,9 @@
     "semantic_hash": ""
   },
   "src/hooks/useProjectsList.ts": {
-    "mtime": 1793819237.075792,
-    "seen": 1793820209.7243679,
-    "ast_hash": "2ae44a416b918295eba57b4ba9942ecb",
+    "mtime": 1793991941.644264,
+    "seen": 1794253238.3465238,
+    "ast_hash": "91d79e7222a5afa2ebd49e814714480e",
     "semantic_hash": ""
   },
   "src/hooks/useProjectsV2.ts": {
@@ -1020,9 +1020,9 @@
     "semantic_hash": "8cbc837200552502e544dcd4d195de98"
   },
   "src/integrations/supabase/types.ts": {
-    "mtime": 1793819029.0702357,
-    "seen": 1793820209.7282681,
-    "ast_hash": "28536e2364293e1d5495744d6fc300d7",
+    "mtime": 1794252532.0315251,
+    "seen": 1794253238.3497913,
+    "ast_hash": "34bd6556ad691ecbc4965f4ae9f232d1",
     "semantic_hash": ""
   },
   "src/layouts/AdminLayout.tsx": {
@@ -1080,9 +1080,9 @@
     "semantic_hash": ""
   },
   "src/pages/Calendar.tsx": {
-    "mtime": 1793041792.0800269,
-    "seen": 1793301766.0109913,
-    "ast_hash": "6b3d05954768a686d98e8b3346fc9893",
+    "mtime": 1793988237.200575,
+    "seen": 1794253238.3728096,
+    "ast_hash": "a2c53691efa27e116d20da064c917beb",
     "semantic_hash": ""
   },
   "src/pages/CompareProjects.tsx": {
@@ -1140,9 +1140,9 @@
     "semantic_hash": ""
   },
   "src/pages/ProjectDetails.tsx": {
-    "mtime": 1793316008.3521874,
-    "seen": 1793316314.9818718,
-    "ast_hash": "b2588346db26d8253ff5f4e1219b61dc",
+    "mtime": 1794267236.2919917,
+    "seen": 1794267535.4628305,
+    "ast_hash": "b624e5d2c0f6294ad2ed30982b852c8c",
     "semantic_hash": ""
   },
   "src/pages/ProjectsKanban.tsx": {
@@ -1326,9 +1326,9 @@
     "semantic_hash": ""
   },
   "src/pages/implantadores/TransicaoPlaceholder.tsx": {
-    "mtime": 1793290540.9690356,
-    "seen": 1793301766.0111272,
-    "ast_hash": "6519b6be4d05d37c6d0e36c7b5d202bb",
+    "mtime": 1793988259.1404257,
+    "seen": 1794253238.389023,
+    "ast_hash": "3ef8debf0e469292a44c6731d2b54e58",
     "semantic_hash": ""
   },
   "src/pages/implantadores/TreinamentoPlaceholder.tsx": {
@@ -1398,9 +1398,9 @@
     "semantic_hash": ""
   },
   "src/types/ProjectV2.ts": {
-    "mtime": 1793818950.145936,
-    "seen": 1793820209.8153358,
-    "ast_hash": "597fe0f5f8cb7663de58d57cd8343385",
+    "mtime": 1793987467.74134,
+    "seen": 1794253238.4198122,
+    "ast_hash": "4478663d30ff2882afd02b69ab1a8075",
     "semantic_hash": ""
   },
   "src/types/admin.ts": {
@@ -2651,9 +2651,9 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/ProjectTagsLegendDialog.tsx": {
-    "mtime": 1788357574.5598278,
-    "seen": 1793301766.0104702,
-    "ast_hash": "06bd6eca9004c318a51133c381f682de",
+    "mtime": 1794267360.53324,
+    "seen": 1794267535.3434522,
+    "ast_hash": "dd8c20532c1a92f0424989e7b95b91e3",
     "semantic_hash": ""
   },
   "src/components/cs-cx/CsCxAccessPanel.tsx": {
@@ -2681,9 +2681,9 @@
     "semantic_hash": ""
   },
   "src/components/knowledge/ArticleMetadataCard.tsx": {
-    "mtime": 1790000864.211151,
-    "seen": 1793301766.0105872,
-    "ast_hash": "ed5a0bd5c1e8b27fcc5acb7a37e9bca8",
+    "mtime": 1794254828.920662,
+    "seen": 1794256834.7777593,
+    "ast_hash": "c813c30f6ed52f89d0aac2e61c04073c",
     "semantic_hash": ""
   },
   "src/components/knowledge/ArticleNavigator.tsx": {
@@ -2699,9 +2699,9 @@
     "semantic_hash": ""
   },
   "src/components/knowledge/CreateRoutineModal.tsx": {
-    "mtime": 1788357574.8213437,
-    "seen": 1793301766.0105915,
-    "ast_hash": "d5a2d6d2b5e0d9119f80d3dbcd3d819c",
+    "mtime": 1794254903.8118901,
+    "seen": 1794256834.7781353,
+    "ast_hash": "4e94408123b4c0fc4a49441833901e5c",
     "semantic_hash": ""
   },
   "src/components/knowledge/MarkdownTiptapEditor.tsx": {
@@ -2867,9 +2867,9 @@
     "semantic_hash": ""
   },
   "src/hooks/useKnowledgeBase.ts": {
-    "mtime": 1790363154.5178344,
-    "seen": 1793301766.0107803,
-    "ast_hash": "d7054befb04f19845f1d4fc2d7054426",
+    "mtime": 1794234979.560932,
+    "seen": 1794253238.3420274,
+    "ast_hash": "dc9451e5d427b7c6b46273cb7ba6aef4",
     "semantic_hash": ""
   },
   "src/hooks/usePosAiAdminAnalytics.ts": {
@@ -3071,9 +3071,9 @@
     "semantic_hash": ""
   },
   "src/pages/assistants/KnowledgeEditorPage.tsx": {
-    "mtime": 1790363205.983883,
-    "seen": 1793301766.0110586,
-    "ast_hash": "8caa80f492002c4eebc77e04ca2e3560",
+    "mtime": 1794254856.0251856,
+    "seen": 1794256834.8399913,
+    "ast_hash": "5637955812a685185c07accad7fc68b5",
     "semantic_hash": ""
   },
   "src/pages/cs-cx/CsCxAdmin.tsx": {
@@ -3167,9 +3167,9 @@
     "semantic_hash": ""
   },
   "src/services/aiRoutineGeneratorService.ts": {
-    "mtime": 1787338066.8819647,
-    "seen": 1793301766.0111463,
-    "ast_hash": "a79333707513524a71c8d22eaa0ba9bc",
+    "mtime": 1794234808.2655447,
+    "seen": 1794253238.3912885,
+    "ast_hash": "f1630950164499037fba3f6ae5d70892",
     "semantic_hash": ""
   },
   "src/services/bunnyService.ts": {
@@ -3185,9 +3185,9 @@
     "semantic_hash": ""
   },
   "src/services/markdownKnowledgeService.ts": {
-    "mtime": 1791996082.055327,
-    "seen": 1793301766.0111508,
-    "ast_hash": "29a45bdce04f7eff2463d5ee82a85b2d",
+    "mtime": 1794254812.0608664,
+    "seen": 1794256834.8492823,
+    "ast_hash": "104513faa23ce250f873f7a891ba3420",
     "semantic_hash": ""
   },
   "src/services/sd-solutions.ts": {
@@ -3491,9 +3491,9 @@
     "semantic_hash": ""
   },
   "src/types/knowledge.ts": {
-    "mtime": 1791996082.1108673,
-    "seen": 1793301766.0113754,
-    "ast_hash": "8477e95ba99a6eaf9e5d7a0a65b10818",
+    "mtime": 1794234716.7914956,
+    "seen": 1794253238.420821,
+    "ast_hash": "15e1ca11ea21bc3ce43d94ae6b873f26",
     "semantic_hash": ""
   },
   "src/types/sd.ts": {
@@ -3545,9 +3545,9 @@
     "semantic_hash": ""
   },
   "supabase/functions/generate-routine-metadata/index.ts": {
-    "mtime": 1787338075.9965382,
-    "seen": 1793301766.0114255,
-    "ast_hash": "46854e03f5e4d99afc439d61d371b5b7",
+    "mtime": 1794234823.9917734,
+    "seen": 1794253238.4258022,
+    "ast_hash": "d93b0b195abae34aa4beae217e56d942",
     "semantic_hash": ""
   },
   "supabase/functions/pos-assistant-chat/index.ts": {
@@ -4650,9 +4650,9 @@
     "semantic_hash": ""
   },
   "src/constants/pageHelpRegistry.ts": {
-    "mtime": 1793818286.3996336,
-    "seen": 1793820209.7087734,
-    "ast_hash": "cf760b63f354a4c843c11f4eaaed4778",
+    "mtime": 1794252933.5594046,
+    "seen": 1794253238.3332295,
+    "ast_hash": "d4d8bd271b914d727e84b06d6c7ca714",
     "semantic_hash": ""
   },
   "src/pages/admin/AdminChangelog.tsx": {
@@ -4668,9 +4668,9 @@
     "semantic_hash": ""
   },
   "src/test/changelog-notifications.test.tsx": {
-    "mtime": 1793818836.4492826,
-    "seen": 1793820209.785583,
-    "ast_hash": "8fc669b031213a64156edc32862b2b65",
+    "mtime": 1793902624.1442754,
+    "seen": 1794253238.3974235,
+    "ast_hash": "6b05d8d1121a179f60a838bb4cf63983",
     "semantic_hash": ""
   },
   "src/test/pageHelpRegistry.test.ts": {
@@ -5048,9 +5048,9 @@
     "semantic_hash": ""
   },
   "src/lib/project-calendar-events.ts": {
-    "mtime": 1793481437.5055604,
-    "seen": 1793482510.3393812,
-    "ast_hash": "382f3c7c152f3328d66737054edf503b",
+    "mtime": 1793988200.4522285,
+    "seen": 1794253238.359699,
+    "ast_hash": "067859677a76633d0a88f12d004301f1",
     "semantic_hash": ""
   },
   "supabase/migrations/20260917100000_add_cs_cx_appointment_observations_preview_changelog.sql": {
@@ -5491,9 +5491,9 @@
     "semantic_hash": ""
   },
   "src/test/knowledge-video-metadata.test.ts": {
-    "mtime": 1791996082.0928693,
-    "seen": 1793301766.0112777,
-    "ast_hash": "cf9c58b1a7b2cc44a956fca9b321645c",
+    "mtime": 1794254975.2159405,
+    "seen": 1794256834.8642402,
+    "ast_hash": "c7e866c6a67aac0ef95076255ca48d58",
     "semantic_hash": ""
   },
   "src/test/project-specialty.test.ts": {
@@ -5653,21 +5653,21 @@
     "semantic_hash": ""
   },
   "src/components/calendar/HomeCalendarKpiStrip.tsx": {
-    "mtime": 1793041866.699203,
-    "seen": 1793301766.0105517,
-    "ast_hash": "43290ff3716d05c4c5a91f2629639e6a",
+    "mtime": 1793990563.4863074,
+    "seen": 1794253238.3110628,
+    "ast_hash": "4a50e0890229f16084ac9eb79c89de33",
     "semantic_hash": ""
   },
   "src/lib/calendar-holidays.ts": {
-    "mtime": 1793427632.4555218,
-    "seen": 1793431711.1883223,
-    "ast_hash": "fbd18be22a89cd56786f7fefbb313261",
+    "mtime": 1793907663.2906942,
+    "seen": 1794253238.3520544,
+    "ast_hash": "4159f485a970f4e0d961ebb64552fd3f",
     "semantic_hash": ""
   },
   "src/lib/project-calendar-events.test.ts": {
-    "mtime": 1793427651.8885474,
-    "seen": 1793431711.203964,
-    "ast_hash": "8b8672ca5f73ce6414b6c3c36548fa23",
+    "mtime": 1793990660.1641378,
+    "seen": 1794253238.359696,
+    "ast_hash": "f03c90a7a44203b5ad8cf3c8d98e607c",
     "semantic_hash": ""
   },
   "src/lib/project-stage-filters.test.ts": {
@@ -5772,9 +5772,9 @@
     "semantic_hash": ""
   },
   "src/test/environment-stage-form.test.tsx": {
-    "mtime": 1793200025.5977547,
-    "seen": 1793301766.0112715,
-    "ast_hash": "9c5a81648ba5e2376c852748aada6d48",
+    "mtime": 1793988037.451342,
+    "seen": 1794253238.406876,
+    "ast_hash": "a904ab6c286eb21d0957a6eb47b19656",
     "semantic_hash": ""
   },
   "src/test/phase1-multiple-responsibles.test.ts": {
@@ -5905,9 +5905,9 @@
     "semantic_hash": ""
   },
   "src/components/EnvironmentConfig/EnvironmentProjectModal.tsx": {
-    "mtime": 1793815109.7555346,
-    "seen": 1793815709.4027808,
-    "ast_hash": "3357d5e8d766e2a6f1cc135b3da04f36",
+    "mtime": 1793987804.395637,
+    "seen": 1794253238.290377,
+    "ast_hash": "faf576a700386c46aa966f843e37b5ef",
     "semantic_hash": ""
   },
   "src/lib/environment-config.ts": {
@@ -5917,9 +5917,9 @@
     "semantic_hash": ""
   },
   "src/pages/DeploymentsEnvironmentConfig.tsx": {
-    "mtime": 1793391738.9502878,
-    "seen": 1793391920.1451488,
-    "ast_hash": "450a6dfc2eabfa5f3f305184d08a69b7",
+    "mtime": 1793987917.9015152,
+    "seen": 1794253238.3734164,
+    "ast_hash": "71d216ba571e968de87afb549a373d72",
     "semantic_hash": ""
   },
   "src/test/deployments-environment-config.test.tsx": {
@@ -6217,9 +6217,9 @@
     "semantic_hash": ""
   },
   "src/pages/admin/AdminNotifications.tsx": {
-    "mtime": 1793818570.2954583,
-    "seen": 1793820209.762394,
-    "ast_hash": "df68168777ee42f7c6dfbbb380bd0dfc",
+    "mtime": 1793907388.7504306,
+    "seen": 1794253238.3789344,
+    "ast_hash": "e286ed8a3cf731d42bff1e6ffb89015c",
     "semantic_hash": ""
   },
   "src/test/admin-notifications.test.tsx": {
@@ -6238,6 +6238,114 @@
     "mtime": 1793819256.7652202,
     "seen": 1793820209.817655,
     "ast_hash": "7b3848afc2314c9679b5c88467a6a423",
+    "semantic_hash": ""
+  },
+  "files/info-system.ps1": {
+    "mtime": 1793896690.730616,
+    "seen": 1794253238.2798574,
+    "ast_hash": "d125e8877c6434aaea51d60187c7fbbd",
+    "semantic_hash": ""
+  },
+  "scripts/tools/sync-knowledge-telemetry.mjs": {
+    "mtime": 1793843907.8229363,
+    "seen": 1794253238.2829866,
+    "ast_hash": "2564ec6d0d8ae1446e9c2da79f98839a",
+    "semantic_hash": ""
+  },
+  "src/components/EnvironmentConfig/EnvironmentListDialog.tsx": {
+    "mtime": 1793992209.8968785,
+    "seen": 1794253238.2903738,
+    "ast_hash": "df2a37ed1a7a517a8e66aa3f7942aeab",
+    "semantic_hash": ""
+  },
+  "src/components/ProjectManagement/SiplanSkillsCard.tsx": {
+    "mtime": 1794256961.4930005,
+    "seen": 1794267535.3442848,
+    "ast_hash": "fa707cdc345e7668b4b3e52a550dd128",
+    "semantic_hash": ""
+  },
+  "src/components/ProjectManagement/SiplanSkillsHeaderButton.tsx": {
+    "mtime": 1794267198.077757,
+    "seen": 1794267535.344293,
+    "ast_hash": "f3235410e9a608d337cac82fb16e2a24",
+    "semantic_hash": ""
+  },
+  "src/hooks/useSiplanSkillsIntegration.ts": {
+    "mtime": 1794267037.127174,
+    "seen": 1794267535.4187686,
+    "ast_hash": "7f4d0b75eafaa907660b045475baae3e",
+    "semantic_hash": ""
+  },
+  "src/lib/format-notification.test.ts": {
+    "mtime": 1793907283.717899,
+    "seen": 1794253238.358042,
+    "ast_hash": "b22105695ca4da153ae60723196bdc1f",
+    "semantic_hash": ""
+  },
+  "src/lib/format-notification.ts": {
+    "mtime": 1793907274.6861126,
+    "seen": 1794253238.3580446,
+    "ast_hash": "8888062fc3f12080683f51e890f04ff1",
+    "semantic_hash": ""
+  },
+  "src/test/deployment-details-dialog-dates.test.tsx": {
+    "mtime": 1793907968.6718822,
+    "seen": 1794253238.4060395,
+    "ast_hash": "e34d336f27c28f4685f7377dfb15c0ab",
+    "semantic_hash": ""
+  },
+  "src/test/deployments-environment-list.test.tsx": {
+    "mtime": 1793992216.6065722,
+    "seen": 1794253238.4062452,
+    "ast_hash": "6fdd60aaf2da10769f19a665565c40ed",
+    "semantic_hash": ""
+  },
+  "src/utils/__tests__/skills-username-generator.test.ts": {
+    "mtime": 1794256344.361378,
+    "seen": 1794256834.8768766,
+    "ast_hash": "4d89a4762bfbd89fd67afcd04a05986d",
+    "semantic_hash": ""
+  },
+  "src/utils/skills-username-generator.ts": {
+    "mtime": 1794256310.026451,
+    "seen": 1794256834.8788416,
+    "ast_hash": "90df2eed26c0d95eb5539d575c4b25ad",
+    "semantic_hash": ""
+  },
+  "supabase/functions/siplan-skills-integration/index.ts": {
+    "mtime": 1794266939.8285909,
+    "seen": 1794267535.534247,
+    "ast_hash": "03fddfe24fb696a800fc81bf43a999fd",
+    "semantic_hash": ""
+  },
+  "assets/perguntas ader\u00eancia.txt": {
+    "mtime": 1793896672.963788,
+    "seen": 1794253238.4339628,
+    "ast_hash": "be2d85710cd1be3b12aee64135a8da1d",
+    "semantic_hash": ""
+  },
+  "docs/CONHECIMENTO_PROCESSOS_E_OPERACAO_HUB.md": {
+    "mtime": 1794267406.6749558,
+    "seen": 1794267535.5448444,
+    "ast_hash": "6e7c4777c8a6140aedff3989aa249d88",
+    "semantic_hash": ""
+  },
+  "files/info_maquina.txt": {
+    "mtime": 1793896690.7312157,
+    "seen": 1794253238.4413416,
+    "ast_hash": "d020accd9c976ccb5f19a7480e709035",
+    "semantic_hash": ""
+  },
+  "src/components/ProjectManagement/SiplanSkillsActivityIndicator.tsx": {
+    "mtime": 1794256768.1345613,
+    "seen": 1794256834.7614052,
+    "ast_hash": "31393a9d946d65853dccb53a59504fbd",
+    "semantic_hash": ""
+  },
+  "src/components/ProjectManagement/SiplanSkillsCardBadge.tsx": {
+    "mtime": 1794267270.5524,
+    "seen": 1794267535.3442895,
+    "ast_hash": "810accfd074e2fdef6702d73352e04cf",
     "semantic_hash": ""
   },
   "package-lock.json": {

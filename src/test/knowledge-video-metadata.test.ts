@@ -13,6 +13,7 @@ import {
   validateTags,
   validateRoutineBody,
   suggestNextArticleId,
+  updateArticleInDocument,
 } from "@/services/markdownKnowledgeService";
 
 describe("Video Metadata & Knowledge Base Parsing", () => {
@@ -373,5 +374,34 @@ describe("Strict YAML serialization order", () => {
     expect(sinIdx).toBeLessThan(pergIdx);
     expect(pergIdx).toBeLessThan(sintIdx);
     expect(sintIdx).toBeLessThan(vidIdx);
+  });
+
+  it("preserva o corpo da rotina intacto ao atualizar apenas metadados", () => {
+    const originalDoc = `# BASE DE CONHECIMENTO\r\n\r\n## SEÇÃO 1 - ROTINAS\r\n\r\n---\r\nid: R-1.0\r\ntitulo: "Consulta Antiga"\r\ntags:\r\n  - busca\r\n  - atos\r\n  - geral\r\nobjetivo: "Consultar atos no sistema"\r\nsinonimos:\r\n  - pesquisar\r\nperguntas_usuario:\r\n  - "Como consultar?"\r\n  - "Onde fica a busca?"\r\n  - "Qual tela usar?"\r\nsintomas_comuns:\r\n  - "não acho o ato"\r\n  - "busca em branco"\r\n  - "sistema travado"\r\nvideo:\r\n  tem_video: false\r\n---\r\n#### Descrição:\r\nInstrução detalhada de consulta existente.\r\n\r\n#### Passo a passo:\r\n1. Acesse **Menu > Consulta**.\r\n2. Clique em **Buscar**.\r\n`;
+
+    const updated = updateArticleInDocument(
+      originalDoc,
+      "R-1.0",
+      "", // corpo vazio vindo do modal de edição de metadados
+      {
+        id: "R-1.0",
+        titulo: "Consulta Atualizada",
+        tags: ["busca", "atos", "geral", "novo"],
+        objetivo: "Consultar atos no sistema com novo objetivo",
+        sinonimos: ["pesquisar", "localizar"],
+        perguntas_usuario: ["Como consultar?", "Onde fica a busca?", "Qual tela usar?"],
+        sintomas_comuns: ["não acho o ato", "busca em branco", "sistema travado"],
+        video: { tem_video: false },
+      }
+    );
+
+    // Deve ter atualizado o título e objetivo nos metadados
+    expect(updated).toContain("titulo: Consulta Atualizada");
+    expect(updated).toContain("Consultar atos no sistema com novo objetivo");
+
+    // O corpo existente DEVE ter sido preservado
+    expect(updated).toContain("#### Descrição:\r\nInstrução detalhada de consulta existente.");
+    expect(updated).toContain("1. Acesse **Menu > Consulta**.");
+    expect(updated).toContain("2. Clique em **Buscar**.");
   });
 });

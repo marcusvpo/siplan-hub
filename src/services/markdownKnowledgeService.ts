@@ -864,17 +864,18 @@ export function updateArticleInDocument(
 
   const before = fullDoc.slice(0, target.startIndex);
   const after = fullDoc.slice(target.endIndex);
-  const cleanBody = sanitizeRoutineBody(updatedBody.trim());
+  const cleanBody = sanitizeRoutineBody(updatedBody ? updatedBody.trim() : "");
+  const bodyToUse = cleanBody || target.body;
 
   let reconstructedArticle: string;
   if (updatedMetadata) {
     reconstructedArticle = serializeArticleToMarkdown(
       updatedMetadata,
-      cleanBody,
+      bodyToUse,
       Boolean(updatedMetadata.video?.tem_video),
     );
   } else {
-    reconstructedArticle = `---\r\n${target.frontmatterRaw}\r\n---\r\n${cleanBody}`;
+    reconstructedArticle = `---\r\n${target.frontmatterRaw}\r\n---\r\n${bodyToUse}`;
   }
 
   const result = `${before}${reconstructedArticle}\r\n${after.replace(/^[\r\n]+/, "")}`;

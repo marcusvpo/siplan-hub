@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PosSaudeBadge } from "@/components/ProjectManagement/PosSaudeBadge";
+import { SiplanSkillsCardBadge } from "@/components/ProjectManagement/SiplanSkillsCardBadge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import {
@@ -255,6 +256,7 @@ export function ProjectCardV3({
       {/* Project Status Badges - Floating over Top Right Corner */}
       <div className="col-span-2 flex min-w-0 flex-wrap items-center gap-1.5 pl-1 md:absolute md:-right-1.5 md:-top-1.5 md:z-10 md:pl-0">
         <PosSaudeBadge projectId={project.id} />
+        <SiplanSkillsCardBadge project={project} />
         {envSlaAlert && (
           <Badge
             className={cn(
