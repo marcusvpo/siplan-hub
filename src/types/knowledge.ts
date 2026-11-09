@@ -15,6 +15,7 @@ export interface KnowledgeArticleMetadata {
   objetivo: string;
   sinonimos: string[];
   perguntas_usuario: string[];
+  sintomas_comuns: string[]; // ⭐ NOVO CAMPO OBRIGATÓRIO: 3 a 5 termos de dor/sintoma
   video?: BunnyVideoMetadata;
   [key: string]: unknown;
 }

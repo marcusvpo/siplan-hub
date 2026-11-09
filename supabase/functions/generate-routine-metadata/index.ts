@@ -15,7 +15,13 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { bodyMarkdown, existingIds = [], sections = [], sectionIndex = 5 } = await req.json();
+    const {
+      bodyMarkdown,
+      existingIds = [],
+      sections = [],
+      sectionIndex = 4,
+      prefix = "D",
+    } = await req.json();
 
     if (!bodyMarkdown || typeof bodyMarkdown !== "string" || bodyMarkdown.trim().length < 10) {
       return new Response(
@@ -31,30 +37,29 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Prompt de Engenharia Especializado no Sistema Orion TN com Seção 5 (Siplan HUB)
     const systemPrompt = `Você é um especialista sênior em suporte e documentação técnica do sistema cartorário **Orion TN** (SiplanControl-M).
 Sua missão é analisar o texto do procedimento/passo a passo escrito por um analista do Service Desk e gerar os metadados técnicos estruturados para a Base de Conhecimento do Assistente de IA.
 
 REGRAS:
-1. **ID:** Para rotinas cadastradas no Siplan HUB, o ID DEVE SEMPRE começar com "S" seguindo o padrão "S-5.{número}" (ex: "S-5.1", "S-5.2", "S-5.3"). NÃO repita nenhum dos IDs já existentes na lista: ${JSON.stringify(
-      existingIds.slice(0, 80),
+1. **ID:** O ID deve iniciar com o prefixo solicitado "${prefix}" (ex: se for "D", gere "D-3.{número}" ou "D-{número}"; se "R", "R-{número}"; etc.). NÃO repita nenhum dos IDs já existentes na lista: ${JSON.stringify(
+      existingIds.slice(0, 100),
     )}.
-2. **sectionIndex e secao:** DEVE ser 5 e "SEÇÃO PRINCIPAL 5: Rotinas atualizadas via Siplan HUB".
-3. **titulo:** Um título claro, profissional e direto, começando normalmente com verbos de ação como "Como...", "Emissão de...", "Configuração de...", "Cadastro de...", "Gerenciamento de...".
-4. **objetivo:** Um resumo conciso de 1 ou 2 frases explicando o que esse procedimento resolve para o usuário final do cartório.
-5. **tags:** Lista de 3 a 6 tags de categorização operacional em português com inicial maiúscula no padrão do documento (ex: "Configurações", "Negócios", "Cadastros", "Notas", "Balcão", "Orçamentos", "Certidões", "Financeiro", "Atendimento", etc.). NUNCA use prefixos como "#" ou termos genéricos em minúsculas como "orion_tn".
-6. **perguntas_usuario:** Lista de 3 a 6 perguntas reais que um atendente de cartório faria para encontrar este tutorial (ex: "Como faço para gerenciar orçamentos?", "Onde lanço a certidão de casamento?").
-7. **sinonimos:** Lista de 3 a 6 termos de busca e palavras-chave alternativas.
+2. **titulo:** Um título claro, profissional e direto, começando normalmente com verbos de ação como "Como...", "Emissão de...", "Configuração de...", "Cadastro de...", "Gerenciamento de...". O TÍTULO NÃO DEVE CONTER O PREFIXO DE ID (NUNCA coloque "D-3.3 - " ou similar dentro do título).
+3. **objetivo:** Uma frase única e densa explicando a finalidade prática da rotina.
+4. **tags:** Lista de 3 a 7 tags de categorização operacional em português com inicial maiúscula (ex: "Notas", "Firmas", "Cartão de Assinatura", "Editor", "Estoque", "Financeiro", "Configurações", etc.). NUNCA use prefixos como "#" ou termos genéricos em minúsculas como "orion_tn".
+5. **perguntas_usuario:** Lista de 3 a 5 perguntas completas que um atendente de cartório faria para encontrar este tutorial (ex: "Como preencher o cartão de assinatura com IA?", "Onde anexo os documentos da firma usando scanner?").
+6. **sintomas_comuns:** ⭐ OBRIGATÓRIO: Lista de 3 a 5 termos curtos de dor ou sintomas que o escrevente relata ao abrir chamado (ex: "não consigo digitar no cartão", "leitura de documento falhou", "foto do autógrafo não carrega", "botão salvar não aparece", "erro ao validar lote"). NUNCA use ponto de interrogação (?) nestes termos; devem ser expressões curtas de busca.
+7. **sinonimos:** Lista de 3 a 5 termos e jargões alternativos de busca.
 
 Retorne APENAS um JSON válido seguindo a estrutura:
 {
-  "id": "S-5.1",
+  "id": "${prefix}-...",
   "titulo": "...",
-  "sectionIndex": 5,
-  "secao": "SEÇÃO PRINCIPAL 5: Rotinas atualizadas via Siplan HUB",
+  "sectionIndex": ${sectionIndex},
   "objetivo": "...",
   "tags": ["..."],
   "perguntas_usuario": ["..."],
+  "sintomas_comuns": ["..."],
   "sinonimos": ["..."]
 }`;
 
@@ -72,7 +77,7 @@ Retorne APENAS um JSON válido seguindo a estrutura:
           { role: "system", content: systemPrompt },
           {
             role: "user",
-            content: `Analise este passo a passo e gere os metadados para a Seção 5:\n\n${bodyMarkdown.trim()}`,
+            content: `Analise este passo a passo e gere os metadados com sintomas comuns:\n\n${bodyMarkdown.trim()}`,
           },
         ],
       }),

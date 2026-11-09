@@ -34,7 +34,8 @@ import { SavePublishModal } from "@/components/knowledge/SavePublishModal";
 import { VersionHistoryDrawer } from "@/components/knowledge/VersionHistoryDrawer";
 import { UnsavedChangesDialog } from "@/components/knowledge/UnsavedChangesDialog";
 import { CreateRoutineModal } from "@/components/knowledge/CreateRoutineModal";
-import type { KnowledgeArticleMetadata } from "@/types/knowledge";
+import { validateRoutineBody } from "@/services/markdownKnowledgeService";
+import type { KnowledgeArticle, KnowledgeArticleMetadata } from "@/types/knowledge";
 
 export default function KnowledgeEditorPage() {
   const navigate = useNavigate();
@@ -68,6 +69,8 @@ export default function KnowledgeEditorPage() {
     saveCurrentArticle,
     createNewRoutine,
     isCreatingRoutine,
+    updateRoutine,
+    isUpdatingRoutine,
     deleteRoutine,
     isDeletingRoutine,
     isSaving,
@@ -90,6 +93,7 @@ export default function KnowledgeEditorPage() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingArticle, setEditingArticle] = useState<KnowledgeArticle | null>(null);
   const [pendingNavigationPath, setPendingNavigationPath] = useState<string | null>(null);
 
   // 1. Interceptar cliques em links de navegação do menu lateral quando houver alterações pendentes
@@ -140,6 +144,15 @@ export default function KnowledgeEditorPage() {
   }, [isDirty]);
 
   const handleSaveClick = () => {
+    const bodyValidation = validateRoutineBody(draftBody);
+    if (!bodyValidation.valid) {
+      toast.error("Estrutura do tutorial em desacordo com o padrão", {
+        description:
+          bodyValidation.errors[0] ||
+          "O corpo do tutorial precisa iniciar com '#### Descrição:' e conter '#### Passo a passo:'.",
+      });
+      return;
+    }
     setIsConfirmModalOpen(true);
   };
 
@@ -151,6 +164,29 @@ export default function KnowledgeEditorPage() {
     }
   };
 
+  const handleOpenCreateRoutine = () => {
+    setEditingArticle(null);
+    setIsCreateModalOpen(true);
+  };
+
+  const handleOpenEditRoutine = (article: KnowledgeArticle) => {
+    setEditingArticle(article);
+    setIsCreateModalOpen(true);
+  };
+
+  const handleUpdateRoutine = async (params: {
+    articleId: string;
+    metadata: KnowledgeArticleMetadata;
+    body: string;
+    customSummary?: string;
+  }) => {
+    setIsCreateModalOpen(false);
+    setEditingArticle(null);
+    setEditingArticle(null);
+    setIsConfirmModalOpen(true);
+    return updateRoutine(params);
+  };
+
   const handleCreateRoutine = async (params: {
     metadata: KnowledgeArticleMetadata;
     body: string;
@@ -159,6 +195,7 @@ export default function KnowledgeEditorPage() {
     customSummary?: string;
   }) => {
     setIsCreateModalOpen(false);
+    setEditingArticle(null);
     setIsConfirmModalOpen(true);
     return createNewRoutine(params);
   };
@@ -352,7 +389,7 @@ export default function KnowledgeEditorPage() {
             type="button"
             variant="default"
             size="sm"
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={handleOpenCreateRoutine}
             className="h-9 min-w-0 gap-1 bg-primary/90 px-2 text-[11px] font-bold text-primary-foreground shadow-xs hover:bg-primary sm:gap-1.5 sm:px-3 sm:text-xs"
             title="Cadastrar uma nova rotina/tutorial na base de conhecimento"
           >
@@ -451,7 +488,7 @@ export default function KnowledgeEditorPage() {
             onTagChange={setSelectedTag}
             allTags={allTags}
             isDirty={isDirty}
-            onOpenCreateModal={() => setIsCreateModalOpen(true)}
+            onOpenCreateModal={handleOpenCreateRoutine}
           />
         </aside>
 
@@ -477,7 +514,7 @@ export default function KnowledgeEditorPage() {
               isDirty={isDirty}
               onOpenCreateModal={() => {
                 setIsMobileNavigatorOpen(false);
-                setIsCreateModalOpen(true);
+                handleOpenCreateRoutine();
               }}
             />
           </SheetContent>
@@ -521,6 +558,7 @@ export default function KnowledgeEditorPage() {
             <ArticleMetadataCard
               article={selectedArticle}
               onDeleteRoutine={handleDeleteRoutine}
+              onEditRoutine={handleOpenEditRoutine}
               isDeleting={isDeletingRoutine || isSaving}
             />
 
@@ -549,11 +587,17 @@ export default function KnowledgeEditorPage() {
       {/* Modal de Cadastro de Nova Rotina com Preenchimento por IA */}
       <CreateRoutineModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setEditingArticle(null);
+        }}
+        mode={editingArticle ? "edit" : "create"}
+        initialArticle={editingArticle}
         articles={articles}
         sections={sections}
         onCreateRoutine={handleCreateRoutine}
-        isCreating={isCreatingRoutine || isSaving}
+        onUpdateRoutine={handleUpdateRoutine}
+        isCreating={isCreatingRoutine || isUpdatingRoutine || isSaving}
       />
 
       {/* Modal de Confirmação e Publicação com Feedback em Tempo Real */}

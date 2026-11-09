@@ -27,6 +27,7 @@ import {
   Video,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   X,
   FileText,
   Tag,
@@ -38,6 +39,10 @@ import {
   Clock,
   ExternalLink,
   Link2,
+  Stethoscope,
+  Pencil,
+  Check,
+  Eraser,
 } from "lucide-react";
 import { toast } from "sonner";
 import { MarkdownTiptapEditor } from "./MarkdownTiptapEditor";
@@ -45,8 +50,18 @@ import {
   suggestNextArticleId,
   validateArticleIdUniqueness,
   parseTimestampToSeconds,
+  formatSecondsToTimestamp,
+  hasIdPrefixInTitle,
+  stripIdPrefixFromTitle,
+  validateSintomasComuns,
+  validatePerguntasUsuario,
+  validateTags,
+  validateVideo,
+  validateRoutineBody,
+  sanitizeRoutineBody,
+  ROUTINE_PREFIX_OPTIONS,
+  RoutinePrefix,
   SIPLAN_HUB_SECTION_INDEX,
-  SIPLAN_HUB_SECTION_TITLE,
 } from "@/services/markdownKnowledgeService";
 import { generateRoutineMetadataWithAi } from "@/services/aiRoutineGeneratorService";
 import {
@@ -74,7 +89,27 @@ interface CreateRoutineModalProps {
     customSummary?: string;
   }) => Promise<any>;
   isCreating: boolean;
+  // Suporte opcional a modo de Edição de Rotina existente
+  mode?: "create" | "edit";
+  initialArticle?: KnowledgeArticle | null;
+  onUpdateRoutine?: (params: {
+    articleId: string;
+    metadata: KnowledgeArticleMetadata;
+    body: string;
+    customSummary?: string;
+  }) => Promise<any>;
+  isUpdating?: boolean;
 }
+
+const DEFAULT_ROUTINE_BODY_TEMPLATE = `#### Descrição:
+[1 a 2 frases claras e conceituais explicando o que a rotina faz]
+
+#### Passo a passo:
+1. Acesse o menu **Menu > Submenu**.
+2. Na aba **Geral**, preencha os campos destacados.
+3. Clique no botão **Concluir e Salvar** para finalizar.
+
+* **Observação:** [Regra operacional ou dica técnica relevante]`;
 
 export function CreateRoutineModal({
   isOpen,
@@ -83,21 +118,38 @@ export function CreateRoutineModal({
   sections,
   onCreateRoutine,
   isCreating,
+  mode = "create",
+  initialArticle = null,
+  onUpdateRoutine,
+  isUpdating = false,
 }: CreateRoutineModalProps) {
+  const isEditMode = mode === "edit" && Boolean(initialArticle);
+
   // 1. Estados dos Campos Principais
-  const [stepByStepBody, setStepByStepBody] = useState("");
+  const [selectedPrefix, setSelectedPrefix] = useState<RoutinePrefix>("D");
   const [routineId, setRoutineId] = useState("");
   const [title, setTitle] = useState("");
-  const [selectedSectionIndex, setSelectedSectionIndex] = useState<number>(SIPLAN_HUB_SECTION_INDEX);
+  const [selectedSectionIndex, setSelectedSectionIndex] = useState<number>(4);
   const [objective, setObjective] = useState("");
+  const [stepByStepBody, setStepByStepBody] = useState("");
+
+  // Tags (3 a 7)
   const [tags, setTags] = useState<string[]>([]);
   const [newTagInput, setNewTagInput] = useState("");
+
+  // Perguntas do Usuário (3 a 5)
   const [userQuestions, setUserQuestions] = useState<string[]>([]);
   const [newQuestionInput, setNewQuestionInput] = useState("");
+
+  // ⭐ Sintomas Comuns de Dor (3 a 5 - Novo Campo Obrigatório)
+  const [sintomasComuns, setSintomasComuns] = useState<string[]>([]);
+  const [newSintomaInput, setNewSintomaInput] = useState("");
+
+  // Sinônimos e Jargões Alternativos
   const [synonyms, setSynonyms] = useState<string[]>([]);
   const [newSynonymInput, setNewSynonymInput] = useState("");
 
-  // Vídeo Bunny.net (Foco Principal: URL Direct Play)
+  // Vídeo Bunny.net Stream
   const [hasVideo, setHasVideo] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
   const [bunnyLibraryId, setBunnyLibraryId] = useState("467408");
@@ -114,15 +166,54 @@ export function CreateRoutineModal({
 
   // Inicializar formulário ao abrir o modal
   useEffect(() => {
-    if (isOpen) {
-      setSelectedSectionIndex(SIPLAN_HUB_SECTION_INDEX);
-      setRoutineId(suggestNextArticleId(articles, SIPLAN_HUB_SECTION_INDEX));
-      setStepByStepBody("");
+    if (!isOpen) return;
+
+    if (isEditMode && initialArticle) {
+      const meta = initialArticle.metadata;
+      // Extrair prefixo do ID
+      const prefixMatch = initialArticle.id.toUpperCase().match(/^([RVMDS])-/);
+      const pref = (prefixMatch ? prefixMatch[1] : "D") as RoutinePrefix;
+      setSelectedPrefix(pref);
+      setRoutineId(initialArticle.id);
+      setTitle(stripIdPrefixFromTitle(meta.titulo || initialArticle.titulo));
+      setSelectedSectionIndex(initialArticle.sectionIndex);
+      setObjective(meta.objetivo || "");
+      setTags(meta.tags || []);
+      setUserQuestions(meta.perguntas_usuario || []);
+      setSintomasComuns(meta.sintomas_comuns || []);
+      setSynonyms(meta.sinonimos || []);
+      setStepByStepBody(initialArticle.body || DEFAULT_ROUTINE_BODY_TEMPLATE);
+
+      const hasVid = Boolean(meta.video?.tem_video);
+      setHasVideo(hasVid);
+      if (hasVid && meta.video) {
+        setVideoUrl(meta.video.video_url || "");
+        setBunnyLibraryId(meta.video.bunny_library_id || "467408");
+        setBunnyVideoId(meta.video.bunny_video_id || "");
+        setVideoTitle(meta.video.video_title || "");
+        setVideoTimestamp(meta.video.video_timestamp || "00:00");
+      } else {
+        setVideoUrl("");
+        setBunnyLibraryId("467408");
+        setBunnyVideoId("");
+        setVideoTitle("");
+        setVideoTimestamp("00:00");
+      }
+      setBunnyVideoInfo(null);
+      setIsValidatingBunny(false);
+    } else {
+      // Modo Create
+      const defaultPref: RoutinePrefix = "D";
+      setSelectedPrefix(defaultPref);
+      setSelectedSectionIndex(4);
+      setRoutineId(suggestNextArticleId(articles, defaultPref));
       setTitle("");
       setObjective("");
       setTags([]);
       setUserQuestions([]);
+      setSintomasComuns([]);
       setSynonyms([]);
+      setStepByStepBody(DEFAULT_ROUTINE_BODY_TEMPLATE);
       setHasVideo(false);
       setVideoUrl("");
       setBunnyLibraryId("467408");
@@ -132,9 +223,29 @@ export function CreateRoutineModal({
       setBunnyVideoInfo(null);
       setIsValidatingBunny(false);
     }
-  }, [isOpen, sections, articles]);
+  }, [isOpen, isEditMode, initialArticle, articles]);
 
-  // Handler Principal para a URL do Vídeo (Extração Automática dos Outros Campos)
+  // Handler para troca de Prefixo (D, R, V, M, S)
+  const handlePrefixChange = (newPrefixStr: string) => {
+    const newPref = newPrefixStr as RoutinePrefix;
+    setSelectedPrefix(newPref);
+
+    const prefixConfig = ROUTINE_PREFIX_OPTIONS.find((p) => p.prefix === newPref);
+    if (prefixConfig) {
+      setSelectedSectionIndex(prefixConfig.sectionIndex);
+    }
+
+    // Se estiver em modo create ou se o ID atual ainda começar com o prefixo anterior, recalcula
+    if (!isEditMode) {
+      setRoutineId(suggestNextArticleId(articles, newPref));
+    } else {
+      // No modo edição, se trocar o prefixo, altera o prefixo inicial do ID mantendo o resto
+      const currentRest = routineId.replace(/^[RVMDS]-/, "");
+      setRoutineId(`${newPref}-${currentRest}`);
+    }
+  };
+
+  // Handler para troca de URL de Vídeo da Bunny
   const handleVideoUrlChange = (inputVal: string) => {
     setVideoUrl(inputVal);
 
@@ -154,7 +265,7 @@ export function CreateRoutineModal({
     }
   };
 
-  // Consulta automática / Debounced na API da Bunny ao preencher a URL ou ID do Vídeo
+  // Consulta automática / Debounced na API da Bunny
   useEffect(() => {
     if (!hasVideo || !bunnyVideoId.trim()) {
       setBunnyVideoInfo(null);
@@ -166,7 +277,7 @@ export function CreateRoutineModal({
       try {
         const info = await fetchBunnyVideoInfo(bunnyLibraryId, bunnyVideoId);
         setBunnyVideoInfo(info);
-        if (info.title) {
+        if (info.title && !videoTitle) {
           setVideoTitle(info.title);
         }
       } catch {
@@ -177,14 +288,23 @@ export function CreateRoutineModal({
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [hasVideo, bunnyLibraryId, bunnyVideoId]);
+  }, [hasVideo, bunnyLibraryId, bunnyVideoId, videoTitle]);
 
-  // 2. Validação de ID Único em tempo real
+  // Validação do ID
   const idValidation = useMemo(() => {
     if (!routineId.trim()) {
       return { isValid: false, message: "ID é obrigatório" };
     }
-    const check = validateArticleIdUniqueness(articles, routineId);
+    // No modo edição, se for o próprio ID, é válido
+    if (isEditMode && initialArticle && routineId.trim().toLowerCase() === initialArticle.id.trim().toLowerCase()) {
+      return { isValid: true, message: "ID inalterado" };
+    }
+
+    const otherArticles = isEditMode && initialArticle
+      ? articles.filter((a) => a.id.toLowerCase() !== initialArticle.id.toLowerCase())
+      : articles;
+
+    const check = validateArticleIdUniqueness(otherArticles, routineId);
     if (!check.isUnique) {
       return {
         isValid: false,
@@ -192,20 +312,55 @@ export function CreateRoutineModal({
       };
     }
     return { isValid: true, message: "ID disponível" };
-  }, [articles, routineId]);
+  }, [articles, routineId, isEditMode, initialArticle]);
 
-  // Atualizar sugestão de ID se o usuário mudar a seção e o ID ainda for o gerado
-  const handleSectionChange = (newSecIndexStr: string) => {
-    const secIdx = parseInt(newSecIndexStr, 10);
-    setSelectedSectionIndex(secIdx);
-    setRoutineId(suggestNextArticleId(articles, secIdx));
+  // Validação do Título
+  const titleHasIdPrefix = useMemo(() => {
+    return hasIdPrefixInTitle(title);
+  }, [title]);
+
+  const handleStripTitlePrefix = () => {
+    setTitle(stripIdPrefixFromTitle(title));
   };
 
-  // 3. Auto-Preenchimento com IA a partir do Passo a Passo
+  // Validações dos campos estruturais
+  const tagsValidation = useMemo(() => validateTags(tags), [tags]);
+  const questionsValidation = useMemo(() => validatePerguntasUsuario(userQuestions), [userQuestions]);
+  const sintomasValidation = useMemo(() => validateSintomasComuns(sintomasComuns), [sintomasComuns]);
+
+  const videoCalculatedSeconds = useMemo(() => {
+    return parseTimestampToSeconds(videoTimestamp);
+  }, [videoTimestamp]);
+
+  const videoValidation = useMemo(() => {
+    return validateVideo(
+      {
+        tem_video: hasVideo,
+        bunny_video_id: bunnyVideoId,
+        video_timestamp: videoTimestamp,
+        video_start_seconds: videoCalculatedSeconds,
+      },
+      hasVideo,
+    );
+  }, [hasVideo, bunnyVideoId, videoTimestamp, videoCalculatedSeconds]);
+
+  const bodyValidation = useMemo(() => validateRoutineBody(stepByStepBody), [stepByStepBody]);
+
+  // Checagem se o corpo contém delimitadores soltos de traço triplo (---)
+  const bodyHasTripleDash = useMemo(() => {
+    return /(?:^|\r?\n)\s*---+\s*(?:\r?\n|$)/.test(stepByStepBody);
+  }, [stepByStepBody]);
+
+  const handleSanitizeBodyDashes = () => {
+    setStepByStepBody(sanitizeRoutineBody(stepByStepBody));
+    toast.success("Traços triplos (---) substituídos por *** no corpo.");
+  };
+
+  // Auto-Preenchimento com IA a partir do Passo a Passo
   const handleGenerateWithAi = async () => {
     if (!stepByStepBody.trim() || stepByStepBody.trim().length < 15) {
       toast.warning("Preencha o Passo a Passo primeiro", {
-        description: "Escreva as instruções do procedimento na Seção 1 para que a IA possa analisar e preencher automaticamente todos os metadados técnicos.",
+        description: "Escreva as instruções do procedimento para que a IA possa analisar e sugerir os metadados.",
       });
       return;
     }
@@ -217,20 +372,21 @@ export function CreateRoutineModal({
         articles,
         sections,
         preferredSectionIndex: selectedSectionIndex,
+        preferredPrefix: selectedPrefix,
       });
 
-      setRoutineId(result.id);
-      setTitle(result.titulo);
-      if (result.sectionIndex) {
-        setSelectedSectionIndex(result.sectionIndex);
+      if (!isEditMode) {
+        setRoutineId(result.id);
       }
+      setTitle(result.titulo);
       setObjective(result.objetivo);
       setTags(result.tags);
       setUserQuestions(result.perguntas_usuario);
+      setSintomasComuns(result.sintomas_comuns);
       setSynonyms(result.sinonimos);
 
-      toast.success("Metadados gerados pela IA com sucesso!", {
-        description: "Todos os campos técnicos foram preenchidos com base no seu passo a passo.",
+      toast.success("Metadados gerados com IA!", {
+        description: "Título, objetivo, tags, perguntas, sintomas e sinônimos foram preenchidos.",
       });
     } catch (err: any) {
       toast.error("Não foi possível gerar com IA", {
@@ -241,10 +397,15 @@ export function CreateRoutineModal({
     }
   };
 
-  // Funções de manipulação de tags com casing natural
+  // Funções de manipulação de tags
   const handleAddTag = () => {
     const trimmed = newTagInput.trim();
-    if (trimmed && !tags.includes(trimmed)) {
+    if (!trimmed) return;
+    if (tags.length >= 7) {
+      toast.warning("Limite de 7 tags atingido");
+      return;
+    }
+    if (!tags.includes(trimmed)) {
       setTags([...tags, trimmed]);
       setNewTagInput("");
     }
@@ -257,7 +418,12 @@ export function CreateRoutineModal({
   // Funções de manipulação de perguntas
   const handleAddQuestion = () => {
     const trimmed = newQuestionInput.trim();
-    if (trimmed && !userQuestions.includes(trimmed)) {
+    if (!trimmed) return;
+    if (userQuestions.length >= 5) {
+      toast.warning("Limite de 5 perguntas atingido");
+      return;
+    }
+    if (!userQuestions.includes(trimmed)) {
       setUserQuestions([...userQuestions, trimmed]);
       setNewQuestionInput("");
     }
@@ -267,10 +433,35 @@ export function CreateRoutineModal({
     setUserQuestions(userQuestions.filter((q) => q !== qToRemove));
   };
 
+  // Funções de manipulação de sintomas comuns
+  const handleAddSintoma = () => {
+    const trimmed = newSintomaInput.trim();
+    if (!trimmed) return;
+    if (sintomasComuns.length >= 5) {
+      toast.warning("Limite de 5 sintomas atingido");
+      return;
+    }
+    if (trimmed.includes("?")) {
+      toast.error("Sintomas não devem conter '?'", {
+        description: "Dúvidas e perguntas devem ser adicionadas no campo 'Perguntas do Usuário'.",
+      });
+      return;
+    }
+    if (!sintomasComuns.includes(trimmed)) {
+      setSintomasComuns([...sintomasComuns, trimmed]);
+      setNewSintomaInput("");
+    }
+  };
+
+  const handleRemoveSintoma = (sToRemove: string) => {
+    setSintomasComuns(sintomasComuns.filter((s) => s !== sToRemove));
+  };
+
   // Funções de manipulação de sinônimos
   const handleAddSynonym = () => {
     const trimmed = newSynonymInput.trim();
-    if (trimmed && !synonyms.includes(trimmed)) {
+    if (!trimmed) return;
+    if (!synonyms.includes(trimmed)) {
       setSynonyms([...synonyms, trimmed]);
       setNewSynonymInput("");
     }
@@ -280,53 +471,69 @@ export function CreateRoutineModal({
     setSynonyms(synonyms.filter((s) => s !== sToRemove));
   };
 
-  // 4. Submissão do Formulário
+  // Submissão do Formulário
   const handleSubmit = async () => {
-    if (!stepByStepBody.trim()) {
-      toast.error("Passo a Passo Obrigatório", {
-        description: "Escreva o procedimento da rotina na Seção 1.",
-      });
-      return;
-    }
-
+    // 1. Validação de ID
     if (!idValidation.isValid) {
       toast.error("ID Inválido ou Duplicado", {
-        description: "Por favor, informe um ID único para a rotina.",
+        description: idValidation.message,
       });
       return;
     }
 
-    if (!title.trim()) {
+    // 2. Validação do Título
+    const cleanTitle = stripIdPrefixFromTitle(title);
+    if (!cleanTitle) {
       toast.error("Título Obrigatório", {
-        description: "Informe o título da rotina ou clique em 'Preencher Metadados com IA'.",
+        description: "Informe o título funcional da rotina.",
       });
       return;
     }
 
+    // 3. Validação do Objetivo
     if (!objective.trim()) {
       toast.error("Objetivo Obrigatório", {
-        description: "Informe o objetivo da rotina ou use o botão 'Preencher Metadados com IA'.",
+        description: "Informe uma frase densa definindo a finalidade da rotina.",
       });
       return;
     }
 
-    if (tags.length === 0) {
-      toast.error("Tags Obrigatórias", {
-        description: "Adicione ao menos uma tag ou use 'Preencher Metadados com IA'.",
+    // 4. Validação de Tags (3 a 7)
+    if (!tagsValidation.isValid) {
+      toast.error("Tags Inválidas", {
+        description: tagsValidation.message,
       });
       return;
     }
 
-    if (userQuestions.length === 0) {
-      toast.error("Perguntas de Usuário Obrigatórias", {
-        description: "Adicione perguntas típicas ou use 'Preencher Metadados com IA'.",
+    // 5. Validação de Perguntas (3 a 5)
+    if (!questionsValidation.isValid) {
+      toast.error("Perguntas Inválidas", {
+        description: questionsValidation.message,
       });
       return;
     }
 
-    if (synonyms.length === 0) {
-      toast.error("Sinônimos Obrigatórios", {
-        description: "Adicione ao menos um sinônimo ou use 'Preencher Metadados com IA'.",
+    // 6. ⭐ Validação de Sintomas Comuns (3 a 5, sem '?')
+    if (!sintomasValidation.isValid) {
+      toast.error("Sintomas Comuns Inválidos", {
+        description: sintomasValidation.message,
+      });
+      return;
+    }
+
+    // 7. Validação de Vídeo
+    if (!videoValidation.isValid) {
+      toast.error("Metadados de Vídeo Inválidos", {
+        description: videoValidation.message,
+      });
+      return;
+    }
+
+    // 8. Validação do Corpo
+    if (!bodyValidation.isValid) {
+      toast.error("Corpo da Rotina Inválido", {
+        description: bodyValidation.message,
       });
       return;
     }
@@ -334,7 +541,7 @@ export function CreateRoutineModal({
     let videoData: BunnyVideoMetadata | undefined = undefined;
     if (hasVideo) {
       const cleanTimestamp = videoTimestamp.trim() || "00:00";
-      const startSecs = parseTimestampToSeconds(cleanTimestamp);
+      const startSecs = videoCalculatedSeconds;
       const cleanLibId = bunnyLibraryId.trim() || "467408";
       const cleanVidId = bunnyVideoId.trim();
       const finalEmbedUrl =
@@ -347,150 +554,171 @@ export function CreateRoutineModal({
         tem_video: true,
         bunny_library_id: cleanLibId,
         bunny_video_id: cleanVidId,
-        video_title: videoTitle.trim() || bunnyVideoInfo?.title || title.trim(),
+        video_title: videoTitle.trim() || bunnyVideoInfo?.title || cleanTitle,
         video_url: finalEmbedUrl,
         video_timestamp: cleanTimestamp,
         video_start_seconds: startSecs,
       };
+    } else {
+      videoData = { tem_video: false };
     }
 
     const metadata: KnowledgeArticleMetadata = {
       id: routineId.trim().toUpperCase(),
-      titulo: title.trim(),
+      titulo: cleanTitle,
       objetivo: objective.trim(),
       tags,
       perguntas_usuario: userQuestions,
+      sintomas_comuns: sintomasComuns,
       sinonimos: synonyms,
       video: videoData,
     };
 
+    const cleanBody = sanitizeRoutineBody(stepByStepBody.trim());
+
     try {
-      await onCreateRoutine({
-        metadata,
-        body: stepByStepBody.trim(),
-        sectionIndex: selectedSectionIndex,
-        hasVideo,
-        customSummary: `Cadastrada nova rotina ${routineId.trim().toUpperCase()}: ${title.trim()}`,
-      });
+      if (isEditMode && onUpdateRoutine && initialArticle) {
+        await onUpdateRoutine({
+          articleId: initialArticle.id,
+          metadata,
+          body: cleanBody,
+          customSummary: `Atualizada rotina ${routineId.trim().toUpperCase()}: ${cleanTitle}`,
+        });
+      } else {
+        await onCreateRoutine({
+          metadata,
+          body: cleanBody,
+          sectionIndex: selectedSectionIndex,
+          hasVideo,
+          customSummary: `Cadastrada nova rotina ${routineId.trim().toUpperCase()}: ${cleanTitle}`,
+        });
+      }
       onClose();
     } catch {
       // Notificações já tratadas pelo hook
     }
   };
 
-  const isFormIncomplete =
-    !stepByStepBody.trim() ||
-    !idValidation.isValid ||
-    !title.trim() ||
-    !objective.trim() ||
-    tags.length === 0 ||
-    userQuestions.length === 0 ||
-    synonyms.length === 0;
+  const isBusy = isCreating || isUpdating;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && !isCreating && onClose()}>
-      <DialogContent className="flex max-h-[calc(100dvh-1rem)] max-w-4xl flex-col overflow-hidden border-border bg-background p-0 shadow-2xl sm:max-h-[90vh]">
-        {/* Header Fixo */}
-        <DialogHeader className="p-5 border-b bg-muted/20 shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                <PlusCircle className="h-5 w-5" />
+    <Dialog open={isOpen} onOpenChange={(open) => !open && !isBusy && onClose()}>
+      <DialogContent className="flex max-h-[calc(100dvh-1rem)] max-w-4xl flex-col overflow-hidden border-border bg-background p-0 shadow-2xl sm:max-h-[92vh]">
+        {/* ===================== HEADER ===================== */}
+        <DialogHeader className="p-4 sm:p-5 border-b bg-muted/20 shrink-0">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
+                {isEditMode ? <Pencil className="h-5 w-5" /> : <PlusCircle className="h-5 w-5" />}
               </div>
-              <div>
-                <DialogTitle className="text-base font-bold text-foreground">
-                  Cadastrar Nova Rotina Orion TN
+              <div className="min-w-0">
+                <DialogTitle className="text-sm sm:text-base font-bold text-foreground truncate">
+                  PAINEL DE GESTÃO DA BASE DE CONHECIMENTO — ORION TN
                 </DialogTitle>
-                <DialogDescription className="text-xs text-muted-foreground">
-                  Preencha o passo a passo na Seção 1 e use o botão da IA na Seção 2 para gerar os metadados automaticamente.
+                <DialogDescription className="text-xs text-muted-foreground truncate">
+                  {isEditMode
+                    ? `Editando rotina ${initialArticle?.id}: ${initialArticle?.metadata?.titulo || initialArticle?.titulo}`
+                    : "Cadastro e padronização estruturada de rotinas e tutoriais da base oficial"}
                 </DialogDescription>
               </div>
             </div>
-            <Badge variant="outline" className="font-mono text-xs bg-background">
-              {articles.length} rotinas cadastradas
-            </Badge>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Badge variant="outline" className="font-mono text-xs bg-background hidden sm:inline-flex">
+                {articles.length} rotinas
+              </Badge>
+              <Badge
+                className={
+                  isEditMode
+                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30 text-xs"
+                    : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-xs"
+                }
+              >
+                {isEditMode ? "Modo Edição" : "Nova Rotina"}
+              </Badge>
+            </div>
           </div>
         </DialogHeader>
 
-        {/* Corpo com Scroll */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 text-xs">
-          {/* ================= SEÇÃO 1: PASSO A PASSO (FOCO PRINCIPAL DO USUÁRIO) ================= */}
-          <div className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-4.5">
-            <div className="space-y-0.5">
-              <Label className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                <FileText className="h-4 w-4 text-primary" />
-                1. Passo a Passo do Procedimento (Corpo da Rotina)
-                <span className="text-destructive">*</span>
-              </Label>
-              <p className="text-[11px] text-muted-foreground">
-                Escreva detalhadamente o passo a passo que o cliente ou atendente do cartório deve executar.
+        {/* ===================== CORPO DO FORMULÁRIO COM SCROLL ===================== */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 text-xs">
+          {/* Botão de Destaque: Preencher com IA (Recomendado) */}
+          <div className="rounded-xl border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-background p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <div className="space-y-1 min-w-0">
+              <div className="flex items-center gap-2 font-bold text-xs text-foreground">
+                <Sparkles className="h-4 w-4 text-primary animate-pulse shrink-0" />
+                <span>Auto-Preenchimento Inteligente</span>
+                <Badge variant="outline" className="text-[10px] border-primary/40 text-primary bg-primary/10">
+                  IA Orion TN
+                </Badge>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Escreva o <strong>Passo a Passo</strong> no final deste formulário e clique aqui para gerar Título, Objetivo, Tags, Perguntas, Sintomas Comuns e Sinônimos automaticamente.
               </p>
             </div>
 
-            <div className="rounded-lg border bg-background overflow-hidden">
-              <MarkdownTiptapEditor
-                value={stepByStepBody}
-                onChange={setStepByStepBody}
-                disabled={isCreating}
-              />
-            </div>
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleGenerateWithAi}
+              disabled={isGeneratingAi || isBusy}
+              className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md hover:shadow-lg transition-all text-xs h-9 px-4 shrink-0"
+            >
+              {isGeneratingAi ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Analisando Passo a Passo...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  <span>Preencher Metadados com IA</span>
+                </>
+              )}
+            </Button>
           </div>
 
-          {/* ================= SEÇÃO 2: METADADOS E CLASSIFICAÇÃO ================= */}
-          <div className="space-y-4 rounded-xl border bg-card p-4.5">
-            <div className="flex items-center justify-between border-b pb-2 text-foreground font-bold text-xs">
-              <div className="flex items-center gap-2">
+          {/* ================= SEÇÃO A: IDENTIFICAÇÃO E TÍTULO ================= */}
+          <div className="rounded-xl border bg-card p-4 space-y-4">
+            <div className="border-b pb-2 text-foreground font-bold text-xs flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
                 <Tag className="h-4 w-4 text-primary" />
-                <span>2. Metadados & Classificação Técnica</span>
-              </div>
-              <span className="text-[11px] text-muted-foreground font-normal">
-                Preenchimento automático recomendado
+                1. Identificação, Título Oficial e Objetivo
+              </span>
+              <span className="text-[10px] text-muted-foreground font-normal">
+                {selectedPrefix} — {ROUTINE_PREFIX_OPTIONS.find((p) => p.prefix === selectedPrefix)?.label.split("—")[1]}
               </span>
             </div>
 
-            {/* Banner de Destaque: Botão Preencher com IA (Primeira Opção antes dos campos) */}
-            <div className="rounded-xl border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-background p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 font-bold text-xs text-foreground">
-                  <Sparkles className="h-4 w-4 text-primary animate-pulse" />
-                  <span>Auto-Preenchimento Inteligente</span>
-                  <Badge variant="outline" className="text-[10px] border-primary/40 text-primary bg-primary/10">
-                    Recomendado
-                  </Badge>
-                </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  A IA analisará o <strong>Passo a Passo</strong> preenchido acima e preencherá automaticamente todos os metadados (ID, Título, Objetivo, Tags, Perguntas e Sinônimos).
-                </p>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5">
+              {/* Prefixo: [ D ▼ ] */}
+              <div className="md:col-span-4 space-y-1.5">
+                <Label htmlFor="routine-prefix" className="font-semibold text-foreground text-[11px]">
+                  Prefixo Oficial <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={selectedPrefix}
+                  onValueChange={handlePrefixChange}
+                  disabled={isBusy}
+                >
+                  <SelectTrigger id="routine-prefix" className="h-9 text-xs font-bold font-mono">
+                    <SelectValue placeholder="Prefixo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ROUTINE_PREFIX_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.prefix} value={opt.prefix} className="text-xs">
+                        <span className="font-mono font-bold mr-1.5">[{opt.prefix}]</span>
+                        <span>{opt.label}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              <Button
-                type="button"
-                size="default"
-                onClick={handleGenerateWithAi}
-                disabled={isGeneratingAi || isCreating}
-                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md hover:shadow-lg transition-all text-xs h-10 px-5 shrink-0"
-              >
-                {isGeneratingAi ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Analisando Passo a Passo...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4" />
-                    <span>Preencher Metadados com IA</span>
-                  </>
-                )}
-              </Button>
-            </div>
-
-            {/* Grid com os Campos de Metadados Técnicos */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 pt-1">
-              {/* ID com Validação em Tempo Real */}
-              <div className="md:col-span-4 space-y-1.5">
+              {/* Identificador (ID): [ D-3.80 ] */}
+              <div className="md:col-span-8 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="routine-id" className="font-semibold text-foreground">
-                    ID da Rotina <span className="text-destructive">*</span>
+                  <Label htmlFor="routine-id" className="font-semibold text-foreground text-[11px]">
+                    Identificador (ID) Único <span className="text-destructive">*</span>
                   </Label>
                   <Badge
                     variant="outline"
@@ -502,11 +730,11 @@ export function CreateRoutineModal({
                   >
                     {idValidation.isValid ? (
                       <span className="flex items-center gap-1">
-                        <CheckCircle2 className="h-3 w-3" /> Disponível
+                        <CheckCircle2 className="h-3 w-3" /> {idValidation.message}
                       </span>
                     ) : (
                       <span className="flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3" /> Duplicado
+                        <AlertCircle className="h-3 w-3" /> {idValidation.message}
                       </span>
                     )}
                   </Badge>
@@ -515,82 +743,99 @@ export function CreateRoutineModal({
                   id="routine-id"
                   value={routineId}
                   onChange={(e) => setRoutineId(e.target.value.toUpperCase().trim())}
-                  placeholder="Ex: S-5.1"
+                  placeholder="Ex: D-3.80"
                   className="font-mono text-xs font-bold h-9 uppercase"
-                  disabled={isCreating}
+                  disabled={isBusy}
                 />
-                {!idValidation.isValid && (
-                  <p className="text-[10px] text-destructive font-medium">
-                    {idValidation.message}
-                  </p>
-                )}
               </div>
 
-              {/* Seção Principal */}
-              <div className="md:col-span-8 space-y-1.5">
-                <Label htmlFor="section-select" className="font-semibold text-foreground">
-                  Seção do Documento <span className="text-destructive">*</span>
-                </Label>
-                <Select
-                  value={selectedSectionIndex.toString()}
-                  onValueChange={handleSectionChange}
-                  disabled={isCreating}
-                >
-                  <SelectTrigger id="section-select" className="h-9 text-xs font-medium">
-                    <SelectValue placeholder="Selecione a Seção" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sections.map((sec) => (
-                      <SelectItem key={sec.index} value={sec.index.toString()} className="text-xs">
-                        {sec.title} ({sec.articleIds.length} rotinas)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Título da Rotina */}
+              {/* Título Oficial (sem prefixo de ID) */}
               <div className="md:col-span-12 space-y-1.5">
-                <Label htmlFor="routine-title" className="font-semibold text-foreground">
-                  Título da Rotina <span className="text-destructive">*</span>
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="routine-title" className="font-semibold text-foreground text-[11px]">
+                    Título Oficial da Rotina <span className="text-destructive">*</span>
+                  </Label>
+                  {titleHasIdPrefix && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleStripTitlePrefix}
+                      className="h-6 text-[10px] text-amber-600 dark:text-amber-400 gap-1 px-1.5 hover:bg-amber-500/10"
+                      title="Remover prefixo de ID do título"
+                    >
+                      <Eraser className="h-3 w-3" />
+                      <span>Limpar Prefixo do Título</span>
+                    </Button>
+                  )}
+                </div>
                 <Input
                   id="routine-title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Ex: Como Realizar o Gerenciamento de Orçamentos no Orion TN"
-                  className="text-xs font-semibold h-9"
-                  disabled={isCreating}
+                  placeholder="Ex: Como Cadastrar Novo Cliente com IA"
+                  className={`text-xs font-semibold h-9 ${
+                    titleHasIdPrefix ? "border-amber-500 focus-visible:ring-amber-500" : ""
+                  }`}
+                  disabled={isBusy}
                 />
+                {titleHasIdPrefix ? (
+                  <p className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1 font-medium">
+                    <AlertTriangle className="h-3 w-3 shrink-0" />
+                    O título deve ser limpo e funcional, sem o código de ID (ex: apenas "Cadastrar Novo Cliente..."). Clique em "Limpar Prefixo".
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-muted-foreground">
+                    Título funcional, limpo e sem código de ID (o ID já é gerenciado no campo acima).
+                  </p>
+                )}
               </div>
 
-              {/* Objetivo / Resumo */}
+              {/* Objetivo da Rotina */}
               <div className="md:col-span-12 space-y-1.5">
-                <Label htmlFor="routine-objective" className="font-semibold text-foreground">
-                  Objetivo / Resumo Operacional <span className="text-destructive">*</span>
+                <Label htmlFor="routine-objective" className="font-semibold text-foreground text-[11px]">
+                  Objetivo da Rotina (Frase Única e Densa) <span className="text-destructive">*</span>
                 </Label>
                 <Textarea
                   id="routine-objective"
                   value={objective}
                   onChange={(e) => setObjective(e.target.value)}
-                  placeholder="Ex: Orientar o usuário no processo de consulta e cancelamento de orçamentos..."
+                  placeholder="Ex: Cadastrar ficha do cliente no balcão de notas utilizando OCR e inteligência artificial para captura de dados..."
                   rows={2}
                   className="text-xs resize-none"
-                  disabled={isCreating}
+                  disabled={isBusy}
                 />
               </div>
             </div>
+          </div>
 
-            {/* Tags Interativas */}
-            <div className="space-y-2 pt-2">
-              <Label className="font-semibold text-foreground flex items-center justify-between">
-                <span>
-                  Tags de Indexação <span className="text-destructive">*</span>
-                </span>
-                <span className="text-[10px] text-muted-foreground font-normal">
-                  Pressione Enter para adicionar
-                </span>
-              </Label>
+          {/* ================= SEÇÃO B: TAGS, PERGUNTAS E SINTOMAS DE DOR ================= */}
+          <div className="rounded-xl border bg-card p-4 space-y-4">
+            <div className="border-b pb-2 text-foreground font-bold text-xs flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <BookOpen className="h-4 w-4 text-primary" />
+                2. Categorização, Dúvidas e Sintomas de Dor (IA Search)
+              </span>
+            </div>
+
+            {/* Tags (3 a 7) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="font-semibold text-foreground text-[11px]">
+                  Tags de Categorização <span className="text-destructive">*</span>
+                </Label>
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] font-mono ${
+                    tagsValidation.isValid
+                      ? "border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
+                      : "border-amber-500/40 text-amber-600 dark:text-amber-400"
+                  }`}
+                >
+                  {tags.length} / 7 (mínimo 3)
+                </Badge>
+              </div>
+
               <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-lg border bg-background min-h-10">
                 {tags.map((tag) => (
                   <Badge
@@ -603,38 +848,60 @@ export function CreateRoutineModal({
                       type="button"
                       onClick={() => handleRemoveTag(tag)}
                       className="text-muted-foreground hover:text-destructive"
+                      disabled={isBusy}
                     >
                       <X className="h-3 w-3" />
                     </button>
                   </Badge>
                 ))}
-                <Input
-                  value={newTagInput}
-                  onChange={(e) => setNewTagInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === ",") {
-                      e.preventDefault();
-                      handleAddTag();
-                    }
-                  }}
-                  placeholder="Adicionar tag..."
-                  className="h-7 w-32 text-xs border-0 focus-visible:ring-0 p-1 bg-transparent"
-                  disabled={isCreating}
-                />
+                <div className="flex items-center gap-1 flex-1 min-w-36">
+                  <Input
+                    value={newTagInput}
+                    onChange={(e) => setNewTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === ",") {
+                        e.preventDefault();
+                        handleAddTag();
+                      }
+                    }}
+                    placeholder="+ Adicionar Tag..."
+                    className="h-7 text-xs border-0 focus-visible:ring-0 p-1 bg-transparent"
+                    disabled={isBusy || tags.length >= 7}
+                  />
+                  {newTagInput.trim() && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleAddTag}
+                      className="h-6 px-1.5 text-[10px] text-primary"
+                    >
+                      Adicionar
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Perguntas Frequentes do Usuário */}
-            <div className="space-y-2 pt-2">
-              <Label className="font-semibold text-foreground flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
+            {/* Perguntas do Usuário (3 a 5) */}
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center justify-between">
+                <Label className="font-semibold text-foreground text-[11px] flex items-center gap-1">
                   <HelpCircle className="h-3.5 w-3.5 text-primary" />
-                  Perguntas Típicas do Usuário <span className="text-destructive">*</span>
-                </span>
-                <span className="text-[10px] text-muted-foreground font-normal">
-                  Pressione Enter para adicionar
-                </span>
-              </Label>
+                  Perguntas do Usuário (Dúvidas Completas) <span className="text-destructive">*</span>
+                </Label>
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] font-mono ${
+                    questionsValidation.isValid
+                      ? "border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
+                      : "border-amber-500/40 text-amber-600 dark:text-amber-400"
+                  }`}
+                >
+                  {userQuestions.length} / 5 (mínimo 3)
+                </Badge>
+              </div>
+
               <div className="space-y-1.5">
                 <div className="flex gap-2">
                   <Input
@@ -646,9 +913,9 @@ export function CreateRoutineModal({
                         handleAddQuestion();
                       }
                     }}
-                    placeholder="Ex: Como gerenciar orçamentos em aberto no Orion TN?"
+                    placeholder="Ex: Como preencher o cartão de assinatura com IA?"
                     className="h-8 text-xs"
-                    disabled={isCreating}
+                    disabled={isBusy || userQuestions.length >= 5}
                   />
                   <Button
                     type="button"
@@ -656,44 +923,123 @@ export function CreateRoutineModal({
                     variant="outline"
                     onClick={handleAddQuestion}
                     className="h-8 text-xs shrink-0"
+                    disabled={isBusy || userQuestions.length >= 5 || !newQuestionInput.trim()}
                   >
-                    Adicionar
+                    + Adicionar Pergunta
                   </Button>
                 </div>
+
                 {userQuestions.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 pt-1">
+                  <div className="space-y-1 pt-1">
                     {userQuestions.map((q, idx) => (
-                      <Badge
+                      <div
                         key={idx}
-                        variant="outline"
-                        className="text-[11px] gap-1.5 py-1 px-2.5 bg-background text-foreground"
+                        className="flex items-center justify-between gap-2 p-1.5 px-2.5 rounded-lg border bg-background text-[11px]"
                       >
-                        <span>{q}</span>
+                        <span className="font-mono text-muted-foreground font-semibold">{idx + 1}.</span>
+                        <span className="flex-1 text-foreground break-words">"{q}"</span>
                         <button
                           type="button"
                           onClick={() => handleRemoveQuestion(q)}
-                          className="text-muted-foreground hover:text-destructive"
+                          className="text-muted-foreground hover:text-destructive shrink-0"
+                          disabled={isBusy}
                         >
-                          <X className="h-3 w-3" />
+                          <X className="h-3.5 w-3.5" />
                         </button>
-                      </Badge>
+                      </div>
                     ))}
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Sinônimos */}
-            <div className="space-y-2 pt-2">
-              <Label className="font-semibold text-foreground flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
+            {/* ⭐ Sintomas Comuns de Dor (3 a 5 - Novo Campo Obrigatório) */}
+            <div className="space-y-2 pt-1 border-t border-border/50">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label className="font-semibold text-foreground text-[11px] flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
+                    <Stethoscope className="h-3.5 w-3.5 text-amber-500" />
+                    ⭐ Sintomas Comuns de Dor (O que o escrevente reclama) <span className="text-destructive">*</span>
+                  </Label>
+                  <p className="text-[10px] text-muted-foreground">
+                    Termos curtos de dor/busca (ex: "tela travada em cinza", "leitura de documento falhou"). <strong>Sem ponto de interrogação (?)</strong>.
+                  </p>
+                </div>
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] font-mono ${
+                    sintomasValidation.isValid
+                      ? "border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
+                      : "border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10"
+                  }`}
+                >
+                  {sintomasComuns.length} / 5 (mínimo 3)
+                </Badge>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex gap-2">
+                  <Input
+                    value={newSintomaInput}
+                    onChange={(e) => setNewSintomaInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddSintoma();
+                      }
+                    }}
+                    placeholder="Ex: não consigo digitar no cartão"
+                    className="h-8 text-xs border-amber-500/40 focus-visible:ring-amber-500"
+                    disabled={isBusy || sintomasComuns.length >= 5}
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleAddSintoma}
+                    className="h-8 text-xs shrink-0 border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
+                    disabled={isBusy || sintomasComuns.length >= 5 || !newSintomaInput.trim()}
+                  >
+                    + Adicionar Sintoma
+                  </Button>
+                </div>
+
+                {sintomasComuns.length > 0 && (
+                  <div className="space-y-1 pt-1">
+                    {sintomasComuns.map((s, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between gap-2 p-1.5 px-2.5 rounded-lg border border-amber-500/20 bg-amber-500/5 text-[11px]"
+                      >
+                        <span className="font-mono text-amber-600 dark:text-amber-400 font-bold">{idx + 1}.</span>
+                        <span className="flex-1 text-foreground font-medium break-words">"{s}"</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSintoma(s)}
+                          className="text-muted-foreground hover:text-destructive shrink-0"
+                          disabled={isBusy}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Sinônimos e Jargões Alternativos */}
+            <div className="space-y-2 pt-1 border-t border-border/50">
+              <div className="flex items-center justify-between">
+                <Label className="font-semibold text-foreground text-[11px] flex items-center gap-1">
                   <Search className="h-3.5 w-3.5 text-primary" />
-                  Sinônimos e Palavras-Chave de Busca <span className="text-destructive">*</span>
-                </span>
-                <span className="text-[10px] text-muted-foreground font-normal">
-                  Pressione Enter para adicionar
-                </span>
-              </Label>
+                  Sinônimos e Jargões Alternativos
+                </Label>
+                <Badge variant="outline" className="text-[10px] font-mono">
+                  {synonyms.length} termos
+                </Badge>
+              </div>
+
               <div className="space-y-1.5">
                 <div className="flex gap-2">
                   <Input
@@ -705,9 +1051,9 @@ export function CreateRoutineModal({
                         handleAddSynonym();
                       }
                     }}
-                    placeholder="Ex: cotação, orçamento cancelado, desistência..."
+                    placeholder="Ex: cadastro com ocr, ficha de firma, autógrafo..."
                     className="h-8 text-xs"
-                    disabled={isCreating}
+                    disabled={isBusy}
                   />
                   <Button
                     type="button"
@@ -715,23 +1061,26 @@ export function CreateRoutineModal({
                     variant="outline"
                     onClick={handleAddSynonym}
                     className="h-8 text-xs shrink-0"
+                    disabled={isBusy || !newSynonymInput.trim()}
                   >
-                    Adicionar
+                    + Adicionar Sinônimo
                   </Button>
                 </div>
+
                 {synonyms.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 pt-1">
                     {synonyms.map((s, idx) => (
                       <Badge
                         key={idx}
                         variant="secondary"
-                        className="text-[11px] gap-1.5 py-0.5 px-2 text-foreground"
+                        className="text-[11px] gap-1 py-0.5 px-2 text-foreground"
                       >
                         <span>{s}</span>
                         <button
                           type="button"
                           onClick={() => handleRemoveSynonym(s)}
                           className="text-muted-foreground hover:text-destructive"
+                          disabled={isBusy}
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -743,236 +1092,257 @@ export function CreateRoutineModal({
             </div>
           </div>
 
-          {/* ================= SEÇÃO 3: VÍDEO BUNNY.NET (FOCO NA URL DO DIRECT PLAY) ================= */}
-          <div className="space-y-4 rounded-xl border bg-card p-4.5">
+          {/* ================= SEÇÃO C: VÍDEO TUTORIAL (BUNNY.NET) ================= */}
+          <div className="rounded-xl border bg-card p-4 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Video className="h-4 w-4 text-primary" />
                 <span className="font-bold text-foreground text-xs">
-                  3. Vídeo Tutorial (Bunny.net - Opcional)
+                  3. Vídeo Tutorial (Bunny.net Stream)
                 </span>
               </div>
 
               <div className="flex items-center gap-2">
-                <Label htmlFor="toggle-has-video" className="text-xs text-muted-foreground cursor-pointer">
-                  {hasVideo ? "Rotina com Vídeo" : "Sem Vídeo"}
+                <Label htmlFor="toggle-has-video" className="text-xs text-muted-foreground cursor-pointer font-medium">
+                  {hasVideo ? "Possui videoaula gravada demonstrando a tela" : "Sem gravação de tela"}
                 </Label>
                 <Switch
                   id="toggle-has-video"
                   checked={hasVideo}
                   onCheckedChange={setHasVideo}
-                  disabled={isCreating}
+                  disabled={isBusy}
                 />
               </div>
             </div>
 
             {hasVideo ? (
               <div className="space-y-4 pt-2 border-t border-border/50 animate-in fade-in-50 duration-200">
-                {/* CAMPO PRINCIPAL (FOCO): URL DO DIRECT PLAY DA BUNNY */}
-                <div className="space-y-1.5 p-3.5 rounded-xl border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-background">
-                  <div className="flex flex-wrap items-center justify-between gap-1">
-                    <Label htmlFor="video-url" className="font-bold text-xs text-foreground flex items-center gap-1.5">
-                      <Link2 className="h-3.5 w-3.5 text-primary" />
-                      URL do Vídeo no Bunny.net (Direct Play ou Embed)
-                      <span className="text-destructive">*</span>
-                    </Label>
-                    <span className="text-[10px] text-muted-foreground font-medium">
-                      Cole a URL do Direct Play para extrair todos os dados automaticamente
-                    </span>
-                  </div>
+                <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-800 dark:text-amber-200 flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600" />
+                  <span>
+                    <strong>Regra Obrigatória:</strong> Apenas marque vídeo se houver gravação demonstrando especificamente esta rotina em execução na tela do Orion TN. Se for apenas áudio ou assunto genérico, mantenha desligado.
+                  </span>
+                </div>
+
+                {/* URL do Direct Play da Bunny */}
+                <div className="space-y-1.5 p-3 rounded-xl border border-primary/30 bg-primary/5">
+                  <Label htmlFor="video-url" className="font-bold text-xs text-foreground flex items-center gap-1.5">
+                    <Link2 className="h-3.5 w-3.5 text-primary" />
+                    URL do Vídeo (Cole a URL do Direct Play para extrair GUID e Minutagem)
+                  </Label>
                   <Input
                     id="video-url"
                     value={videoUrl}
                     onChange={(e) => handleVideoUrlChange(e.target.value)}
-                    placeholder="https://iframe.mediadelivery.net/play/467408/dd1681df-2c50-4b21-8ca9-e175ee298621"
-                    className="h-9 text-xs font-mono bg-background border-primary/40 focus-visible:ring-primary shadow-xs"
-                    disabled={isCreating}
+                    placeholder="https://iframe.mediadelivery.net/play/467408/8b0225b8-ab00-44a2-a03e-5a3cb3f07f99"
+                    className="h-8 text-xs font-mono bg-background"
+                    disabled={isBusy}
                   />
                 </div>
 
-                {/* Status de Verificação em Andamento */}
+                {/* Verificação em andamento */}
                 {isValidatingBunny && (
-                  <div className="flex items-center gap-2 p-3 rounded-lg border border-primary/30 bg-primary/5 text-xs text-primary font-medium">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Conectando à API da Bunny.net e sincronizando dados do vídeo...</span>
+                  <div className="flex items-center gap-2 p-2.5 rounded-lg border border-primary/30 bg-primary/5 text-xs text-primary font-medium">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>Conectando à API da Bunny.net...</span>
                   </div>
                 )}
 
-                {/* CARD DE VINCULAÇÃO COM SUCESSO & FOTO DE CAPA */}
+                {/* Card de Vinculação com Capa */}
                 {!isValidatingBunny && bunnyVideoId.trim() && (
-                  <div className="rounded-xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-background p-4 flex flex-col sm:flex-row gap-4 items-center shadow-xs animate-in fade-in-50 duration-200">
-                    {/* Foto de Capa (Thumbnail do Vídeo na Bunny) */}
-                    <div className="relative w-40 sm:w-48 aspect-video rounded-lg overflow-hidden bg-black/90 border border-emerald-500/40 shrink-0 shadow-md flex items-center justify-center">
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3.5 flex flex-col sm:flex-row gap-3 items-center">
+                    <div className="relative w-36 aspect-video rounded-lg overflow-hidden bg-black shrink-0 border border-emerald-500/40 flex items-center justify-center">
                       {bunnyVideoInfo?.thumbnailUrl ? (
                         <img
                           src={bunnyVideoInfo.thumbnailUrl}
-                          alt={videoTitle || bunnyVideoInfo?.title || title || "Capa do Vídeo Bunny"}
+                          alt={videoTitle || "Capa do Vídeo Bunny"}
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-muted/30 text-muted-foreground">
-                          <Video className="h-8 w-8 text-muted-foreground/60" />
-                        </div>
+                        <Video className="h-6 w-6 text-muted-foreground" />
                       )}
                       <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
-                        <div className="h-9 w-9 rounded-full bg-rose-600/90 text-white flex items-center justify-center shadow-lg">
-                          <Play className="h-4 w-4 fill-white ml-0.5" />
+                        <div className="h-7 w-7 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-md">
+                          <Play className="h-3.5 w-3.5 fill-white ml-0.5" />
                         </div>
                       </div>
                     </div>
 
-                    {/* Metadados e Confirmação de Vinculação */}
-                    <div className="flex-1 space-y-1.5 min-w-0 text-xs w-full">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white font-bold text-[10px] gap-1 shadow-xs">
-                          <CheckCircle2 className="h-3 w-3" />
-                          Vídeo Vinculado com Sucesso via Bunny.net
+                    <div className="flex-1 space-y-1 text-xs w-full min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge className="bg-emerald-600 text-white text-[9px] gap-1">
+                          <CheckCircle2 className="h-2.5 w-2.5" /> Vinculado com Sucesso
                         </Badge>
-                        <Badge variant="outline" className="text-[10px] font-mono border-border bg-background">
-                          <Clock className="h-2.5 w-2.5 mr-1 text-primary" />
-                          Início: {videoTimestamp || "00:00"}
+                        <Badge variant="outline" className="text-[10px] font-mono">
+                          Início: {videoTimestamp || "00:00"} ({videoCalculatedSeconds}s)
                         </Badge>
-                        {bunnyVideoInfo?.formattedTimestamp && bunnyVideoInfo.formattedTimestamp !== "00:00" && (
-                          <Badge variant="secondary" className="text-[10px] text-muted-foreground">
-                            Duração total: {bunnyVideoInfo.formattedTimestamp}
-                          </Badge>
-                        )}
                       </div>
-
-                      <div className="font-bold text-foreground truncate text-sm">
+                      <div className="font-bold text-foreground truncate text-xs">
                         {videoTitle || bunnyVideoInfo?.title || title || "Vídeo Tutorial Orion TN"}
                       </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground font-mono pt-1">
-                        <span className="truncate">
-                          <strong className="text-foreground">GUID:</strong> {bunnyVideoId}
-                        </span>
-                        <span>
-                          <strong className="text-foreground">Library ID:</strong> {bunnyLibraryId}
-                        </span>
+                      <div className="text-[10px] text-muted-foreground font-mono truncate">
+                        GUID: {bunnyVideoId} | Library: {bunnyLibraryId}
                       </div>
-
-                      {videoUrl && (
-                        <div className="pt-1">
-                          <a
-                            href={videoUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[11px] text-primary hover:underline flex items-center gap-1 font-semibold"
-                          >
-                            <span>Testar link no player da Bunny</span>
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}
 
-                {/* Campos Preenchidos Automaticamente a partir da URL */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 pt-1">
-                  {/* Título do Vídeo (Auto-Preenchido via Bunny) */}
-                  <div className="md:col-span-12 space-y-1">
-                    <Label htmlFor="bunny-video-title" className="font-semibold text-[11px] text-muted-foreground flex items-center justify-between">
-                      <span>Título do Vídeo Tutorial</span>
-                      <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold">Sincronizado da Bunny</span>
-                    </Label>
-                    <Input
-                      id="bunny-video-title"
-                      value={videoTitle}
-                      onChange={(e) => setVideoTitle(e.target.value)}
-                      placeholder="Título oficial do vídeo no Bunny.net"
-                      className="h-8 text-xs font-semibold bg-background"
-                      disabled={isCreating}
-                    />
-                  </div>
-
-                  {/* Bunny Library ID */}
-                  <div className="md:col-span-4 space-y-1">
-                    <Label htmlFor="bunny-lib-id" className="font-semibold text-[11px] text-muted-foreground flex items-center justify-between">
-                      <span>Bunny Library ID</span>
-                      <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold">Automático</span>
-                    </Label>
-                    <Input
-                      id="bunny-lib-id"
-                      value={bunnyLibraryId}
-                      onChange={(e) => setBunnyLibraryId(e.target.value)}
-                      placeholder="467408"
-                      className="h-8 text-xs font-mono bg-muted/30"
-                      disabled={isCreating}
-                    />
-                  </div>
-
-                  {/* Bunny Video ID (GUID) */}
-                  <div className="md:col-span-4 space-y-1">
-                    <Label htmlFor="bunny-video-id" className="font-semibold text-[11px] text-muted-foreground flex items-center justify-between">
-                      <span>Bunny Video ID (GUID)</span>
-                      <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold">Automático</span>
+                {/* Campos do Vídeo */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 pt-1">
+                  {/* GUID do Vídeo */}
+                  <div className="md:col-span-5 space-y-1">
+                    <Label htmlFor="bunny-video-id" className="font-semibold text-[11px] text-foreground">
+                      GUID do Vídeo (bunny_video_id) <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="bunny-video-id"
                       value={bunnyVideoId}
                       onChange={(e) => setBunnyVideoId(e.target.value)}
-                      placeholder="dd1681df-2c50-4b21-8ca9-e175ee298621"
-                      className="h-8 text-xs font-mono bg-muted/30"
-                      disabled={isCreating}
+                      placeholder="8b0225b8-ab00-44a2-a03e-5a3cb3f07f99"
+                      className="h-8 text-xs font-mono"
+                      disabled={isBusy}
                     />
                   </div>
 
-                  {/* Tempo de Início / Ponto Exato da Rotina (Manual) */}
+                  {/* Título do Vídeo */}
                   <div className="md:col-span-4 space-y-1">
+                    <Label htmlFor="bunny-video-title" className="font-semibold text-[11px] text-foreground">
+                      Título do Vídeo
+                    </Label>
+                    <Input
+                      id="bunny-video-title"
+                      value={videoTitle}
+                      onChange={(e) => setVideoTitle(e.target.value)}
+                      placeholder="Cadastro Cartão de Assinatura pt 1 - Orion TN"
+                      className="h-8 text-xs"
+                      disabled={isBusy}
+                    />
+                  </div>
+
+                  {/* Minutagem de Início */}
+                  <div className="md:col-span-3 space-y-1">
                     <Label htmlFor="video-timestamp" className="font-semibold text-[11px] text-foreground flex items-center justify-between">
-                      <span>Início da Rotina (mm:ss)</span>
-                      <span className="text-[9px] text-primary font-bold">Definir Manual</span>
+                      <span>Início (MM:SS) <span className="text-destructive">*</span></span>
+                      <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold font-mono">
+                        {videoCalculatedSeconds}s
+                      </span>
                     </Label>
                     <Input
                       id="video-timestamp"
                       value={videoTimestamp}
                       onChange={(e) => setVideoTimestamp(e.target.value)}
-                      placeholder="00:00 (Ex: 02:30)"
-                      className="h-8 text-xs font-mono border-primary/30"
-                      disabled={isCreating}
+                      placeholder="00:18"
+                      className="h-8 text-xs font-mono"
+                      disabled={isBusy}
                     />
                   </div>
                 </div>
               </div>
             ) : (
-              <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                <Info className="h-3.5 w-3.5 text-muted-foreground/80" />
-                Esta rotina será salva sem o bloco de vídeo no cabeçalho YAML.
+              <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 pt-1 border-t border-border/50">
+                <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                Esta rotina será gravada com <code className="font-mono text-[10px] bg-muted px-1 py-0.5 rounded">video: tem_video: false</code> no YAML.
               </p>
             )}
           </div>
+
+          {/* ================= SEÇÃO D: CORPO DA ROTINA (MARKDOWN FORMATADO) ================= */}
+          <div className="rounded-xl border border-primary/20 bg-card p-4 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-2">
+              <div className="space-y-0.5">
+                <Label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <FileText className="h-4 w-4 text-primary" />
+                  4. Corpo da Rotina (Markdown Formatado) <span className="text-destructive">*</span>
+                </Label>
+                <p className="text-[10px] text-muted-foreground">
+                  Deve iniciar com <code>#### Descrição:</code> e conter <code>#### Passo a passo:</code>.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {bodyHasTripleDash && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSanitizeBodyDashes}
+                    className="h-6 text-[10px] text-destructive border-destructive/40 gap-1 bg-destructive/5 hover:bg-destructive/10"
+                    title="Substituir '---' por '***'"
+                  >
+                    <AlertTriangle className="h-3 w-3" />
+                    <span>Corrigir Traços '---'</span>
+                  </Button>
+                )}
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] ${
+                    bodyValidation.isValid
+                      ? "border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
+                      : "border-amber-500/40 text-amber-600 dark:text-amber-400"
+                  }`}
+                >
+                  {bodyValidation.isValid ? "Formato Válido" : "Requer Atenção"}
+                </Badge>
+              </div>
+            </div>
+
+            {bodyHasTripleDash && (
+              <div className="p-2.5 rounded-lg bg-destructive/10 border border-destructive/30 text-[11px] text-destructive flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  Traços triplos isolados (---) não são permitidos dentro do corpo pois quebram a separação dos artigos.
+                </span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleSanitizeBodyDashes}
+                  className="h-6 text-[10px] shrink-0"
+                >
+                  Substituir por ***
+                </Button>
+              </div>
+            )}
+
+            <div className="rounded-lg border bg-background overflow-hidden">
+              <MarkdownTiptapEditor
+                value={stepByStepBody}
+                onChange={setStepByStepBody}
+                disabled={isBusy}
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Rodapé Fixo */}
-        <DialogFooter className="p-4 border-t bg-muted/20 shrink-0 gap-2 sm:gap-0">
+        {/* ===================== FOOTER ===================== */}
+        <DialogFooter className="p-3.5 sm:p-4 border-t bg-muted/20 shrink-0 gap-2 sm:gap-0">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={onClose}
-            disabled={isCreating}
+            disabled={isBusy}
             className="text-xs"
           >
             Cancelar
           </Button>
+
           <Button
             type="button"
             size="sm"
             onClick={handleSubmit}
-            disabled={isCreating || isFormIncomplete}
+            disabled={isBusy}
             className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs shadow-md"
           >
-            {isCreating ? (
+            {isBusy ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Cadastrando e Publicando...
+                {isEditMode ? "Salvando Alterações..." : "Cadastrando e Publicando..."}
               </>
             ) : (
               <>
                 <CheckCircle2 className="h-4 w-4" />
-                Cadastrar e Publicar na IA
+                {isEditMode ? "Salvar Alterações na Rotina" : "Salvar Rotina"}
               </>
             )}
           </Button>

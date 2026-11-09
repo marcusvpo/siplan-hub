@@ -11,6 +11,210 @@ export const SIPLAN_HUB_SECTION_INDEX = 5;
 export const SIPLAN_HUB_SECTION_TITLE = "SEÇÃO PRINCIPAL 5: Rotinas atualizadas via Siplan HUB";
 export const SIPLAN_HUB_ID_PREFIX = "S-";
 
+export type RoutinePrefix = "D" | "R" | "V" | "M" | "S";
+
+export const ROUTINE_PREFIX_OPTIONS: { prefix: RoutinePrefix; label: string; sectionIndex: number }[] = [
+  { prefix: "D", label: "D — Demonstrações do Sistema (Seção 4)", sectionIndex: 4 },
+  { prefix: "R", label: "R — Rotinas e Funcionalidades (Seção 1)", sectionIndex: 1 },
+  { prefix: "V", label: "V — Transcrições de Videoaulas (Seção 2)", sectionIndex: 2 },
+  { prefix: "M", label: "M — Manuais do Produto (Seção 3)", sectionIndex: 3 },
+  { prefix: "S", label: "S — Siplan HUB / Atualizações (Seção 5)", sectionIndex: 5 },
+];
+
+/**
+ * Normaliza quebras de linha para o padrão Windows CRLF (\r\n).
+ * Obrigatório no salvamento do arquivo mestre OrionTN pos.md.
+ */
+export function ensureCrlf(content: string): string {
+  if (!content) return "";
+  return content.replace(/\r?\n/g, "\r\n");
+}
+
+/**
+ * Converte timestamp textual (ex: "02:30", "01:15:00", "45") para segundos inteiros.
+ */
+export function parseTimestampToSeconds(ts: string): number {
+  if (!ts) return 0;
+  const parts = ts.trim().split(":").map((p) => parseInt(p, 10));
+  if (parts.some(isNaN)) return 0;
+  if (parts.length === 3) {
+    return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  }
+  if (parts.length === 2) {
+    return parts[0] * 60 + parts[1];
+  }
+  if (parts.length === 1) {
+    return parts[0];
+  }
+  return 0;
+}
+
+/**
+ * Converte segundos inteiros para formato textual MM:SS ou HH:MM:SS.
+ */
+export function formatSecondsToTimestamp(seconds?: number | null): string {
+  if (seconds === undefined || seconds === null || isNaN(seconds) || seconds < 0) {
+    return "00:00";
+  }
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  if (h > 0) {
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+/**
+ * Detecta se o título informado contém prefixo de ID (ex: "D-3.3 - ", "R-1.0: ").
+ * Conforme regra da base, o título deve ser limpo e funcional, sem código de ID.
+ */
+export interface RoutineValidationResult {
+  isValid: boolean;
+  valid: boolean;
+  message?: string;
+  errors: string[];
+}
+
+export const ID_PREFIX_REGEX = /^\s*\[?[A-Z]{1,4}-\d+(?:\.\d+)*\]?(?:\s*[-–—:]\s*|\s+)/i;
+
+export function hasIdPrefixInTitle(title: string): boolean {
+  if (!title) return false;
+  return ID_PREFIX_REGEX.test(title.trim());
+}
+
+/**
+ * Remove qualquer prefixo de ID do início do título.
+ */
+export function stripIdPrefixFromTitle(title: string): string {
+  if (!title) return "";
+  return title.trim().replace(ID_PREFIX_REGEX, "").trim();
+}
+
+/**
+ * Validação do campo sintomas_comuns:
+ * - Obrigar no mínimo 3 e no máximo 5 termos.
+ * - Não aceitar ponto de interrogação (?) pois devem ser expressões curtas de busca, e não perguntas.
+ */
+export function validateSintomasComuns(sintomas: string[]): RoutineValidationResult {
+  if (!sintomas || sintomas.length < 3) {
+    const msg = `Cadastre pelo menos 3 sintomas comuns de dor (atualmente: ${sintomas?.length || 0}).`;
+    return { isValid: false, valid: false, message: msg, errors: [msg] };
+  }
+  if (sintomas.length > 5) {
+    const msg = `Cadastre no máximo 5 sintomas comuns (atualmente: ${sintomas.length}).`;
+    return { isValid: false, valid: false, message: msg, errors: [msg] };
+  }
+  for (const s of sintomas) {
+    if (s.includes("?")) {
+      const msg = `O termo "${s}" contém ponto de interrogação '?'. Dores e sintomas não devem ser perguntas; adicione dúvidas em 'Perguntas do Usuário'.`;
+      return { isValid: false, valid: false, message: msg, errors: [msg] };
+    }
+    if (s.trim().length > 70) {
+      const msg = `O termo "${s.slice(0, 30)}..." é muito longo. Sintomas devem ser expressões curtas de busca (ex: "tela travada", "erro ao validar lote").`;
+      return { isValid: false, valid: false, message: msg, errors: [msg] };
+    }
+  }
+  return { isValid: true, valid: true, errors: [] };
+}
+
+/**
+ * Validação das perguntas_usuario:
+ * - Obrigar no mínimo 3 e no máximo 5 perguntas completas.
+ */
+export function validatePerguntasUsuario(perguntas: string[]): RoutineValidationResult {
+  if (!perguntas || perguntas.length < 3) {
+    const msg = `Cadastre no mínimo 3 perguntas completas que um usuário faria (atualmente: ${perguntas?.length || 0}).`;
+    return { isValid: false, valid: false, message: msg, errors: [msg] };
+  }
+  if (perguntas.length > 5) {
+    const msg = `Cadastre no máximo 5 perguntas do usuário permitido (atualmente: ${perguntas.length}).`;
+    return { isValid: false, valid: false, message: msg, errors: [msg] };
+  }
+  return { isValid: true, valid: true, errors: [] };
+}
+
+/**
+ * Validação de tags:
+ * - Obrigar no mínimo 3 e no máximo 7 tags de categorização.
+ */
+export function validateTags(tags: string[]): RoutineValidationResult {
+  if (!tags || tags.length < 3) {
+    const msg = `Cadastre no mínimo 3 tags de categorização (atualmente: ${tags?.length || 0}).`;
+    return { isValid: false, valid: false, message: msg, errors: [msg] };
+  }
+  if (tags.length > 7) {
+    const msg = `Máximo de 7 tags permitido (atualmente: ${tags.length}).`;
+    return { isValid: false, valid: false, message: msg, errors: [msg] };
+  }
+  return { isValid: true, valid: true, errors: [] };
+}
+
+/**
+ * Validação do vídeo Bunny.net:
+ * - Se tem_video for true, exigir GUID e minutagem de início.
+ */
+export function validateVideo(
+  video: BunnyVideoMetadata | undefined,
+  hasVideo: boolean,
+): RoutineValidationResult {
+  if (!hasVideo || !video?.tem_video) {
+    return { isValid: true, valid: true, errors: [] };
+  }
+  if (!video.bunny_video_id || !video.bunny_video_id.trim()) {
+    const msg = "Informe o GUID do vídeo Bunny.net (ou cole a URL de Direct Play).";
+    return { isValid: false, valid: false, message: msg, errors: [msg] };
+  }
+  if (!video.video_timestamp || !video.video_timestamp.trim()) {
+    const msg = "A minutagem de início do vídeo (MM:SS) é obrigatória quando há vídeo.";
+    return { isValid: false, valid: false, message: msg, errors: [msg] };
+  }
+  return { isValid: true, valid: true, errors: [] };
+}
+
+/**
+ * Validação e higienização do corpo da rotina:
+ * - Deve começar com #### Descrição:
+ * - Deve conter #### Passo a passo:
+ * - Bloqueia delimitadores soltos de traço triplo (---) dentro do corpo.
+ */
+export function validateRoutineBody(body: string): RoutineValidationResult {
+  const trimmed = body?.trim() || "";
+  if (!trimmed) {
+    const msg = "O corpo da rotina é obrigatório.";
+    return { isValid: false, valid: false, message: msg, errors: [msg] };
+  }
+
+  // Verifica delimitadores triplos soltos (---)
+  const hasTripleDash = /(?:^|\r?\n)\s*---+\s*(?:\r?\n|$)/.test(trimmed);
+  if (hasTripleDash) {
+    const msg = "Delimitadores de traço triplo ('---') não são permitidos dentro do corpo da rotina para não corromper o arquivo mestre. Utilize '***' se desejar uma linha horizontal divisória.";
+    return { isValid: false, valid: false, message: msg, errors: [msg] };
+  }
+
+  // Começar com #### Descrição: (aceita ### ou ####)
+  if (!/^#{3,4}\s+Descrição:/i.test(trimmed)) {
+    const msg = "O corpo da rotina deve obrigatoriamente começar com o cabeçalho '#### Descrição:'.";
+    return { isValid: false, valid: false, message: msg, errors: [msg] };
+  }
+
+  // Conter #### Passo a passo: (aceita ### ou ####)
+  if (!/#{3,4}\s+Passo a passo:/i.test(trimmed)) {
+    const msg = "O corpo da rotina deve conter a seção '#### Passo a passo:'.";
+    return { isValid: false, valid: false, message: msg, errors: [msg] };
+  }
+
+  return { isValid: true, valid: true, errors: [] };
+}
+
+/**
+ * Sanitiza o corpo da rotina substituindo traços triplos soltos (---) por ***.
+ */
+export function sanitizeRoutineBody(body: string): string {
+  if (!body) return "";
+  return body.replace(/(^|\r?\n)\s*---+\s*(\r?\n|$)/g, "$1***$2");
+}
+
 /**
  * Faz o parse seguro do frontmatter YAML de um artigo individual.
  */
@@ -37,86 +241,95 @@ export function parseArticleFrontmatter(frontmatterRaw: string): KnowledgeArticl
       ? loaded.perguntas_usuario.map((p) => String(p).trim()).filter(Boolean)
       : [];
 
+    // ⭐ Novo campo obrigatório: sintomas_comuns
+    const sintomas_comuns = Array.isArray(loaded.sintomas_comuns)
+      ? loaded.sintomas_comuns.map((s) => String(s).trim()).filter(Boolean)
+      : [];
+
     let video: BunnyVideoMetadata | undefined;
     if (loaded.video && typeof loaded.video === "object") {
       const v = loaded.video as Record<string, unknown>;
-      const rawSec = v.video_start_seconds;
-      let startSec: number | undefined;
-      if (typeof rawSec === "number" && !isNaN(rawSec)) {
-        startSec = rawSec;
-      } else if (rawSec !== undefined && rawSec !== null && String(rawSec).trim() !== "") {
-        const parsed = parseInt(String(rawSec), 10);
-        startSec = isNaN(parsed) ? undefined : parsed;
-      }
+      const isTemVideo = Boolean(v.tem_video);
 
-      let rawTs =
-        v.video_timestamp !== undefined && v.video_timestamp !== null
-          ? String(v.video_timestamp).trim()
-          : undefined;
+      if (isTemVideo) {
+        const rawSec = v.video_start_seconds;
+        let startSec: number | undefined;
+        if (typeof rawSec === "number" && !isNaN(rawSec)) {
+          startSec = rawSec;
+        } else if (rawSec !== undefined && rawSec !== null && String(rawSec).trim() !== "") {
+          const parsed = parseInt(String(rawSec), 10);
+          startSec = isNaN(parsed) ? undefined : parsed;
+        }
 
-      // Se video_start_seconds existe mas video_timestamp não, derivar
-      if (startSec !== undefined && !rawTs) {
-        rawTs = formatSecondsToTimestamp(startSec);
-      }
-      // Se video_timestamp existe mas video_start_seconds não, derivar
-      if (rawTs && startSec === undefined) {
-        startSec = parseTimestampToSeconds(rawTs);
-      }
+        let rawTs =
+          v.video_timestamp !== undefined && v.video_timestamp !== null
+            ? String(v.video_timestamp).trim()
+            : undefined;
 
-      const libId = v.bunny_library_id ? String(v.bunny_library_id).trim() : undefined;
-      const vidId = v.bunny_video_id ? String(v.bunny_video_id).trim() : undefined;
-      let videoUrl = v.video_url ? String(v.video_url).trim() : undefined;
+        if (startSec !== undefined && !rawTs) {
+          rawTs = formatSecondsToTimestamp(startSec);
+        }
+        if (rawTs && startSec === undefined) {
+          startSec = parseTimestampToSeconds(rawTs);
+        }
 
-      // Se videoUrl existe mas não tínhamos startSec nem rawTs, tentar extrair t da videoUrl
-      if (startSec === undefined && videoUrl) {
-        try {
-          const parsed = new URL(videoUrl);
-          const tParam = parsed.searchParams.get("t");
-          if (tParam) {
-            const parsedVal = parseInt(tParam, 10);
-            if (!isNaN(parsedVal)) {
-              startSec = parsedVal;
+        const libId = v.bunny_library_id ? String(v.bunny_library_id).trim() : "467408";
+        const vidId = v.bunny_video_id ? String(v.bunny_video_id).trim() : undefined;
+        let videoUrl = v.video_url ? String(v.video_url).trim() : undefined;
+
+        if (startSec === undefined && videoUrl) {
+          try {
+            const parsed = new URL(videoUrl);
+            const tParam = parsed.searchParams.get("t");
+            if (tParam) {
+              const parsedVal = parseInt(tParam, 10);
+              if (!isNaN(parsedVal)) {
+                startSec = parsedVal;
+                rawTs = formatSecondsToTimestamp(startSec);
+              }
+            }
+          } catch {
+            const match = videoUrl.match(/[?&]t=(\d+)/);
+            if (match) {
+              startSec = parseInt(match[1], 10);
               rawTs = formatSecondsToTimestamp(startSec);
             }
           }
-        } catch {
-          const match = videoUrl.match(/[?&]t=(\d+)/);
-          if (match) {
-            startSec = parseInt(match[1], 10);
-            rawTs = formatSecondsToTimestamp(startSec);
-          }
         }
-      }
 
-      // Garantir que videoUrl sempre tenha ?t=${startSec || 0} atualizado
-      if (videoUrl) {
-        try {
-          const parsed = new URL(videoUrl);
-          parsed.searchParams.set("t", String(startSec ?? 0));
-          videoUrl = parsed.toString();
-        } catch {
-          if (videoUrl.includes("?")) {
-            videoUrl = videoUrl.replace(/([?&])t=[^&]*/, `$1t=${startSec || 0}`);
-            if (!videoUrl.includes("t=")) {
-              videoUrl = `${videoUrl}&t=${startSec || 0}`;
+        if (videoUrl) {
+          try {
+            const parsed = new URL(videoUrl);
+            parsed.searchParams.set("t", String(startSec ?? 0));
+            videoUrl = parsed.toString();
+          } catch {
+            if (videoUrl.includes("?")) {
+              videoUrl = videoUrl.replace(/([?&])t=[^&]*/, `$1t=${startSec || 0}`);
+              if (!videoUrl.includes("t=")) {
+                videoUrl = `${videoUrl}&t=${startSec || 0}`;
+              }
+            } else {
+              videoUrl = `${videoUrl}?t=${startSec || 0}`;
             }
-          } else {
-            videoUrl = `${videoUrl}?t=${startSec || 0}`;
           }
+        } else if (libId && vidId) {
+          videoUrl = `https://iframe.mediadelivery.net/embed/${libId}/${vidId}?t=${startSec || 0}`;
         }
-      } else if (libId && vidId) {
-        videoUrl = `https://iframe.mediadelivery.net/embed/${libId}/${vidId}?t=${startSec || 0}`;
-      }
 
-      video = {
-        tem_video: Boolean(v.tem_video),
-        bunny_library_id: libId,
-        bunny_video_id: vidId,
-        video_title: v.video_title ? String(v.video_title).trim() : undefined,
-        video_url: videoUrl,
-        video_timestamp: rawTs,
-        video_start_seconds: startSec,
-      };
+        video = {
+          tem_video: true,
+          bunny_library_id: libId,
+          bunny_video_id: vidId,
+          video_title: v.video_title ? String(v.video_title).trim() : undefined,
+          video_url: videoUrl,
+          video_timestamp: rawTs,
+          video_start_seconds: startSec,
+        };
+      } else {
+        video = { tem_video: false };
+      }
+    } else {
+      video = { tem_video: false };
     }
 
     return {
@@ -127,10 +340,11 @@ export function parseArticleFrontmatter(frontmatterRaw: string): KnowledgeArticl
       objetivo,
       sinonimos,
       perguntas_usuario,
+      sintomas_comuns,
       video,
     };
   } catch {
-    // Fallback por regex robusto caso o YAML contenha chaves duplicadas ou sintaxe atípica
+    // Fallback por regex robusto
     const id = frontmatterRaw.match(/id:\s*([^\n\r]+)/)?.[1]?.trim() || "";
     const tituloMatch =
       frontmatterRaw.match(/titulo:\s*"([^"]+)"/) ||
@@ -141,7 +355,6 @@ export function parseArticleFrontmatter(frontmatterRaw: string): KnowledgeArticl
       frontmatterRaw.match(/objetivo:\s*([^\n\r]+)/);
     const objetivo = objetivoMatch ? objetivoMatch[1].trim() : "";
 
-    // Extrair listas em bloco (tags, sinonimos, perguntas_usuario)
     const extractList = (blockName: string) => {
       const match = frontmatterRaw.match(
         new RegExp(`${blockName}:[\\r\\n]+((?:\\s+-[^\\r\\n]+[\\r\\n]*)+)`, "i"),
@@ -156,72 +369,75 @@ export function parseArticleFrontmatter(frontmatterRaw: string): KnowledgeArticl
     const tags = extractList("tags");
     const sinonimos = extractList("sinonimos");
     const perguntas_usuario = extractList("perguntas_usuario");
+    const sintomas_comuns = extractList("sintomas_comuns");
 
-    let video: BunnyVideoMetadata | undefined;
+    let video: BunnyVideoMetadata = { tem_video: false };
     if (frontmatterRaw.includes("video:")) {
       const temVideo = /tem_video:\s*true/i.test(frontmatterRaw);
-      const bunnyLibraryId = frontmatterRaw.match(/bunny_library_id:\s*"?([^"\r\n]+)"?/)?.[1]?.trim();
-      const bunnyVideoId = frontmatterRaw.match(/bunny_video_id:\s*"?([^"\r\n]+)"?/)?.[1]?.trim();
-      const videoTitle = frontmatterRaw.match(/video_title:\s*"?([^"\r\n]+)"?/)?.[1]?.trim();
-      let videoUrl = frontmatterRaw.match(/video_url:\s*"?([^"\r\n]+)"?/)?.[1]?.trim();
-      let videoTimestamp = frontmatterRaw.match(/video_timestamp:\s*"?([^"\r\n]+)"?/)?.[1]?.trim();
-      const startSecMatch = frontmatterRaw.match(/video_start_seconds:\s*(\d+)/);
-      let startSec = startSecMatch ? parseInt(startSecMatch[1], 10) : undefined;
+      if (temVideo) {
+        const bunnyLibraryId = frontmatterRaw.match(/bunny_library_id:\s*"?([^"\r\n]+)"?/)?.[1]?.trim() || "467408";
+        const bunnyVideoId = frontmatterRaw.match(/bunny_video_id:\s*"?([^"\r\n]+)"?/)?.[1]?.trim();
+        const videoTitle = frontmatterRaw.match(/video_title:\s*"?([^"\r\n]+)"?/)?.[1]?.trim();
+        let videoUrl = frontmatterRaw.match(/video_url:\s*"?([^"\r\n]+)"?/)?.[1]?.trim();
+        let videoTimestamp = frontmatterRaw.match(/video_timestamp:\s*"?([^"\r\n]+)"?/)?.[1]?.trim();
+        const startSecMatch = frontmatterRaw.match(/video_start_seconds:\s*(\d+)/);
+        let startSec = startSecMatch ? parseInt(startSecMatch[1], 10) : undefined;
 
-      if (startSec !== undefined && !videoTimestamp) {
-        videoTimestamp = formatSecondsToTimestamp(startSec);
-      }
-      if (videoTimestamp && startSec === undefined) {
-        startSec = parseTimestampToSeconds(videoTimestamp);
-      }
-      if (startSec === undefined && videoUrl) {
-        try {
-          const parsed = new URL(videoUrl);
-          const tParam = parsed.searchParams.get("t");
-          if (tParam) {
-            const parsedVal = parseInt(tParam, 10);
-            if (!isNaN(parsedVal)) {
-              startSec = parsedVal;
+        if (startSec !== undefined && !videoTimestamp) {
+          videoTimestamp = formatSecondsToTimestamp(startSec);
+        }
+        if (videoTimestamp && startSec === undefined) {
+          startSec = parseTimestampToSeconds(videoTimestamp);
+        }
+        if (startSec === undefined && videoUrl) {
+          try {
+            const parsed = new URL(videoUrl);
+            const tParam = parsed.searchParams.get("t");
+            if (tParam) {
+              const parsedVal = parseInt(tParam, 10);
+              if (!isNaN(parsedVal)) {
+                startSec = parsedVal;
+                videoTimestamp = formatSecondsToTimestamp(startSec);
+              }
+            }
+          } catch {
+            const match = videoUrl.match(/[?&]t=(\d+)/);
+            if (match) {
+              startSec = parseInt(match[1], 10);
               videoTimestamp = formatSecondsToTimestamp(startSec);
             }
           }
-        } catch {
-          const match = videoUrl.match(/[?&]t=(\d+)/);
-          if (match) {
-            startSec = parseInt(match[1], 10);
-            videoTimestamp = formatSecondsToTimestamp(startSec);
-          }
         }
-      }
 
-      if (videoUrl) {
-        try {
-          const parsed = new URL(videoUrl);
-          parsed.searchParams.set("t", String(startSec ?? 0));
-          videoUrl = parsed.toString();
-        } catch {
-          if (videoUrl.includes("?")) {
-            videoUrl = videoUrl.replace(/([?&])t=[^&]*/, `$1t=${startSec || 0}`);
-            if (!videoUrl.includes("t=")) {
-              videoUrl = `${videoUrl}&t=${startSec || 0}`;
+        if (videoUrl) {
+          try {
+            const parsed = new URL(videoUrl);
+            parsed.searchParams.set("t", String(startSec ?? 0));
+            videoUrl = parsed.toString();
+          } catch {
+            if (videoUrl.includes("?")) {
+              videoUrl = videoUrl.replace(/([?&])t=[^&]*/, `$1t=${startSec || 0}`);
+              if (!videoUrl.includes("t=")) {
+                videoUrl = `${videoUrl}&t=${startSec || 0}`;
+              }
+            } else {
+              videoUrl = `${videoUrl}?t=${startSec || 0}`;
             }
-          } else {
-            videoUrl = `${videoUrl}?t=${startSec || 0}`;
           }
+        } else if (bunnyLibraryId && bunnyVideoId) {
+          videoUrl = `https://iframe.mediadelivery.net/embed/${bunnyLibraryId}/${bunnyVideoId}?t=${startSec || 0}`;
         }
-      } else if (bunnyLibraryId && bunnyVideoId) {
-        videoUrl = `https://iframe.mediadelivery.net/embed/${bunnyLibraryId}/${bunnyVideoId}?t=${startSec || 0}`;
-      }
 
-      video = {
-        tem_video: temVideo,
-        bunny_library_id: bunnyLibraryId,
-        bunny_video_id: bunnyVideoId,
-        video_title: videoTitle,
-        video_url: videoUrl,
-        video_timestamp: videoTimestamp,
-        video_start_seconds: startSec,
-      };
+        video = {
+          tem_video: true,
+          bunny_library_id: bunnyLibraryId,
+          bunny_video_id: bunnyVideoId,
+          video_title: videoTitle,
+          video_url: videoUrl,
+          video_timestamp: videoTimestamp,
+          video_start_seconds: startSec,
+        };
+      }
     }
 
     return {
@@ -231,7 +447,8 @@ export function parseArticleFrontmatter(frontmatterRaw: string): KnowledgeArticl
       objetivo,
       sinonimos,
       perguntas_usuario,
-      video: video || { tem_video: false },
+      sintomas_comuns,
+      video,
     };
   }
 }
@@ -240,14 +457,13 @@ export function parseArticleFrontmatter(frontmatterRaw: string): KnowledgeArticl
  * Analisa o documento mestre consolidado (`OrionTN pos.md`) e extrai as seções e todos os artigos.
  */
 export function parseMasterDocument(rawContent: string): MasterKnowledgeDocument {
-  // 1. Extrair informações do cabeçalho
   const versionMatch = rawContent.match(/VERSÃO_BASE_CONHECIMENTO:\s*([^\n\r]+)/i);
   const dateMatch = rawContent.match(/DATA_ULTIMA_ATUALIZACAO_BASE:\s*([^\n\r]+)/i);
 
   const version = versionMatch ? versionMatch[1].trim() : "2.1.0";
   const lastUpdated = dateMatch ? dateMatch[1].trim() : "";
 
-  // 2. Mapear as seções principais e seus índices
+  // Mapear seções principais
   const sectionRegex = /(?:^|\r?\n)\s*(SEÇÃO PRINCIPAL\s*(\d+)?:?\s*([^\n\r]+))/g;
   const sectionMarkers: { index: number; title: string; pos: number }[] = [];
   let sMatch: RegExpExecArray | null;
@@ -262,7 +478,6 @@ export function parseMasterDocument(rawContent: string): MasterKnowledgeDocument
     });
   }
 
-  // Seção padrão inicial se nenhuma foi marcada
   if (sectionMarkers.length === 0) {
     sectionMarkers.push({
       index: 1,
@@ -271,7 +486,7 @@ export function parseMasterDocument(rawContent: string): MasterKnowledgeDocument
     });
   }
 
-  // 3. Extrair artigos delimitados por frontmatter YAML
+  // Extrair artigos delimitados por frontmatter YAML
   const articleRegex =
     /---\r?\n(id:[\s\S]*?)\r?\n---\r?\n([\s\S]*?)(?=(?:\r?\n---\r?\n(?:id:| SEÇÃO PRINCIPAL|===)|$))/g;
 
@@ -285,7 +500,6 @@ export function parseMasterDocument(rawContent: string): MasterKnowledgeDocument
     const startIndex = aMatch.index;
     const endIndex = startIndex + fullMatch.length;
 
-    // Determinar a qual seção este artigo pertence
     let currentSection = sectionMarkers[0];
     for (const marker of sectionMarkers) {
       if (startIndex >= marker.pos) {
@@ -311,14 +525,21 @@ export function parseMasterDocument(rawContent: string): MasterKnowledgeDocument
     });
   }
 
-  // 4. Montar lista de seções agregadas
-  const sections: KnowledgeSection[] = sectionMarkers.map((m) => ({
-    index: m.index,
-    title: m.title,
-    articleIds: articles.filter((a) => a.sectionIndex === m.index).map((a) => a.id),
-  }));
+  // Montar lista de seções agregadas únicas (deduplica por index)
+  const uniqueSectionMap = new Map<number, KnowledgeSection>();
+  for (const marker of sectionMarkers) {
+    if (!uniqueSectionMap.has(marker.index)) {
+      uniqueSectionMap.set(marker.index, {
+        index: marker.index,
+        title: marker.title,
+        articleIds: articles.filter((a) => a.sectionIndex === marker.index).map((a) => a.id),
+      });
+    }
+  }
 
-  // Garantir que a SEÇÃO PRINCIPAL 5 esteja sempre disponível na lista de seções
+  const sections: KnowledgeSection[] = Array.from(uniqueSectionMap.values());
+
+  // Garantir Seção 5 (Siplan HUB) se não estiver mapeada
   if (!sections.some((s) => s.index === SIPLAN_HUB_SECTION_INDEX)) {
     sections.push({
       index: SIPLAN_HUB_SECTION_INDEX,
@@ -359,105 +580,147 @@ export function validateArticleIdUniqueness(
 }
 
 /**
- * Sugere o próximo ID sequencial livre.
- * Para a Seção 5 (Siplan HUB), gera IDs no padrão "S-5.X" (ex: S-5.1, S-5.2, S-5.3).
- * Para outras seções, gera "R-{sec}.{num}".
+ * Sugere o próximo ID sequencial livre com base no prefixo ou seção.
+ * Suporta os 5 prefixos oficiais:
+ * - D: D-X.Y (ex: D-3.80)
+ * - R: R-X.Y (ex: R-1.12)
+ * - V: V-X.Y (ex: V-2.15)
+ * - M: M-X.Y (ex: M-10.1)
+ * - S: S-5.X (ex: S-5.1)
  */
 export function suggestNextArticleId(
   articles: KnowledgeArticle[],
-  sectionIndex: number = SIPLAN_HUB_SECTION_INDEX,
+  prefixOrSection: string | number = "D",
 ): string {
-  // Se for a Seção 5 (Siplan HUB) ou se o prefixo desejado for "S-"
-  if (sectionIndex === SIPLAN_HUB_SECTION_INDEX) {
-    const sMinorNumbers: number[] = [];
+  let prefix: string = "D";
 
-    for (const a of articles) {
-      const trimmedId = a.id.trim().toUpperCase();
-      // Padrão S-5.X ou S-X.Y
-      const matchS5 = trimmedId.match(/^S-5\.(\d+)$/);
-      if (matchS5) {
-        sMinorNumbers.push(parseInt(matchS5[1], 10));
-      } else {
-        const matchSGeneral = trimmedId.match(/^S-(\d+)(?:\.(\d+))?$/);
-        if (matchSGeneral) {
-          const num = matchSGeneral[2]
-            ? parseInt(matchSGeneral[2], 10)
-            : parseInt(matchSGeneral[1], 10);
-          if (!isNaN(num)) sMinorNumbers.push(num);
-        }
+  if (typeof prefixOrSection === "number") {
+    switch (prefixOrSection) {
+      case 1:
+        prefix = "R";
+        break;
+      case 2:
+        prefix = "V";
+        break;
+      case 3:
+        prefix = "M";
+        break;
+      case 4:
+        prefix = "D";
+        break;
+      case 5:
+        prefix = "S";
+        break;
+      default:
+        prefix = "D";
+    }
+  } else {
+    const raw = prefixOrSection.trim().toUpperCase();
+    if (raw.startsWith("D")) prefix = "D";
+    else if (raw.startsWith("R")) prefix = "R";
+    else if (raw.startsWith("V")) prefix = "V";
+    else if (raw.startsWith("M")) prefix = "M";
+    else if (raw.startsWith("S")) prefix = "S";
+    else prefix = "D";
+  }
+
+  // Filtrar artigos que começam com esse prefixo
+  const prefixUpper = `${prefix}-`;
+  const matchingArticles = articles.filter((a) => a.id.toUpperCase().startsWith(prefixUpper));
+
+  if (prefix === "S") {
+    const numbers: number[] = [];
+    for (const a of matchingArticles) {
+      const match = a.id.toUpperCase().match(/^S-(?:5\.)?(\d+)$/);
+      if (match) numbers.push(parseInt(match[1], 10));
+    }
+    const nextNum = numbers.length > 0 ? Math.max(...numbers) + 1 : 1;
+    return `S-5.${nextNum}`;
+  }
+
+  if (prefix === "D") {
+    // Para D, analisa agrupamento de D-3.X (que concentra a maioria das rotinas de atendimento)
+    const d3Numbers: number[] = [];
+    for (const a of matchingArticles) {
+      const match = a.id.toUpperCase().match(/^D-3\.(\d+)$/);
+      if (match) d3Numbers.push(parseInt(match[1], 10));
+    }
+    if (d3Numbers.length > 0) {
+      const nextNum = Math.max(...d3Numbers) + 1;
+      return `D-3.${nextNum}`;
+    }
+  }
+
+  // Heurística geral: extrai os números após o prefixo (ex: R-X.Y ou R-X)
+  let detectedMajor = 1;
+  const majorToMinors = new Map<number, { val: number; raw: string }[]>();
+
+  for (const a of matchingArticles) {
+    const match = a.id.toUpperCase().match(new RegExp(`^${prefix}-(\\d+)(?:\\.(\\d+))?`));
+    if (match) {
+      const maj = parseInt(match[1], 10);
+      const rawMin = match[2] || "";
+      const min = rawMin ? parseInt(rawMin, 10) : 0;
+      if (maj > detectedMajor) {
+        detectedMajor = maj;
+      }
+      if (!majorToMinors.has(maj)) {
+        majorToMinors.set(maj, []);
+      }
+      majorToMinors.get(maj)!.push({ val: min, raw: rawMin });
+    }
+  }
+
+  const minors = majorToMinors.get(detectedMajor) || [];
+  if (minors.length > 0) {
+    let maxMinVal = -1;
+    let sampleRaw = "";
+    for (const m of minors) {
+      if (m.val > maxMinVal) {
+        maxMinVal = m.val;
+        sampleRaw = m.raw;
       }
     }
-
-    if (sMinorNumbers.length > 0) {
-      const maxNum = Math.max(...sMinorNumbers);
-      return `S-5.${maxNum + 1}`;
+    const nextVal = maxMinVal + 1;
+    if (sampleRaw.startsWith("0") && sampleRaw.length > 1) {
+      const padded = String(nextVal).padStart(sampleRaw.length, "0");
+      return `${prefix}-${detectedMajor}.${padded}`;
     }
-
-    return `S-5.1`;
+    return `${prefix}-${detectedMajor}.${nextVal}`;
   }
 
-  // Padrão R-{sectionIndex}.{num} para as seções 1 a 4
-  const sectionPrefix = `R-${sectionIndex}.`;
-  const minorNumbers: number[] = [];
-
-  for (const a of articles) {
-    const trimmedId = a.id.trim().toUpperCase();
-    if (trimmedId.startsWith(sectionPrefix)) {
-      const remainder = trimmedId.slice(sectionPrefix.length);
-      const num = parseInt(remainder, 10);
-      if (!isNaN(num)) {
-        minorNumbers.push(num);
-      }
-    }
-  }
-
-  if (minorNumbers.length > 0) {
-    const maxNum = Math.max(...minorNumbers);
-    return `R-${sectionIndex}.${maxNum + 1}`;
-  }
-
-  return `R-${sectionIndex}.1`;
+  return `${prefix}-1.01`;
 }
 
 /**
- * Serializa uma rotina completa (Frontmatter YAML + Corpo Markdown) no padrão estrito da base.
+ * Serializa uma rotina completa (Frontmatter YAML + Corpo Markdown) no novo padrão estrito da base.
+ * Ordem dos campos:
+ * 1. id
+ * 2. titulo
+ * 3. tags
+ * 4. objetivo
+ * 5. sinonimos
+ * 6. perguntas_usuario
+ * 7. sintomas_comuns
+ * 8. video (tem_video: true com metadados ou tem_video: false)
  */
 export function serializeArticleToMarkdown(
   metadata: KnowledgeArticleMetadata,
   body: string,
   hasVideo: boolean = false,
 ): string {
-  const lb = "\n";
+  const isVideoEnabled = hasVideo && Boolean(metadata.video?.tem_video);
 
-  // Objeto YAML estruturado
-  const yamlObj: Record<string, unknown> = {
-    id: metadata.id.trim().toUpperCase(),
-    titulo: metadata.titulo.trim(),
-  };
+  let videoObj: Record<string, unknown> = { tem_video: false };
 
-  if (metadata.tags && metadata.tags.length > 0) {
-    yamlObj.tags = metadata.tags.map((t) => t.trim()).filter(Boolean);
-  }
-
-  yamlObj.objetivo = metadata.objetivo?.trim() || "";
-
-  if (metadata.perguntas_usuario && metadata.perguntas_usuario.length > 0) {
-    yamlObj.perguntas_usuario = metadata.perguntas_usuario.map((p) => p.trim()).filter(Boolean);
-  }
-
-  if (metadata.sinonimos && metadata.sinonimos.length > 0) {
-    yamlObj.sinonimos = metadata.sinonimos.map((s) => s.trim()).filter(Boolean);
-  }
-
-  // Configuração condicional de vídeo Bunny.net
-  if (hasVideo && metadata.video && metadata.video.tem_video) {
+  if (isVideoEnabled && metadata.video) {
     const v = metadata.video;
+    const cleanTimestamp = v.video_timestamp?.trim() || "00:00";
     const startSecs =
       typeof v.video_start_seconds === "number"
         ? v.video_start_seconds
-        : parseTimestampToSeconds(v.video_timestamp || "00:00");
+        : parseTimestampToSeconds(cleanTimestamp);
 
-    const cleanTimestamp = v.video_timestamp?.trim() || "00:00";
     const cleanLibId = v.bunny_library_id?.trim() || "467408";
     const cleanVidId = v.bunny_video_id?.trim() || "";
     let cleanEmbedUrl = v.video_url?.trim() || "";
@@ -481,7 +744,7 @@ export function serializeArticleToMarkdown(
       cleanEmbedUrl = `https://iframe.mediadelivery.net/embed/${cleanLibId}/${cleanVidId}?t=${startSecs}`;
     }
 
-    yamlObj.video = {
+    videoObj = {
       tem_video: true,
       bunny_library_id: cleanLibId,
       bunny_video_id: cleanVidId,
@@ -492,24 +755,33 @@ export function serializeArticleToMarkdown(
     };
   }
 
-  // Gerar YAML com js-yaml garantindo formatação limpa e legível
+  // Objeto YAML estruturado rigorosamente na ordem definida
+  const yamlObj: Record<string, unknown> = {
+    id: metadata.id.trim(),
+    titulo: stripIdPrefixFromTitle(metadata.titulo), // Garante título sem prefixo de ID
+    tags: (metadata.tags || []).map((t) => t.trim()).filter(Boolean),
+    objetivo: metadata.objetivo?.trim() || "",
+    sinonimos: (metadata.sinonimos || []).map((s) => s.trim()).filter(Boolean),
+    perguntas_usuario: (metadata.perguntas_usuario || []).map((p) => p.trim()).filter(Boolean),
+    sintomas_comuns: (metadata.sintomas_comuns || []).map((s) => s.trim()).filter(Boolean),
+    video: videoObj,
+  };
+
   const yamlString = yaml
     .dump(yamlObj, {
       indent: 2,
       lineWidth: -1,
       noRefs: true,
-      quoteStyle: 'double',
-      forceQuotes: false,
     })
     .trim();
 
-  const cleanBody = body.trim();
-  return `---${lb}${yamlString}${lb}---${lb}${cleanBody}`;
+  // Sanitiza o corpo removendo delimitadores isolados de --- para evitar conflito com frontmatter
+  const cleanBody = sanitizeRoutineBody(body.trim());
+  return ensureCrlf(`---\r\n${yamlString}\r\n---\r\n${cleanBody}`);
 }
 
 /**
  * Insere cirurgicamente uma nova rotina dentro do documento mestre OrionTN pos.md.
- * As rotinas criadas via Siplan HUB são alocadas na SEÇÃO PRINCIPAL 5.
  */
 export function insertNewArticleIntoDocument(
   fullDoc: string,
@@ -522,7 +794,6 @@ export function insertNewArticleIntoDocument(
 ): string {
   const parsed = parseMasterDocument(fullDoc);
 
-  // 1. Validar unicidade do ID
   const { isUnique, conflictArticle } = validateArticleIdUniqueness(
     parsed.articles,
     newArticle.metadata.id,
@@ -534,10 +805,6 @@ export function insertNewArticleIntoDocument(
     );
   }
 
-  const isCrlf = fullDoc.includes("\r\n");
-  const lb = isCrlf ? "\r\n" : "\n";
-
-  // 2. Serializar o novo artigo
   const serialized = serializeArticleToMarkdown(
     newArticle.metadata,
     newArticle.body,
@@ -545,41 +812,36 @@ export function insertNewArticleIntoDocument(
   );
 
   const targetSectionIndex = newArticle.sectionIndex ?? SIPLAN_HUB_SECTION_INDEX;
+  const sectionArticles = parsed.articles.filter((a) => a.sectionIndex === targetSectionIndex);
 
-  // 3. Encontrar os artigos pertencentes a essa seção
-  const sectionArticles = parsed.articles.filter(
-    (a) => a.sectionIndex === targetSectionIndex,
-  );
-
+  let result: string;
   if (sectionArticles.length > 0) {
-    // Inserir logo após o último artigo da seção correspondente
     const lastArticleOfSection = sectionArticles[sectionArticles.length - 1];
     const insertionPoint = lastArticleOfSection.endIndex;
 
     const before = fullDoc.slice(0, insertionPoint);
     const after = fullDoc.slice(insertionPoint);
 
-    return `${before}${lb}${lb}${serialized}${after.startsWith(lb) ? "" : lb}${after}`;
+    result = `${before}\r\n\r\n${serialized}\r\n${after.replace(/^[\r\n]+/, "")}`;
+  } else if (targetSectionIndex === SIPLAN_HUB_SECTION_INDEX) {
+    const sectionHeader = `\r\n\r\n${SIPLAN_HUB_SECTION_TITLE}\r\n\r\n`;
+    result = `${fullDoc.trim()}${sectionHeader}${serialized}\r\n`;
+  } else {
+    result = `${fullDoc.trim()}\r\n\r\n${serialized}\r\n`;
   }
 
-  // 4. Se for a Seção 5 e ela ainda não tiver cabeçalho no documento
-  if (targetSectionIndex === SIPLAN_HUB_SECTION_INDEX) {
-    const sectionHeader = `${lb}${lb}${SIPLAN_HUB_SECTION_TITLE}${lb}${lb}`;
-    return `${fullDoc.trim()}${sectionHeader}${serialized}${lb}`;
-  }
-
-  // 5. Se a seção não tiver artigos ou não foi localizada, insere no final do documento
-  return `${fullDoc.trim()}${lb}${lb}${serialized}${lb}`;
+  return ensureCrlf(result);
 }
 
 /**
- * Atualiza cirurgicamente o corpo de um artigo dentro do documento mestre,
- * preservando 100% da integridade do YAML frontmatter e de todos os outros artigos.
+ * Atualiza cirurgicamente uma rotina dentro do documento mestre.
+ * Pode atualizar tanto o corpo markdown quanto os metadados YAML (ou ambos).
  */
 export function updateArticleInDocument(
   fullDoc: string,
   articleId: string,
   updatedBody: string,
+  updatedMetadata?: KnowledgeArticleMetadata,
 ): string {
   const parsed = parseMasterDocument(fullDoc);
   const target = parsed.articles.find((a) => a.id.toLowerCase() === articleId.toLowerCase());
@@ -588,22 +850,39 @@ export function updateArticleInDocument(
     throw new Error(`Artigo com ID "${articleId}" não encontrado no documento.`);
   }
 
+  // Se o ID foi modificado nos metadados, valida unicidade
+  if (updatedMetadata && updatedMetadata.id.trim().toLowerCase() !== articleId.trim().toLowerCase()) {
+    const otherArticles = parsed.articles.filter((a) => a.id.toLowerCase() !== articleId.toLowerCase());
+    const { isUnique, conflictArticle } = validateArticleIdUniqueness(
+      otherArticles,
+      updatedMetadata.id,
+    );
+    if (!isUnique) {
+      throw new Error(`O novo ID "${updatedMetadata.id}" já está em uso pela rotina "${conflictArticle?.titulo}".`);
+    }
+  }
+
   const before = fullDoc.slice(0, target.startIndex);
-  const isCrlf = fullDoc.includes("\r\n");
-  const lb = isCrlf ? "\r\n" : "\n";
-
-  // Reconstruir o bloco do artigo preservando o frontmatter idêntico
   const after = fullDoc.slice(target.endIndex);
+  const cleanBody = sanitizeRoutineBody(updatedBody.trim());
 
-  const cleanBody = updatedBody.trim();
-  const reconstructedArticle = `---${lb}${target.frontmatterRaw}${lb}---${lb}${cleanBody}${after.startsWith("\r\n") || after.startsWith("\n") ? "" : lb}`;
+  let reconstructedArticle: string;
+  if (updatedMetadata) {
+    reconstructedArticle = serializeArticleToMarkdown(
+      updatedMetadata,
+      cleanBody,
+      Boolean(updatedMetadata.video?.tem_video),
+    );
+  } else {
+    reconstructedArticle = `---\r\n${target.frontmatterRaw}\r\n---\r\n${cleanBody}`;
+  }
 
-  return `${before}${reconstructedArticle}${after}`;
+  const result = `${before}${reconstructedArticle}\r\n${after.replace(/^[\r\n]+/, "")}`;
+  return ensureCrlf(result);
 }
 
 /**
- * Remove completamente uma rotina do documento mestre OrionTN pos.md
- * (incluindo Frontmatter YAML, Metadados e Corpo).
+ * Remove completamente uma rotina do documento mestre OrionTN pos.md.
  */
 export function deleteArticleFromDocument(
   fullDoc: string,
@@ -621,22 +900,19 @@ export function deleteArticleFromDocument(
   const before = fullDoc.slice(0, target.startIndex);
   const after = fullDoc.slice(target.endIndex);
 
-  // Limpar quebras de linha excessivas residuais entre os artigos
   const cleanedBefore = before.replace(/\r?\n\s*$/, "");
   const cleanedAfter = after.replace(/^\s*\r?\n/, "");
 
-  const isCrlf = fullDoc.includes("\r\n");
-  const lb = isCrlf ? "\r\n" : "\n";
-
+  let result: string;
   if (!cleanedBefore) {
-    return cleanedAfter;
+    result = cleanedAfter;
+  } else if (!cleanedAfter) {
+    result = cleanedBefore;
+  } else {
+    result = `${cleanedBefore}\r\n\r\n${cleanedAfter}`;
   }
 
-  if (!cleanedAfter) {
-    return cleanedBefore;
-  }
-
-  return `${cleanedBefore}${lb}${lb}${cleanedAfter}`;
+  return ensureCrlf(result);
 }
 
 /**
@@ -652,40 +928,3 @@ export function normalizeMarkdown(str: string): string {
     .join("\n")
     .trim();
 }
-
-/**
- * Converte timestamp textual (ex: "02:30", "01:15:00", "45") para segundos inteiros.
- */
-export function parseTimestampToSeconds(ts: string): number {
-  if (!ts) return 0;
-  const parts = ts.trim().split(":").map((p) => parseInt(p, 10));
-  if (parts.some(isNaN)) return 0;
-  if (parts.length === 3) {
-    return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  }
-  if (parts.length === 2) {
-    return parts[0] * 60 + parts[1];
-  }
-  if (parts.length === 1) {
-    return parts[0];
-  }
-  return 0;
-}
-
-/**
- * Converte segundos inteiros para formato textual MM:SS ou HH:MM:SS.
- */
-export function formatSecondsToTimestamp(seconds?: number | null): string {
-  if (seconds === undefined || seconds === null || isNaN(seconds) || seconds < 0) {
-    return "00:00";
-  }
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = Math.floor(seconds % 60);
-  if (h > 0) {
-    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  }
-  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-}
-
-
