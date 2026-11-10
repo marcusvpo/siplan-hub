@@ -20,6 +20,7 @@
 10. [Integração com a Telemetria Invisível de Afinidade](#10-integração-com-a-telemetria-invisível-de-afinidade)
 11. [Invariantes e Regras de Ouro de Negócio](#11-invariantes-e-regras-de-ouro-de-negócio)
 12. [Protocolo Oficial de Manutenção e Auto-Alimentação por IAs](#12-protocolo-oficial-de-manutenção-e-auto-alimentação-por-ias)
+13. [Base de Conhecimento Operacional e IA do Orion TN (Suporte Ellevo/0800)](#13-base-de-conhecimento-operacional-e-ia-do-orion-tn-suporte-ellevo0800)
 
 ---
 
@@ -88,6 +89,7 @@ flowchart LR
 * **Objetivo:** Instalação de SO, SQL Server/PostgreSQL, instâncias Orion, certificados digitais e rotinas de backup.
 * **Operadores Principais:** Alex Silva e Bruno Fernandes.
 * **Telas:** `/deployments/environment-config` (Kanban operacional) e `/projects` (Aba Preparação de Ambiente).
+* **Configuração no Orion Admin (Chaves via Orion CRM):** Quando a serventia contrata produtos dependentes do Orion Admin (Livro Caixa Web - LCW, SGA ou Cartório On Hand), Alex Silva ou Bruno Fernandes geram as chaves e credenciais de integração na plataforma **Orion CRM** via CNS da serventia e realizam a configuração/parametrização direta no servidor da serventia (VM e containers) através das propriedades (`urlAdminCentral`, `usuarioAdminCentral`, `senhaAdminCentral`). Essa etapa deve estar concluída a tempo para que o implantador consiga realizar a homologação e treinamento desses produtos.
 * **Regra de Conclusão:** Ao mover o card para "Concluídos" no Kanban, o sistema conclui automaticamente a Etapa 4 no projeto. O ambiente deve estar 100% testado até a sexta-feira anterior à viagem.
 
 #### Etapa 3: Conversão de Dados e Homologação
@@ -209,6 +211,7 @@ Abaixo está o quadro dos 28 colaboradores com permissão/atuação em SD cadast
 
 ### 6.2. Produtos Secundários (`/deployments/secondary-products`)
 * **Escopo:** Implantação de soluções complementares à plataforma principal (ex: Livro Caixa Web, SGA — Sistema de Gestão de Atendimento, Orion GED, etc.).
+* **Dependência do Orion Admin:** Os produtos LCW, SGA e Cartório On Hand exigem configuração de chaves geradas via CNS na plataforma **Orion CRM** na Etapa 4 (Preparação de Ambiente) para funcionamento pleno e sincronia com a nuvem central.
 * **Quem Instala:**
   * Se o implantador estiver presencialmente no cliente realizando a Fase 1, ele mesmo pode instalar os produtos secundários.
   * Se a implantação principal já ocorreu ou for independente, a instalação é realizada remotamente por **analistas de SD** ou por **Bruno Fernandes**.
@@ -431,3 +434,80 @@ flowchart TD
 - [ ] O novo recurso alterou quem executa uma ação? Atualize a seção 4 (Matriz RACI) ou a seção 5 (Tabela de SD).
 - [ ] Foi criada uma nova integração ou fluxo externo? Documente na seção 8.1.
 - [ ] O changelog oficial foi emitido em `public.notifications` com `category = 'changelog'`?
+
+---
+
+## 13. Base de Conhecimento Operacional e IA do Orion TN (Suporte Ellevo/0800)
+
+O Siplan HUB mantém uma integração contínua com a base de dados do Ellevo (sistema 0800 de suporte a clientes), sincronizando chamados e trâmites técnicos para a tabela `chamados_processo_venda` e `chamados_processo_venda_tramites`.
+
+A partir dessa sincronização, foi arquitetada e gerada a **Base de Conhecimento Operacional do Orion TN** para alimentar o **Assistente de IA do Orion TN**.
+
+### 13.1. Estrutura e Localização
+* **Diretório Oficial:** `docs/knowledge-base/orion-tn-tickets/`
+* **Índice Mestre e Métricas:** `INDEX.md`
+* **Divisão Modular (11 arquivos temáticos):**
+  1. `01-financeiro-caixa-guias-recibos.md`: Guias de recolhimento, recibos, caixa diário, ISS, Sinoreg, estornos e emolumentos.
+  2. `02-selo-digital-tribunais.md`: Comunicação, consulta, lote, retorno e cancelamento de selos do TJ.
+  3. `03-lavratura-atos-escrituras-procuracoes.md`: Lavratura de escrituras (compra e venda, inventário, doação), procurações, substabelecimentos e testamentos.
+  4. `04-reconhecimento-firmas-autenticacoes.md`: Reconhecimento de firma por semelhança e autenticidade, cartão de autógrafo, biometria e sinal público.
+  5. `05-centrais-coaf-censec-doi-sirc.md`: Comunicações obrigatórias para COAF (operações suspeitas), CENSEC (CESDI, RCTO, CEP), DOI e e-Notariado.
+  6. `06-livros-notariais-termos-folhas.md`: Livros notariais, numeração de folhas, termos de abertura e encerramento, traslados.
+  7. `07-modelos-minutas-editor-oriontn.md`: Editor de minutas Orion TN, tags dinâmicas, variáveis de sistema, máscaras e formatação.
+  8. `08-certidoes-buscas.md`: Emissão de certidões em breve relato, inteiro teor, buscas de atos e fichas.
+  9. `09-usuarios-permissoes-acessos.md`: Cadastro de colaboradores, substitutos, escreventes, perfis de acesso, senhas e auditoria.
+  10. `10-configuracao-sistema-perifericos.md`: Impressoras (etiquetas e termos), certificados digitais (A1/A3), token, scanners, banco de dados e backup.
+  11. `11-geral-outras-duvidas-operacionais.md`: Atendimentos gerais e validações cadastrais complementares.
+
+### 13.2. Regras de Sanitização e Proteção de Dados (LGPD)
+* **Senhas e Acessos:** IDs de AnyDesk, senhas provisórias e credenciais de acesso remoto são sanitizados obrigatoriamente (`[ACESSO REMOVIDO]`, `[SENHA REMOVIDA]`).
+* **Telefonia:** Telefones diretos de analistas e cartórios são higienizados (`[CONTATO TELEFÔNICO REMOVIDO]`).
+* **Integridade Notarial:** Protocolos de atos, números de livros, folhas e termos são estritamente preservados, pois constituem referências cruciais para a IA entender os procedimentos reais de cartório.
+* **Separador de Concluídos vs. Em Aberto:** Cada arquivo modular separa com clareza a Seção 1 (Soluções Homologadas com Trâmites) da Seção 2 (Dúvidas Recentes em Aberto, retratando o comportamento das versões mais atuais do sistema).
+
+### 13.3. Arquitetura Granular Dual-Layer RAG V3.2 e Sincronização OpenAI Vector Store
+* **Paradigma Atômico (1 Rotina = 1 Arquivo Markdown):** Para eliminar os cortes cegos de 800 tokens da OpenAI que rasgavam o cabeçalho YAML e o passo a passo, a base foi convertida para a arquitetura **Dual-Layer RAG V3.2**:
+  * **Rotinas Atômicas:** Cada uma das rotinas homologadas é compilada em arquivo individual com slug funcional (`kb/rotinas/<modulo>/<id>-<slug>.md`).
+  * **Catálogo de Roteamento (`_indice.md`):** Roteador semântico no padrão `llms.txt` contendo IDs, títulos, módulos e sinônimos de todas as rotinas para direcionamento rápido de vocabulário.
+  * **Glossário Notarial (`_glossario.md`):** Vocabulário controlado com termos jurídicos e da Corregedoria (CENSEC, CCN, sinal público, depósito prévio, etc.).
+* **Chunking Estático de 1800 Tokens e Zero Overlap:** Garantia de que cada rotina caiba exatamente em 1 chunk da Vector Store (`max_chunk_size_tokens: 1800`, `chunk_overlap_tokens: 0`), preservando 100% dos links de vídeo da Bunny.net e negritos operacionais.
+* **Atributos Filtráveis Nativos da OpenAI:** Metadados estruturados injetados em cada arquivo na Vector Store: `id`, `modulo` (11 módulos homologados: `firmas`, `caixa`, `notas`, `selos`, `centrais`, `livros`, `certidoes`, `acesso`, `config`, `comunicacao`, `geral`), `secao` (`R`, `V`, `M`, `D`, `C`, `SYS`), `tem_video` (`true`/`false`) e `categoria`.
+* **Tabela de Rastreabilidade Supabase (`assistant_knowledge_files`):** Registra o estado atômico de cada rotina com `sha256_hash`, `openai_file_id`, `token_count` e `sync_status`. A função RPC `upsert_assistant_knowledge_file_batch` realiza gravações em lote com alta performance.
+* **Automação no n8n com Delta Engine (Workflow `mNQ9HfJUls39FIVi`):**
+  * O webhook `update-openai-vector-store` aciona o compilador com regex corrigida (`/(?:^|\r?\n)---\s*\r?\n(id:\s*[\s\S]*?)\r?\n---\s*\r?\n([\s\S]*?)(?=(?:\r?\n---\s*\r?\nid:)|$)/g`), garantindo que nenhuma rotina (inclusive a `R-1.0`) seja ignorada.
+  * Compara o SHA-256 do arquivo editado com os registros do Supabase: sincroniza apenas o que mudou (delta de 1 ou 2 arquivos no dia a dia em ~2 segundos).
+  * Expurga automaticamente arquivos legados/monolíticos e versões antigas da Vector Store `vs_6a85e00895f081918844a28887a34a17`.
+* **Preservação da Experiência do Usuário (Siplan HUB):** A tela `/assistentes/conhecimento` permanece intacta e funcional para edição centralizada, com o compilador e a sincronização delta rodando de forma 100% transparente em background.
+* **Script de Seed e Inicialização (`scripts/seed-orion-tn-vector-store.mjs`):** Script em Node.js com pool de 10 requisições simultâneas para carga inicial massiva com tolerância a timeouts.
+
+### 13.4. Criação Guiada de Rotinas, Validação de Schema V3.0 e Atualização Contínua do `_indice.md`
+* **Botão "+ Nova Rotina" e Template Canônico V3:**
+  * No painel `/assistentes/conhecimento`, a equipe conta com o botão **"+ Nova Rotina"** que abre o formulário guiado de criação com pré-carregamento do template canônico homologado:
+    * `id`: chave única com prefixos suportados (`R-`, `V-`, `M-`, `D-`, `C-`, `S-`).
+    * `titulo`: título limpo e funcional sem código de ID.
+    * `tags`: entre 3 e 7 tags de categorização.
+    * `objetivo`: frase única densa iniciando com verbo no infinitivo.
+    * `sinonimos`: termos alternativos e jargões de balcão.
+    * `perguntas_usuario`: 3 a 5 dúvidas reais que o escrevente faria.
+    * `sintomas_comuns`: 3 a 5 termos de dor/sintoma do sistema (sem '?').
+    * `video`: nó com `tem_video: boolean`, `bunny_library_id`, `bunny_video_id`, `video_timestamp` e `video_start_seconds`. **Proibição estrita do campo legado `video_id` (ADR-003)**.
+    * `passo_a_passo`: corpo obrigatório contendo os cabeçalhos `#### Descrição:` e `#### Passo a passo:`, sem traços triplos soltos (`---`).
+  * O botão **"Template Canônico V3"** dentro do modal injeta instantaneamente a estrutura pré-formatada canônica com placeholders homologados.
+  * O botão **"Visualizar YAML"** permite conferir e copiar a formatação serializada antes da publicação.
+* **Validação Prévia de Integridade no Frontend (`validateRoutineSchemaV3`):**
+  * Toda ação de salvar (seja nova rotina, edição de metadados ou salvamento do passo a passo no WYSIWYG) passa por uma validação estrita antes de tocar o Supabase Storage ou disparar o n8n.
+  * O sistema valida a integridade do YAML, campos obrigatórios, regras de sintomas/tags e faz consulta assíncrona na tabela `assistant_knowledge_files` para garantir unicidade do `id`.
+* **Garantia de Regeração do `_indice.md` pelo n8n:**
+  * O workflow `mNQ9HfJUls39FIVi` no n8n recalcula e regera o arquivo mestre de roteamento semântico `_indice.md` a cada sincronização.
+  * Se qualquer rotina for adicionada, alterada ou removida, o `_indice.md` é forçado para upload na OpenAI com substituição automática da versão antiga na Vector Store.
+
+## 14. Arquitetura de Webhooks Assíncronos, Triggers das Etapas e Sincronização de Trâmites
+
+### 14.1. Resiliência de Webhooks n8n (pg_net)
+* Os triggers de transição de status para `in-progress` nas etapas 1 (Infraestrutura), 2 (Aderência), 3 (Conversão de Dados) e 4 (Preparação de Ambiente) invocam webhooks do n8n via chamadas assíncronas `net.http_post` e `supabase_functions.http_request`.
+* **Regra de Blindagem Transacional:** As invocações de webhooks externos em triggers de banco de dados são estritamente encapsuladas em blocos `BEGIN ... EXCEPTION WHEN OTHERS THEN RAISE WARNING ...; END;`. Dessa forma, nenhuma indisponibilidade de rede, timeout ou erro no endpoint externo é capaz de abortar o UPDATE da aplicação no frontend (ex.: analistas assumindo ambientes ou movendo cards no Kanban).
+
+### 14.2. Desacoplamento da Tabela de Trâmites Técnicos
+* A tabela `chamados_processo_venda_tramites` armazena o histórico 1:N de trâmites de atendimentos do Ellevo tanto dos projetos principais do Processo de Venda quanto de Chamados Secundários (`secondary_tickets`) e chamados 0800.
+* A tabela não possui chave estrangeira restritiva para `chamados_processo_venda`, garantindo que produtos secundários independentes e atendimentos correlatos possam persistir seus trâmites sem erros de integridade referencial (`violates foreign key constraint`).
+

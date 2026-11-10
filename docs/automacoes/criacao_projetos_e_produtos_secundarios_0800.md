@@ -16,7 +16,7 @@ status_atual: #ativo
 
 Este manual explica **exatamente o que alterar manualmente em cada um dos 4 nós** do seu workflow atual no **n8n** (`Criação de Projetos Siplan HUB - 0800`) para que ele capture:
 1. Os **Sistemas Principais** (`Orion TN`, `Orion PRO`, `Orion REG`, `WebRI`);
-2. Os **14 Produtos Secundários Oficiais** (`Livro Caixa Web`, `SGA`, `Library`, `Cartório On Hand`, `e-Recepção`, `CIAF`, `Image`, `Image PRO`, `e-Qualificação`, `Orion Caixa`, `Orion CartFLOW`, `Orion Connect`, `Orion Editor` e `Orion GED`);
+2. Os **14 Produtos Secundários Oficiais** (`Livro Caixa Web`, `SGA`, `Library`, `Cartório On Hand`, `e-Recepção`, `CIAF`, `Image`, `Image PRO`, `e-Qualificação`, `Orion Caixa`, `Orion CartFLOW`, `Orion CRM`, `Orion Editor` e `Orion GED`);
 3. As **Horas Vendidas/Contratadas** (`sold_hours`) e o **Sistema Legado** (`legacy_system`), eliminando a necessidade de preenchimento manual no HUB.
 
 > [!IMPORTANT]
@@ -104,7 +104,7 @@ secundarios AS (
       'e-Qualificação',
       'Caixa', 'Orion Caixa', 'OrionCaixa',
       'Orion CartFLOW', 'OrionCartFLOW', 'CartFLOW',
-      'Orion Connect', 'OrionConnect',
+      'Orion CRM', 'OrionCRM', 'CRM', 'Orion Connect', 'OrionConnect',
       'Editor', 'Orion Editor', 'OrionEditor',
       'GED', 'Orion GED', 'OrionGED'
     )

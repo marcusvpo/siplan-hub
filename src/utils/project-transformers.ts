@@ -201,7 +201,7 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
             row.implementation_start_date
           )
         )
-          ? (((row.custom_fields as any)?.environment_kanban_status as ("not_started" | "in_progress" | "completed") | undefined) || (row.environment_status === 'done' ? 'completed' : 'not_started'))
+          ? (((row.custom_fields as any)?.environment_kanban_status as ("not_started" | "in_progress" | "completed") | undefined) || (row.environment_status === 'done' ? 'completed' : row.environment_status === 'in-progress' ? 'in_progress' : 'not_started'))
           : undefined,
         hasPendings: Boolean((row.custom_fields as any)?.environment_has_pendings),
         timeline: Array.isArray((row.custom_fields as any)?.environment_timeline)

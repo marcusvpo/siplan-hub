@@ -960,9 +960,9 @@
     "semantic_hash": ""
   },
   "src/hooks/useProjectsList.ts": {
-    "mtime": 1793991941.644264,
-    "seen": 1794253238.3465238,
-    "ast_hash": "91d79e7222a5afa2ebd49e814714480e",
+    "mtime": 1794337494.7957737,
+    "seen": 1794337863.410242,
+    "ast_hash": "909e07d0e4f4b61285fe007b0a671e26",
     "semantic_hash": ""
   },
   "src/hooks/useProjectsV2.ts": {
@@ -1452,9 +1452,9 @@
     "semantic_hash": ""
   },
   "src/utils/project-transformers.ts": {
-    "mtime": 1793819143.0611796,
-    "seen": 1793820209.8188124,
-    "ast_hash": "57bde0d8044bb4ef0291c0dd8319a82f",
+    "mtime": 1794337484.8169563,
+    "seen": 1794337863.5171447,
+    "ast_hash": "620636af3ce0c75315549aed045d721a",
     "semantic_hash": ""
   },
   "src/vite-env.d.ts": {
@@ -4439,9 +4439,9 @@
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/ProjectCardV3.mobile.test.tsx": {
-    "mtime": 1793219455.6657436,
-    "seen": 1793301766.0104642,
-    "ast_hash": "6f312d7fa744739f23ddffb5af4f0bda",
+    "mtime": 1794268494.9329593,
+    "seen": 1794318808.5686955,
+    "ast_hash": "8c78b2bd0feaea2bacb6a4b4c39890f7",
     "semantic_hash": ""
   },
   "src/pages/Index.mobile.test.tsx": {
@@ -5568,18 +5568,6 @@
     "ast_hash": "",
     "semantic_hash": ""
   },
-  "docs/export. 0800/AUDITORIA_CHAMADOS_0800_HUB.md": {
-    "mtime": 1790466290.381756,
-    "seen": 1793301766.01153,
-    "ast_hash": "f71b88aaf83efa92f88dde119bbeaf0e",
-    "semantic_hash": ""
-  },
-  "docs/export. 0800/relatorio-levantamento-chamados-siplan.html": {
-    "mtime": 1790472547.168622,
-    "seen": 1793301766.0115318,
-    "ast_hash": "cb2c309067828f315295baca926f157c",
-    "semantic_hash": ""
-  },
   "src/test/cs-cx-registry-office-notary-migration.test.ts": {
     "mtime": 1792431177.2587378,
     "seen": 1793301766.0112467,
@@ -5821,15 +5809,15 @@
     "semantic_hash": ""
   },
   "docs/automacoes/n8n-workflow-projetos-e-produtos-secundarios-0800.json": {
-    "mtime": 1793329071.7017915,
-    "seen": 1793329239.2092679,
-    "ast_hash": "e4ef35ddce648f72f963cd492a7426e0",
+    "mtime": 1794318523.686559,
+    "seen": 1794318808.5437934,
+    "ast_hash": "506ff97ec5bf1dbd0270f6b5c19d9bd5",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Tabs/SecondaryProductsTab.tsx": {
-    "mtime": 1793310769.1067114,
-    "seen": 1793311243.4030836,
-    "ast_hash": "38ff224ada8fa0e808a4482d86a9874c",
+    "mtime": 1794318453.6041436,
+    "seen": 1794318808.5725303,
+    "ast_hash": "3e1fa6a38d7edce28fedbfdbc9147301",
     "semantic_hash": ""
   },
   "src/hooks/useSecondaryTickets.ts": {
@@ -5839,9 +5827,9 @@
     "semantic_hash": ""
   },
   "src/lib/secondary-products.ts": {
-    "mtime": 1793369413.892362,
-    "seen": 1793369819.9972513,
-    "ast_hash": "6ee5dced2789cb5b9eb59c4e9145a0b9",
+    "mtime": 1794318463.247445,
+    "seen": 1794318808.6419947,
+    "ast_hash": "7e6dc5fb9d47c9b68f80c0ada8b18022",
     "semantic_hash": ""
   },
   "src/pages/DeploymentsSecondaryProducts.tsx": {
@@ -5851,21 +5839,21 @@
     "semantic_hash": ""
   },
   "src/test/secondary-products.test.tsx": {
-    "mtime": 1793371086.375198,
-    "seen": 1793371311.8308136,
-    "ast_hash": "c0fb115079e34a059e96e493f326b1f1",
+    "mtime": 1794318561.3190436,
+    "seen": 1794318808.7068317,
+    "ast_hash": "c5d703c8e09b221f1296458cc50b5feb",
     "semantic_hash": ""
   },
   "docs/automacoes/criacao_projetos_e_produtos_secundarios_0800.md": {
-    "mtime": 1793329050.4683833,
-    "seen": 1793329239.5247762,
-    "ast_hash": "044af09d7b555d2aabe559512e4070b7",
+    "mtime": 1794318473.8553898,
+    "seen": 1794318808.7279754,
+    "ast_hash": "2490cbb6452ca493fd1e74bbae07718f",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/Forms/OrionAdminSection.tsx": {
-    "mtime": 1793371036.50421,
-    "seen": 1793371311.6559947,
-    "ast_hash": "e387c413c617dff13ae89e5539cb4fe6",
+    "mtime": 1794318449.3040605,
+    "seen": 1794318808.5647469,
+    "ast_hash": "163b4f13eac62526bf8d81881ee12272",
     "semantic_hash": ""
   },
   "src/components/ProjectManagement/OrionAdminAnimatedButton.tsx": {
@@ -6271,9 +6259,9 @@
     "semantic_hash": ""
   },
   "src/hooks/useSiplanSkillsIntegration.ts": {
-    "mtime": 1794267037.127174,
-    "seen": 1794267535.4187686,
-    "ast_hash": "7f4d0b75eafaa907660b045475baae3e",
+    "mtime": 1794268482.8370178,
+    "seen": 1794318808.6268258,
+    "ast_hash": "57dfd830125e4aa2ff9b8e94accf77ef",
     "semantic_hash": ""
   },
   "src/lib/format-notification.test.ts": {
@@ -6325,9 +6313,9 @@
     "semantic_hash": ""
   },
   "docs/CONHECIMENTO_PROCESSOS_E_OPERACAO_HUB.md": {
-    "mtime": 1794267406.6749558,
-    "seen": 1794267535.5448444,
-    "ast_hash": "6e7c4777c8a6140aedff3989aa249d88",
+    "mtime": 1794337810.7332342,
+    "seen": 1794337863.5329218,
+    "ast_hash": "efba6e6ab426d8e6262d6795e721b71b",
     "semantic_hash": ""
   },
   "files/info_maquina.txt": {
@@ -6346,6 +6334,12 @@
     "mtime": 1794267270.5524,
     "seen": 1794267535.3442895,
     "ast_hash": "810accfd074e2fdef6702d73352e04cf",
+    "semantic_hash": ""
+  },
+  "scripts/generate-orion-tn-knowledge-base.mjs": {
+    "mtime": 1794321074.5922291,
+    "seen": 1794337863.3055983,
+    "ast_hash": "7fb76df90b10d4746387cd1dc7a06db4",
     "semantic_hash": ""
   },
   "package-lock.json": {
