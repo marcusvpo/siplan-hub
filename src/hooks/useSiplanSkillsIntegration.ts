@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useContext, useMemo } from 'react';
+import { QueryClient, QueryClientContext, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectV2 } from '@/types/ProjectV2';
 import { toast } from '@/components/ui/use-toast';
@@ -118,30 +118,44 @@ export function extractSkillsCredentialsFromFields(
   };
 }
 
+const fallbackQueryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      enabled: false,
+    },
+  },
+});
+
 /**
  * Busca em lote (1 única requisição compartilhada pelo React Query) o farol de atividade
  * de todos os cartórios no Siplan Skills para alimentar as tags dos cards em /projects.
  */
 export function useSkillsBatchActivity(enabled = true) {
-  return useQuery({
-    queryKey: ['skillsBatchActivityMap'],
-    queryFn: async (): Promise<Record<string, SkillsActivityRecord>> => {
-      const { data, error } = await supabase.functions.invoke('siplan-skills-integration', {
-        body: {
-          action: 'get_batch_activity',
-        },
-      });
-      if (error || data?.error || !data?.activityMap) {
-        return {};
-      }
-      return data.activityMap as Record<string, SkillsActivityRecord>;
+  const contextClient = useContext(QueryClientContext);
+
+  return useQuery(
+    {
+      queryKey: ['skillsBatchActivityMap'],
+      queryFn: async (): Promise<Record<string, SkillsActivityRecord>> => {
+        const { data, error } = await supabase.functions.invoke('siplan-skills-integration', {
+          body: {
+            action: 'get_batch_activity',
+          },
+        });
+        if (error || data?.error || !data?.activityMap) {
+          return {};
+        }
+        return data.activityMap as Record<string, SkillsActivityRecord>;
+      },
+      enabled: Boolean(enabled && contextClient),
+      staleTime: 30 * 1000,
+      refetchInterval: 60 * 1000,
+      retry: false,
+      refetchOnWindowFocus: false,
     },
-    enabled,
-    staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000,
-    retry: false,
-    refetchOnWindowFocus: false,
-  });
+    contextClient || fallbackQueryClient
+  );
 }
 
 export function useSiplanSkillsIntegration(project: ProjectV2 | null | undefined) {

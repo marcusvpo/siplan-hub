@@ -11,6 +11,10 @@ vi.mock("@/components/ProjectManagement/PosSaudeBadge", () => ({
   PosSaudeBadge: () => <span>Pós saudável</span>,
 }));
 
+vi.mock("@/components/ProjectManagement/SiplanSkillsCardBadge", () => ({
+  SiplanSkillsCardBadge: () => <span data-testid="mock-skills-badge">Skills Badge</span>,
+}));
+
 const stage = (status: string) => ({ status });
 
 const project = {
