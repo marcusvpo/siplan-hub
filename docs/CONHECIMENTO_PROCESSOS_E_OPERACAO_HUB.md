@@ -501,6 +501,27 @@ A partir dessa sincronização, foi arquitetada e gerada a **Base de Conheciment
   * O workflow `mNQ9HfJUls39FIVi` no n8n recalcula e regera o arquivo mestre de roteamento semântico `_indice.md` a cada sincronização.
   * Se qualquer rotina for adicionada, alterada ou removida, o `_indice.md` é forçado para upload na OpenAI com substituição automática da versão antiga na Vector Store.
 
+### 13.5. Parâmetros Canônicos de Backend na OpenAI Responses API & Prompt Dinâmico na OpenAI Platform
+* **Localização no Backend:** Edge Function Supabase `supabase/functions/pos-assistant-chat/index.ts` (chamada à API `POST https://api.openai.com/v1/responses`).
+* **Arquitetura Desacoplada (Backend Fixo vs. Prompt Dinâmico):**
+  * **No Backend:** Mantêm-se estritamente os parâmetros fixos de infraestrutura, custo e calibração de busca (`model`, `temperature`, `max_output_tokens`, `top_p` e `tools`).
+  * **Na OpenAI Platform:** O System Prompt (instruções) é mantido e versionado diretamente dentro do prompt template cadastrado na OpenAI (`pmpt_6a85e041a0e08196a659d0560497de3402bd152c918f12f4`), garantindo liberdade total para ajustes de prompt, tom e refinamento contínuo pelo painel da OpenAI sem a necessidade de novos deploys de código.
+* **Configuração Homologada (`orionAssistantConfig`):**
+  * `model: "gpt-4o-mini"`: Homologado para máximo custo-benefício, baixa latência e obediência estrita a tools.
+  * `temperature: 0.1`: Baixíssima aleatoriedade para garantir respostas determinísticas, anulando invenções, gírias ou telas hipotéticas.
+  * `max_output_tokens: 1200`: Limite seguro e econômico garantindo obediência ao formato de pirâmide invertida sem prolixidade.
+  * `top_p: 0.9`: Estabilidade e consistência estatística de vocabulário notarial.
+  * `tools` (`file_search`):
+    * `vector_store_ids: ["vs_6a85e00895f081918844a28887a34a17"]`: Vector Store oficial indexada.
+    * `max_num_results: 5`: Traz apenas os 5 arquivos atômicos mais relevantes, evitando poluição de contexto.
+    * `ranking_options.score_threshold: 0.25`: Filtro anti-ruído que descarta documentos irrelevantes para evitar *sycophancy*.
+    * `ranking_options.hybrid_search`: Combinação de `rrf_text_weight: 1.3` (prioridade BM25 para capturar botões literais e telas em negrito) com `rrf_embedding_weight: 1.0` (busca semântica para intenções e sinônimos de balcão).
+* **Diretrizes Oficiais Mantidas na OpenAI Platform (System Prompt V3.3):**
+  * **Anti-vazamento de IDs internos:** Proibição estrita de citar `R-X.X`, `V-X.X`, `M-X.X`, `D-X.X`, `C-X.X`, `S-X.X` ou nomes de arquivos (`rotina-...md`, `_indice.md`).
+  * **Pirâmide Invertida:** Diagnóstico direto (1 a 2 frases) + Passo a passo numerado com elementos em **negrito** + Dica + Vídeo Bunny.net.
+  * **Supressão Limpa de Vídeo:** Se `tem_video: false` ou ausente, a seção de vídeo é 100% omitida (sem "não há vídeo" ou placeholders vazios).
+  * **Vocabulário Corporativo do Suporte:** Indicação estrita para abertura de **chamado** (nunca a palavra "ticket") direcionando para o Help Desk oficial `https://sac.siplancontrolm.com.br`.
+
 ## 14. Arquitetura de Webhooks Assíncronos, Triggers das Etapas e Sincronização de Trâmites
 
 ### 14.1. Resiliência de Webhooks n8n (pg_net)
