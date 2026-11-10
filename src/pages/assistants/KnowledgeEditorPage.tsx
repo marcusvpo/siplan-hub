@@ -34,7 +34,7 @@ import { SavePublishModal } from "@/components/knowledge/SavePublishModal";
 import { VersionHistoryDrawer } from "@/components/knowledge/VersionHistoryDrawer";
 import { UnsavedChangesDialog } from "@/components/knowledge/UnsavedChangesDialog";
 import { CreateRoutineModal } from "@/components/knowledge/CreateRoutineModal";
-import { validateRoutineBody } from "@/services/markdownKnowledgeService";
+import { validateRoutineBody, validateRoutineSchemaV3 } from "@/services/markdownKnowledgeService";
 import type { KnowledgeArticle, KnowledgeArticleMetadata } from "@/types/knowledge";
 
 export default function KnowledgeEditorPage() {
@@ -144,15 +144,25 @@ export default function KnowledgeEditorPage() {
   }, [isDirty]);
 
   const handleSaveClick = () => {
-    const bodyValidation = validateRoutineBody(draftBody);
-    if (!bodyValidation.valid) {
-      toast.error("Estrutura do tutorial em desacordo com o padrão", {
+    if (!selectedArticle) return;
+
+    // Validação Prévia Completa do Schema V3.0 antes de abrir o modal de confirmação
+    const schemaValidation = validateRoutineSchemaV3(
+      selectedArticle.metadata,
+      draftBody,
+      articles,
+      selectedArticle.id,
+    );
+
+    if (!schemaValidation.isValid) {
+      toast.error("Rotina fora do padrão canônico do Schema V3", {
         description:
-          bodyValidation.errors[0] ||
-          "O corpo do tutorial precisa iniciar com '#### Descrição:' e conter '#### Passo a passo:'.",
+          schemaValidation.errors[0] ||
+          "Corrija os campos obrigatórios antes de persistir e disparar a IA.",
       });
       return;
     }
+
     setIsConfirmModalOpen(true);
   };
 

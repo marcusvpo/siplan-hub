@@ -269,7 +269,7 @@ export function OrionAdminSection({
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Geração de chaves no Orion Connect para os produtos secundários dependentes
+              Geração de chaves no Orion CRM para os produtos secundários dependentes
             </p>
           </div>
         </div>
@@ -312,7 +312,7 @@ export function OrionAdminSection({
                 ))}
               </div>
               <p className="text-[11px] opacity-90 pt-1 leading-relaxed">
-                Alex ou Bruno geram as chaves na plataforma <strong>Orion Connect</strong> via CNS e realizam a
+                Alex ou Bruno geram as chaves na plataforma <strong>Orion CRM</strong> via CNS e realizam a
                 configuração e parametrização direta no servidor da serventia (VM e containers). Essa etapa deve estar
                 concluída a tempo para que o implantador consiga realizar a homologação e treinamento desses produtos.
               </p>

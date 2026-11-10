@@ -9,6 +9,8 @@ import {
   deleteArticleFromDocument,
   normalizeMarkdown,
   ensureCrlf,
+  validateRoutineSchemaV3,
+  checkArticleIdUniquenessInDatabase,
 } from "@/services/markdownKnowledgeService";
 import { computeTextDiff, formatBackupFilePath } from "@/services/diffService";
 import type {
@@ -388,6 +390,17 @@ export function useKnowledgeBase() {
       const currentArticle = docData.articles.find((a) => a.id === articleId);
       if (!currentArticle) throw new Error("Artigo não localizado");
 
+      // Validação Prévia de Integridade (Schema V3.0) antes de persistir no Storage
+      const schemaCheck = validateRoutineSchemaV3(
+        currentArticle.metadata,
+        updatedBody,
+        docData.articles,
+        articleId,
+      );
+      if (!schemaCheck.isValid) {
+        throw new Error(`Rotina fora do padrão canônico do Schema V3: ${schemaCheck.errors[0]}`);
+      }
+
       setSaveStep("saving_storage");
       setSyncErrorMessage(null);
       setSyncedFileId(null);
@@ -652,6 +665,22 @@ export function useKnowledgeBase() {
       customSummary?: string;
     }) => {
       if (!docData) throw new Error("Documento não carregado");
+
+      // Validação Prévia de Integridade (Schema V3.0) antes de persistir no Storage
+      const schemaCheck = validateRoutineSchemaV3(
+        metadata,
+        body,
+        docData.articles,
+        articleId,
+      );
+      if (!schemaCheck.isValid) {
+        throw new Error(`Rotina fora do padrão canônico do Schema V3: ${schemaCheck.errors[0]}`);
+      }
+
+      const dbCheck = await checkArticleIdUniquenessInDatabase(supabase, metadata.id, articleId);
+      if (!dbCheck.isUnique) {
+        throw new Error(`O identificador "${metadata.id}" já existe registrado na tabela assistant_knowledge_files. Escolha outro ID.`);
+      }
 
       setSaveStep("saving_storage");
       setSyncErrorMessage(null);

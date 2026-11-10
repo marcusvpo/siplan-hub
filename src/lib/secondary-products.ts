@@ -247,7 +247,7 @@ export const OFFICIAL_SECONDARY_PRODUCTS = [
   { code: "e_qualificacao", name: "e-Qualificação", onlySystemType: null, requiresOrionAdmin: false },
   { code: "orion_caixa", name: "Orion Caixa", onlySystemType: null, requiresOrionAdmin: false },
   { code: "orion_cartflow", name: "Orion CartFLOW", onlySystemType: null, requiresOrionAdmin: false },
-  { code: "orion_connect", name: "Orion Connect", onlySystemType: null, requiresOrionAdmin: false },
+  { code: "orion_connect", name: "Orion CRM", onlySystemType: null, requiresOrionAdmin: false },
   { code: "orion_editor", name: "Orion Editor", onlySystemType: "Orion TN", requiresOrionAdmin: false },
   { code: "orion_ged", name: "Orion GED", onlySystemType: null, requiresOrionAdmin: false },
 ] as const;
@@ -359,7 +359,7 @@ export function matchSecondaryTicket(
     ["library", "orion library"],
     ["ged", "orion ged"],
     ["cartflow", "cart flow", "orion cartflow"],
-    ["connect", "orion connect"],
+    ["connect", "orion connect", "crm", "orion crm"],
     ["image", "siplan image", "image pro"],
     ["erecepcao", "e recepcao", "e-recepcao"],
     ["equalificacao", "e qualificacao", "e-qualificacao"],

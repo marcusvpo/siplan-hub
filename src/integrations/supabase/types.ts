@@ -803,6 +803,46 @@ export type ProjectRow = {
 export type ProjectInsert = Partial<ProjectRow>;
 export type ProjectUpdate = Partial<ProjectRow>;
 
+export type AssistantKnowledgeFileRow = {
+  id: string;
+  article_id: string;
+  file_path: string;
+  file_name: string;
+  modulo: string;
+  secao: string;
+  tem_video: boolean;
+  categoria: string;
+  sha256_hash: string;
+  openai_file_id: string | null;
+  vector_store_id: string;
+  token_count: number | null;
+  sync_status: string;
+  last_synced_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AssistantKnowledgeFileInsert = {
+  id?: string;
+  article_id: string;
+  file_path: string;
+  file_name: string;
+  modulo: string;
+  secao: string;
+  tem_video?: boolean;
+  categoria: string;
+  sha256_hash: string;
+  openai_file_id?: string | null;
+  vector_store_id?: string;
+  token_count?: number | null;
+  sync_status?: string;
+  last_synced_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type AssistantKnowledgeFileUpdate = Partial<AssistantKnowledgeFileInsert>;
+
 export type Tables<TableName extends string> =
   TableName extends "projects" ? ProjectRow
     :
@@ -831,6 +871,7 @@ export type Tables<TableName extends string> =
                                       : TableName extends "automation_dispatches" ? AutomationDispatchRow
                                          : TableName extends "notifications" ? NotificationRow
                                            : TableName extends "user_topic_affinities" ? UserTopicAffinityRow
+                                             : TableName extends "assistant_knowledge_files" ? AssistantKnowledgeFileRow
                                     : UntypedSupabaseShape;
 
 export type TablesInsert<TableName extends string> =
@@ -861,6 +902,7 @@ export type TablesInsert<TableName extends string> =
                                       : TableName extends "automation_dispatches" ? AutomationDispatchInsert
                                          : TableName extends "notifications" ? NotificationInsert
                                            : TableName extends "user_topic_affinities" ? UserTopicAffinityInsert
+                                             : TableName extends "assistant_knowledge_files" ? AssistantKnowledgeFileInsert
                                     : UntypedSupabaseShape;
 
 export type TablesUpdate<TableName extends string> =
@@ -891,4 +933,5 @@ export type TablesUpdate<TableName extends string> =
                                       : TableName extends "automation_dispatches" ? AutomationDispatchUpdate
                                          : TableName extends "notifications" ? NotificationUpdate
                                            : TableName extends "user_topic_affinities" ? UserTopicAffinityUpdate
+                                             : TableName extends "assistant_knowledge_files" ? AssistantKnowledgeFileUpdate
                                     : UntypedSupabaseShape;

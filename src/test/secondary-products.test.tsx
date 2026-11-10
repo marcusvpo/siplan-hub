@@ -607,5 +607,45 @@ describe("Produtos Secundários — regras de negócio, espelho 0800 e esteira",
         })
       );
     });
+
+    it("exibe a nomenclatura Orion CRM no subtítulo e nas instruções do banner para produtos dependentes, sem resquícios de Orion Connect", () => {
+      const mockProjectWithLcw = {
+        id: "proj-lcw",
+        clientName: "Cartório Com LCW",
+        systemType: "Orion TN",
+        ticketNumber: "763901",
+        products: ["Livro Caixa Web"],
+        stages: {
+          environment: {
+            status: "todo",
+            orionAdminConfig: "",
+            orionAdminConfigured: false,
+          },
+        },
+      } as unknown as ProjectV2;
+
+      render(
+        <OrionAdminSection
+          stage={mockProjectWithLcw.stages.environment as any}
+          project={mockProjectWithLcw}
+          canEdit={true}
+          currentUserName="Bruno Fernandes"
+          onUpdate={vi.fn()}
+        />
+      );
+
+      // Deve exibir a nomenclatura Orion CRM no cabeçalho/subtítulo
+      expect(
+        screen.getByText("Geração de chaves no Orion CRM para os produtos secundários dependentes")
+      ).toBeInTheDocument();
+
+      // Deve exibir as orientações mencionando Orion CRM e não Orion Connect
+      expect(
+        screen.getByText(/Alex ou Bruno geram as chaves na plataforma/i)
+      ).toHaveTextContent("Alex ou Bruno geram as chaves na plataforma Orion CRM via CNS");
+
+      // Nenhuma ocorrência de "Orion Connect" deve estar presente na tela
+      expect(screen.queryByText(/Orion Connect/i)).toBeNull();
+    });
   });
 });

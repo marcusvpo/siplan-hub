@@ -1025,7 +1025,7 @@ function SecondaryTicketItemCard({
               <Badge
                 variant="outline"
                 className="h-8 px-2.5 gap-1.5 text-xs border-amber-500/35 bg-amber-500/10 text-amber-800 dark:text-amber-200"
-                title="Chaves geradas via CNS no Orion Connect e cadastradas na Etapa 4 (Preparação de Ambiente)"
+                title="Chaves geradas via CNS no Orion CRM e cadastradas na Etapa 4 (Preparação de Ambiente)"
               >
                 <KeyRound className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                 Chaves no Orion Admin (Etapa 4)

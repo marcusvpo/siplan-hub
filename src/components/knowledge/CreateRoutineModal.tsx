@@ -43,8 +43,13 @@ import {
   Pencil,
   Check,
   Eraser,
+  Code,
+  Eye,
+  FileCode,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { MarkdownTiptapEditor } from "./MarkdownTiptapEditor";
 import {
   suggestNextArticleId,
@@ -62,6 +67,10 @@ import {
   ROUTINE_PREFIX_OPTIONS,
   RoutinePrefix,
   SIPLAN_HUB_SECTION_INDEX,
+  CANONICAL_ROUTINE_BODY_TEMPLATE,
+  CANONICAL_ROUTINE_EXAMPLE_METADATA,
+  validateRoutineSchemaV3,
+  checkArticleIdUniquenessInDatabase,
 } from "@/services/markdownKnowledgeService";
 import { generateRoutineMetadataWithAi } from "@/services/aiRoutineGeneratorService";
 import {
@@ -203,9 +212,9 @@ export function CreateRoutineModal({
       setIsValidatingBunny(false);
     } else {
       // Modo Create
-      const defaultPref: RoutinePrefix = "D";
+      const defaultPref: RoutinePrefix = "R";
       setSelectedPrefix(defaultPref);
-      setSelectedSectionIndex(4);
+      setSelectedSectionIndex(1);
       setRoutineId(suggestNextArticleId(articles, defaultPref));
       setTitle("");
       setObjective("");
@@ -213,7 +222,7 @@ export function CreateRoutineModal({
       setUserQuestions([]);
       setSintomasComuns([]);
       setSynonyms([]);
-      setStepByStepBody(DEFAULT_ROUTINE_BODY_TEMPLATE);
+      setStepByStepBody(CANONICAL_ROUTINE_BODY_TEMPLATE);
       setHasVideo(false);
       setVideoUrl("");
       setBunnyLibraryId("467408");
@@ -224,6 +233,33 @@ export function CreateRoutineModal({
       setIsValidatingBunny(false);
     }
   }, [isOpen, isEditMode, initialArticle, articles]);
+
+  const [isYamlPreviewOpen, setIsYamlPreviewOpen] = useState(false);
+
+  // Carregar Template Canônico Homologado (Schema V3.0)
+  const handleLoadCanonicalTemplate = () => {
+    setSelectedPrefix("R");
+    const nextRId = suggestNextArticleId(articles, "R");
+    setRoutineId(nextRId);
+    setTitle(CANONICAL_ROUTINE_EXAMPLE_METADATA.titulo);
+    setObjective(CANONICAL_ROUTINE_EXAMPLE_METADATA.objetivo);
+    setTags([...CANONICAL_ROUTINE_EXAMPLE_METADATA.tags]);
+    setUserQuestions([...CANONICAL_ROUTINE_EXAMPLE_METADATA.perguntas_usuario]);
+    setSintomasComuns([...CANONICAL_ROUTINE_EXAMPLE_METADATA.sintomas_comuns]);
+    setSynonyms([...CANONICAL_ROUTINE_EXAMPLE_METADATA.sinonimos]);
+    setStepByStepBody(CANONICAL_ROUTINE_BODY_TEMPLATE);
+    setHasVideo(false);
+    setVideoUrl("");
+    setBunnyLibraryId("467408");
+    setBunnyVideoId("");
+    setVideoTitle("");
+    setVideoTimestamp("00:00");
+    setBunnyVideoInfo(null);
+    setIsValidatingBunny(false);
+    toast.success("Template Canônico (Schema V3) carregado!", {
+      description: "Estrutura pré-formatada injetada com sucesso nos campos da rotina.",
+    });
+  };
 
   // Handler para troca de Prefixo (D, R, V, M, S)
   const handlePrefixChange = (newPrefixStr: string) => {
@@ -479,72 +515,12 @@ export function CreateRoutineModal({
     setSynonyms(synonyms.filter((s) => s !== sToRemove));
   };
 
-  // Submissão do Formulário
+  // Submissão do Formulário com Validação Estrita do Schema V3.0
   const handleSubmit = async () => {
-    // 1. Validação de ID
-    if (!idValidation.isValid) {
-      toast.error("ID Inválido ou Duplicado", {
-        description: idValidation.message,
-      });
-      return;
-    }
-
-    // 2. Validação do Título
     const cleanTitle = stripIdPrefixFromTitle(title);
-    if (!cleanTitle) {
-      toast.error("Título Obrigatório", {
-        description: "Informe o título funcional da rotina.",
-      });
-      return;
-    }
-
-    // 3. Validação do Objetivo
-    if (!objective.trim()) {
-      toast.error("Objetivo Obrigatório", {
-        description: "Informe uma frase densa definindo a finalidade da rotina.",
-      });
-      return;
-    }
-
-    // 4. Validação de Tags (3 a 7)
-    if (!tagsValidation.isValid) {
-      toast.error("Tags Inválidas", {
-        description: tagsValidation.message,
-      });
-      return;
-    }
-
-    // 5. Validação de Perguntas (3 a 5)
-    if (!questionsValidation.isValid) {
-      toast.error("Perguntas Inválidas", {
-        description: questionsValidation.message,
-      });
-      return;
-    }
-
-    // 6. ⭐ Validação de Sintomas Comuns (3 a 5, sem '?')
-    if (!sintomasValidation.isValid) {
-      toast.error("Sintomas Comuns Inválidos", {
-        description: sintomasValidation.message,
-      });
-      return;
-    }
-
-    // 7. Validação de Vídeo
-    if (!videoValidation.isValid) {
-      toast.error("Metadados de Vídeo Inválidos", {
-        description: videoValidation.message,
-      });
-      return;
-    }
-
-    // 8. Validação do Corpo (apenas em modo de cadastro de nova rotina)
-    if (!isEditMode && !bodyValidation.isValid) {
-      toast.error("Corpo da Rotina Inválido", {
-        description: bodyValidation.message,
-      });
-      return;
-    }
+    const cleanBody = isEditMode
+      ? (initialArticle?.body || "")
+      : sanitizeRoutineBody(stepByStepBody.trim());
 
     let videoData: BunnyVideoMetadata | undefined = undefined;
     if (hasVideo) {
@@ -582,9 +558,33 @@ export function CreateRoutineModal({
       video: videoData,
     };
 
-    const cleanBody = isEditMode
-      ? (initialArticle?.body || "")
-      : sanitizeRoutineBody(stepByStepBody.trim());
+    // 1. Validação Prévia Completa do Schema V3.0
+    const schemaValidation = validateRoutineSchemaV3(
+      metadata,
+      cleanBody,
+      articles,
+      isEditMode ? initialArticle?.id : undefined,
+    );
+
+    if (!schemaValidation.isValid) {
+      toast.error("Rotina fora do padrão canônico do Schema V3", {
+        description: schemaValidation.errors[0] || "Corrija os campos obrigatórios antes de prosseguir.",
+      });
+      return;
+    }
+
+    // 2. Checagem de Unicidade Remota no Banco (assistant_knowledge_files)
+    const dbCheck = await checkArticleIdUniquenessInDatabase(
+      supabase,
+      routineId,
+      isEditMode ? initialArticle?.id : undefined,
+    );
+    if (!dbCheck.isUnique) {
+      toast.error("ID já cadastrado na base de conhecimento", {
+        description: `O identificador "${routineId}" já existe registrado na tabela assistant_knowledge_files. Escolha outro ID exclusivo.`,
+      });
+      return;
+    }
 
     try {
       if (isEditMode && onUpdateRoutine && initialArticle) {
@@ -612,7 +612,8 @@ export function CreateRoutineModal({
   const isBusy = isCreating || isUpdating;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && !isBusy && onClose()}>
+    <>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && !isBusy && onClose()}>
       <DialogContent className="flex max-h-[calc(100dvh-1rem)] max-w-4xl flex-col overflow-hidden border-border bg-background p-0 shadow-2xl sm:max-h-[92vh]">
         {/* ===================== HEADER ===================== */}
         <DialogHeader className="p-4 sm:p-5 border-b bg-muted/20 shrink-0">
@@ -651,46 +652,74 @@ export function CreateRoutineModal({
 
         {/* ===================== CORPO DO FORMULÁRIO COM SCROLL ===================== */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 text-xs">
-          {/* Botão de Destaque: Preencher com IA (Recomendado) */}
-          <div className="rounded-xl border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-background p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          {/* Ações Rápidas: Template Canônico V3 & Preencher com IA */}
+          <div className="rounded-xl border border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-background p-3.5 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
             <div className="space-y-1 min-w-0">
               <div className="flex items-center gap-2 font-bold text-xs text-foreground">
                 <Sparkles className="h-4 w-4 text-primary animate-pulse shrink-0" />
-                <span>Auto-Preenchimento Inteligente</span>
+                <span>Criação Assistida & Padrão Canônico V3</span>
                 <Badge variant="outline" className="text-[10px] border-primary/40 text-primary bg-primary/10">
-                  IA Orion TN
+                  Schema V3.0
                 </Badge>
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
                 {isEditMode ? (
-                  "Clique aqui para a IA analisar o passo a passo da rotina e sugerir/atualizar Objetivo, Tags, Perguntas, Sintomas Comuns e Sinônimos automaticamente."
+                  "Utilize os campos abaixo para editar metadados ou clique em preencher com IA para refinar os termos."
                 ) : (
-                  <>
-                    Escreva o <strong>Passo a Passo</strong> no final deste formulário e clique aqui para gerar Título, Objetivo, Tags, Perguntas, Sintomas Comuns e Sinônimos automaticamente.
-                  </>
+                  "Carregue o template oficial pré-formatado ou escreva o passo a passo para preencher os metadados automaticamente com IA."
                 )}
               </p>
             </div>
 
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleGenerateWithAi}
-              disabled={isGeneratingAi || isBusy}
-              className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md hover:shadow-lg transition-all text-xs h-9 px-4 shrink-0"
-            >
-              {isGeneratingAi ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Analisando Passo a Passo...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4" />
-                  <span>Preencher Metadados com IA</span>
-                </>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              {!isEditMode && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLoadCanonicalTemplate}
+                  disabled={isBusy}
+                  className="gap-1.5 text-xs h-9 font-semibold border-primary/30 hover:bg-primary/5"
+                  title="Injeta a estrutura canônica homologada com placeholders pré-formatados"
+                >
+                  <FileCode className="h-4 w-4 text-primary" />
+                  <span>Template Canônico V3</span>
+                </Button>
               )}
-            </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsYamlPreviewOpen(true)}
+                disabled={isBusy}
+                className="gap-1.5 text-xs h-9 font-semibold"
+                title="Visualizar o YAML resultante estruturado"
+              >
+                <Code className="h-4 w-4 text-primary" />
+                <span className="hidden sm:inline">Visualizar YAML</span>
+              </Button>
+
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleGenerateWithAi}
+                disabled={isGeneratingAi || isBusy}
+                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md hover:shadow-lg transition-all text-xs h-9 px-3.5"
+              >
+                {isGeneratingAi ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Analisando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    <span>Preencher com IA</span>
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
 
           {/* ================= SEÇÃO A: IDENTIFICAÇÃO E TÍTULO ================= */}
@@ -1367,5 +1396,93 @@ export function CreateRoutineModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {/* Dialog Secundário: Visualização do YAML Canônico (Schema V3.0) */}
+    <Dialog open={isYamlPreviewOpen} onOpenChange={setIsYamlPreviewOpen}>
+      <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden border-border bg-background shadow-2xl">
+        <DialogHeader className="p-4 border-b bg-muted/20">
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-sm font-bold flex items-center gap-2">
+              <Code className="h-4 w-4 text-primary" />
+              Estrutura YAML Canônica — Schema V3.0
+            </DialogTitle>
+            <Badge variant="outline" className="font-mono text-xs">
+              {routineId.trim().toUpperCase() || "NOVA-ROTINA"}
+            </Badge>
+          </div>
+          <DialogDescription className="text-xs">
+            Pré-visualização da formatação serializada conforme os padrões homologados para a OpenAI Vector Store.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex-1 overflow-y-auto p-4 bg-muted/30 font-mono text-[11px] leading-relaxed select-all">
+          <pre className="p-3.5 rounded-lg bg-background border whitespace-pre-wrap">
+{`---
+id: ${routineId.trim().toUpperCase() || "[PREFIXO]-[ID]"}
+titulo: "${stripIdPrefixFromTitle(title) || "Título da Rotina"}"
+tags:
+${tags.map((t) => `  - ${t}`).join("\n") || "  - [tag 1]\n  - [tag 2]\n  - [tag 3]"}
+objetivo: "${objective.trim() || "Descrição em 1 a 2 linhas iniciada por verbo no infinitivo"}"
+sinonimos:
+${synonyms.map((s) => `  - ${s}`).join("\n") || "  - [termo alternativo 1]"}
+perguntas_usuario:
+${userQuestions.map((q) => `  - "${q}"`).join("\n") || '  - "Como faço para cadastrar X?"'}
+sintomas_comuns:
+${sintomasComuns.map((s) => `  - "${s}"`).join("\n") || '  - "tela travada em cinza"'}
+video:
+  tem_video: ${hasVideo ? "true" : "false"}
+${hasVideo ? `  bunny_library_id: "${bunnyLibraryId.trim() || "467408"}"
+  bunny_video_id: "${bunnyVideoId.trim() || "GUID"}"
+  video_title: "${videoTitle.trim() || stripIdPrefixFromTitle(title)}"
+  video_url: "${videoUrl.trim() || `https://iframe.mediadelivery.net/embed/${bunnyLibraryId.trim() || "467408"}/${bunnyVideoId.trim() || "GUID"}?t=${videoCalculatedSeconds}`}"
+  video_timestamp: "${videoTimestamp.trim() || "00:00"}"
+  video_start_seconds: ${videoCalculatedSeconds}` : ""}
+---
+${stepByStepBody || CANONICAL_ROUTINE_BODY_TEMPLATE}`}
+          </pre>
+        </div>
+
+        <DialogFooter className="p-3 border-t bg-muted/20 flex items-center justify-between">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const fullText = `---
+id: ${routineId.trim().toUpperCase() || "[PREFIXO]-[ID]"}
+titulo: "${stripIdPrefixFromTitle(title) || "Título da Rotina"}"
+tags:
+${tags.map((t) => `  - ${t}`).join("\n")}
+objetivo: "${objective.trim()}"
+sinonimos:
+${synonyms.map((s) => `  - ${s}`).join("\n")}
+perguntas_usuario:
+${userQuestions.map((q) => `  - "${q}"`).join("\n")}
+sintomas_comuns:
+${sintomasComuns.map((s) => `  - "${s}"`).join("\n")}
+video:
+  tem_video: ${hasVideo ? "true" : "false"}
+---
+${stepByStepBody}`;
+              navigator.clipboard.writeText(fullText);
+              toast.success("Estrutura copiada para a área de transferência!");
+            }}
+            className="text-xs gap-1.5"
+          >
+            <Copy className="h-3.5 w-3.5" />
+            Copiar YAML
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => setIsYamlPreviewOpen(false)}
+            className="text-xs"
+          >
+            Fechar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

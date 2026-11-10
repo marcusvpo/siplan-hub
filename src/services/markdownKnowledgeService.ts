@@ -11,15 +11,53 @@ export const SIPLAN_HUB_SECTION_INDEX = 5;
 export const SIPLAN_HUB_SECTION_TITLE = "SEÇÃO PRINCIPAL 5: Rotinas atualizadas via Siplan HUB";
 export const SIPLAN_HUB_ID_PREFIX = "S-";
 
-export type RoutinePrefix = "D" | "R" | "V" | "M" | "S";
+export type RoutinePrefix = "D" | "R" | "V" | "M" | "S" | "C";
 
 export const ROUTINE_PREFIX_OPTIONS: { prefix: RoutinePrefix; label: string; sectionIndex: number }[] = [
-  { prefix: "D", label: "D — Demonstrações do Sistema (Seção 4)", sectionIndex: 4 },
-  { prefix: "R", label: "R — Rotinas e Funcionalidades (Seção 1)", sectionIndex: 1 },
+  { prefix: "R", label: "R — Rotinas e Procedimentos (Seção 1)", sectionIndex: 1 },
   { prefix: "V", label: "V — Transcrições de Videoaulas (Seção 2)", sectionIndex: 2 },
   { prefix: "M", label: "M — Manuais do Produto (Seção 3)", sectionIndex: 3 },
+  { prefix: "D", label: "D — Demonstrações do Sistema (Seção 4)", sectionIndex: 4 },
+  { prefix: "C", label: "C — Suporte 0800 / Troubleshooting (Seção 1)", sectionIndex: 1 },
   { prefix: "S", label: "S — Siplan HUB / Atualizações (Seção 5)", sectionIndex: 5 },
 ];
+
+/**
+ * Template Canônico Homologado (Schema V3.0) para o corpo de novas rotinas.
+ */
+export const CANONICAL_ROUTINE_BODY_TEMPLATE = `#### Descrição:
+[Resumo conciso de 1 a 2 parágrafos contextualizando a funcionalidade]
+
+#### Passo a passo:
+1. No menu **[Menu Principal]**, acesse a tela **[Submenu/Tela]**.
+2. Clique no botão **[Botão em Negrito]** e preencha o campo **[Campo]**.
+3. Selecione a opção **[Opção]** e clique em **[Salvar]**.
+
+* **Dica / Alerta:** [Orientação prática de Corregedoria, ITCMD ou boas práticas].`;
+
+/**
+ * Exemplo de estrutura canônica de metadados para preenchimento guiado.
+ */
+export const CANONICAL_ROUTINE_EXAMPLE_METADATA: KnowledgeArticleMetadata = {
+  id: "R-39.0",
+  titulo: "Título Claro e Autoexplicativo da Rotina",
+  tags: ["modulo", "funcionalidade", "tela"],
+  objetivo: "Descrição em 1 a 2 linhas iniciada por verbo no infinitivo",
+  sinonimos: ["termo alternativo 1", "termo alternativo 2", "gíria de balcão 3"],
+  perguntas_usuario: [
+    "Como o escrevente pergunta no dia a dia 1?",
+    "Dúvida comum 2?",
+    "Pergunta real 3?",
+  ],
+  sintomas_comuns: [
+    "dor ou trava do usuário 1",
+    "mensagem de tela ou botão cinza 2",
+    "comportamento observado 3",
+  ],
+  video: {
+    tem_video: false,
+  },
+};
 
 /**
  * Normaliza quebras de linha para o padrão Windows CRLF (\r\n).
@@ -205,6 +243,180 @@ export function validateRoutineBody(body: string): RoutineValidationResult {
   }
 
   return { isValid: true, valid: true, errors: [] };
+}
+
+/**
+ * Validação Integral de Integridade do Schema V3.0 (Pré-voo antes de salvar no Storage e n8n).
+ * Regras:
+ * 1. O 'id' é obrigatório e único;
+ * 2. O YAML deve ser parseável sem erros sintáticos;
+ * 3. Presença obrigatória dos campos: id, titulo, objetivo, tags, sinonimos, perguntas_usuario, sintomas_comuns e do nó video;
+ * 4. Proibição estrita do campo legado 'video_id' (deve ser exclusivamente 'bunny_video_id' conforme ADR-003);
+ * 5. O corpo markdown deve conter os cabeçalhos '#### Descrição:' e '#### Passo a passo:'.
+ */
+export interface SchemaV3ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+export function validateRoutineSchemaV3(
+  metadata: Partial<KnowledgeArticleMetadata>,
+  body: string,
+  existingArticles: KnowledgeArticle[] = [],
+  currentArticleId?: string,
+): SchemaV3ValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // 1. Validação de ID
+  const id = (metadata.id || "").trim();
+  if (!id) {
+    errors.push("O identificador 'id' é obrigatório (ex: R-39.0, V-8.1.0, M-71.0, D-10.0 ou C-NOTAS-01).");
+  } else {
+    // Unicidade na memória
+    const normalizedTarget = id.toUpperCase();
+    const conflict = existingArticles.find(
+      (a) =>
+        a.id.toUpperCase() === normalizedTarget &&
+        a.id.toUpperCase() !== currentArticleId?.toUpperCase(),
+    );
+    if (conflict) {
+      errors.push(`O ID "${id}" já está em uso pela rotina "${conflict.titulo}". Cada rotina deve possuir um ID exclusivo.`);
+    }
+  }
+
+  // 2. Validação do Título (Título funcional, limpo e SEM código de ID)
+  const rawTitle = (metadata.titulo || "").trim();
+  if (!rawTitle) {
+    errors.push("O campo 'titulo' é obrigatório.");
+  } else if (hasIdPrefixInTitle(rawTitle)) {
+    errors.push(`O título não deve conter o prefixo do ID no texto (ex: remova o prefixo de "${rawTitle}").`);
+  }
+
+  // 3. Validação do Objetivo (Frase única e densa)
+  const objetivo = (metadata.objetivo || "").trim();
+  if (!objetivo) {
+    errors.push("O campo 'objetivo' é obrigatório (frase concisa definindo a finalidade prática).");
+  } else if (!/^[A-ZÀ-Úa-zà-ú]/i.test(objetivo)) {
+    warnings.push("Recomenda-se iniciar o objetivo com um verbo no infinitivo (ex: 'Orientar o escrevente a...').");
+  }
+
+  // 4. Validação de Tags (3 a 7)
+  const tags = (metadata.tags || []).map((t) => t.trim()).filter(Boolean);
+  if (tags.length < 3 || tags.length > 7) {
+    errors.push(`O campo 'tags' deve conter entre 3 e 7 itens de categorização (atualmente: ${tags.length}).`);
+  }
+
+  // 5. Validação de Sinônimos (Mínimo 1)
+  const sinonimos = (metadata.sinonimos || []).map((s) => s.trim()).filter(Boolean);
+  if (sinonimos.length === 0) {
+    errors.push("O campo 'sinonimos' é obrigatório (informe ao menos 1 termo alternativo ou jargão de balcão).");
+  }
+
+  // 6. Validação de Perguntas do Usuário (3 a 5)
+  const perguntas = (metadata.perguntas_usuario || []).map((p) => p.trim()).filter(Boolean);
+  if (perguntas.length < 3 || perguntas.length > 5) {
+    errors.push(`O campo 'perguntas_usuario' deve conter entre 3 e 5 perguntas completas que um usuário faria (atualmente: ${perguntas.length}).`);
+  }
+
+  // 7. Validação de Sintomas Comuns (3 a 5, sem '?')
+  const sintomas = (metadata.sintomas_comuns || []).map((s) => s.trim()).filter(Boolean);
+  if (sintomas.length < 3 || sintomas.length > 5) {
+    errors.push(`O campo 'sintomas_comuns' deve conter entre 3 e 5 termos de dor/sintoma (atualmente: ${sintomas.length}).`);
+  } else {
+    for (const s of sintomas) {
+      if (s.includes("?")) {
+        errors.push(`O sintoma "${s}" contém ponto de interrogação '?'. Dores de sistema não devem ser perguntas.`);
+      }
+    }
+  }
+
+  // 8. Nó Video e Proibição Estrita de 'video_id' (ADR-003)
+  if (!metadata.video || typeof metadata.video !== "object") {
+    errors.push("O nó 'video' é obrigatório no frontmatter YAML.");
+  } else {
+    const rawVideo = metadata.video as Record<string, any>;
+
+    // Proibição estrita de video_id
+    if ("video_id" in rawVideo && rawVideo.video_id) {
+      errors.push("PROIBIÇÃO ESTRITA: O campo legado 'video_id' é proibido conforme ADR-003. Utilize exclusivamente 'bunny_video_id'.");
+    }
+
+    if (rawVideo.tem_video) {
+      if (!rawVideo.bunny_video_id || !String(rawVideo.bunny_video_id).trim()) {
+        errors.push("Quando 'tem_video: true', o campo 'bunny_video_id' (GUID) é obrigatório.");
+      }
+      if (!rawVideo.video_timestamp || !String(rawVideo.video_timestamp).trim()) {
+        errors.push("Quando 'tem_video: true', a minutagem inicial 'video_timestamp' (MM:SS) é obrigatória.");
+      }
+    }
+  }
+
+  // 9. YAML Parseável sem erros sintáticos
+  try {
+    const yamlString = yaml.dump({
+      id,
+      titulo: stripIdPrefixFromTitle(rawTitle),
+      tags,
+      objetivo,
+      sinonimos,
+      perguntas_usuario: perguntas,
+      sintomas_comuns: sintomas,
+      video: metadata.video,
+    });
+    yaml.load(yamlString);
+  } catch (yamlErr: any) {
+    errors.push(`Erro de sintaxe no YAML: ${yamlErr?.message || "Estrutura inválida"}`);
+  }
+
+  // 10. Validação do Corpo Markdown (#### Descrição: e #### Passo a passo:)
+  const bodyValidation = validateRoutineBody(body);
+  if (!bodyValidation.valid) {
+    errors.push(...bodyValidation.errors);
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings,
+  };
+}
+
+/**
+ * Consulta assíncrona na tabela assistant_knowledge_files do Supabase
+ * para garantir unicidade do ID mesmo fora do arquivo mestre.
+ */
+export async function checkArticleIdUniquenessInDatabase(
+  supabaseClient: any,
+  articleId: string,
+  excludeArticleId?: string,
+): Promise<{ isUnique: boolean; conflictId?: string }> {
+  const cleanId = articleId?.trim();
+  if (!cleanId) return { isUnique: false };
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("assistant_knowledge_files")
+      .select("article_id")
+      .ilike("article_id", cleanId)
+      .limit(1);
+
+    if (error) {
+      console.warn("Aviso na consulta de unicidade de ID no Supabase:", error.message);
+      return { isUnique: true };
+    }
+
+    if (data && data.length > 0) {
+      const found = data[0].article_id;
+      if (!excludeArticleId || found.toLowerCase() !== excludeArticleId.toLowerCase()) {
+        return { isUnique: false, conflictId: found };
+      }
+    }
+    return { isUnique: true };
+  } catch {
+    return { isUnique: true };
+  }
 }
 
 /**
@@ -621,12 +833,32 @@ export function suggestNextArticleId(
     else if (raw.startsWith("V")) prefix = "V";
     else if (raw.startsWith("M")) prefix = "M";
     else if (raw.startsWith("S")) prefix = "S";
+    else if (raw.startsWith("C")) prefix = "C";
     else prefix = "D";
   }
 
   // Filtrar artigos que começam com esse prefixo
   const prefixUpper = `${prefix}-`;
   const matchingArticles = articles.filter((a) => a.id.toUpperCase().startsWith(prefixUpper));
+
+  if (prefix === "C") {
+    // Para C (ex: C-NOTAS-01 ou C-01)
+    const cNumbers: number[] = [];
+    let detectedSubprefix = "NOTAS";
+    for (const a of matchingArticles) {
+      const match = a.id.toUpperCase().match(/^C-([A-Z]+)-(\d+)$/);
+      if (match) {
+        detectedSubprefix = match[1];
+        cNumbers.push(parseInt(match[2], 10));
+      } else {
+        const simpleMatch = a.id.toUpperCase().match(/^C-(\d+)$/);
+        if (simpleMatch) cNumbers.push(parseInt(simpleMatch[1], 10));
+      }
+    }
+    const nextNum = cNumbers.length > 0 ? Math.max(...cNumbers) + 1 : 1;
+    const padded = String(nextNum).padStart(2, "0");
+    return `C-${detectedSubprefix}-${padded}`;
+  }
 
   if (prefix === "S") {
     const numbers: number[] = [];

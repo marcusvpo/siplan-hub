@@ -1,0 +1,713 @@
+{
+  "id": "mNQ9HfJUls39FIVi",
+  "name": "Siplan HUB - Sincronização OpenAI Vector Store",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "update-openai-vector-store",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "id": "fb7857b2-dae9-4a2b-8099-2751bedc2d31",
+      "name": "Webhook - Atualização Base Orion TN",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4600,
+        -600
+      ],
+      "webhookId": "update-openai-vector-store"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.openai.com/v1/vector_stores/vs_6a85e00895f081918844a28887a34a17/files?limit=100",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "OpenAI-Beta",
+              "value": "assistants=v2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e7dc1418-e461-4beb-9ff6-2bee089ce87f",
+      "name": "Mapear Arquivos Atuais na Vector Store",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -4360,
+        -600
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "wDDwY8E0NUat6Ia7",
+          "name": "OpenAI Conta Assistentes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://okvufcwkophaadttmjwa.supabase.co/rest/v1/assistant_knowledge_files?select=article_id,file_path,sha256_hash,openai_file_id",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-e5f6-4a1b-8c2d-3e4f5a6b7c8d",
+      "name": "Consultar assistant_knowledge_files",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -4120,
+        -600
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "xHsaYah1jaanhiNt",
+          "name": "Supabase Siplan HUB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://okvufcwkophaadttmjwa.supabase.co/storage/v1/object/assistant-oriontn-doc/OrionTN%20pos.md",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "3b526937-9bad-4a28-b26d-3fc5d4ed166a",
+      "name": "Baixar Markdown do Supabase Storage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3880,
+        -600
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "xHsaYah1jaanhiNt",
+          "name": "Supabase Siplan HUB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Compilador Granular Dual-Layer RAG V3.2 & Delta Calculator\nconst crypto = require('crypto');\nconst yaml = require('js-yaml');\n\n// 1. Obter arquivo consolidado baixado do Supabase Storage\nconst binaryObj = $node[\"Baixar Markdown do Supabase Storage\"].binary;\nconst rawBuffer = binaryObj && binaryObj.data ? Buffer.from(binaryObj.data.data, 'base64') : null;\nconst rawContent = rawBuffer ? rawBuffer.toString('utf8') : '';\n\nif (!rawContent) {\n  throw new Error(\"Arquivo OrionTN pos.md vazio ou não recebido do Storage.\");\n}\n\n// 2. Obter estado atual do banco Supabase\nconst dbFilesData = $node[\"Consultar assistant_knowledge_files\"].json;\nconst dbFileArray = Array.isArray(dbFilesData) ? dbFilesData : (dbFilesData ? [dbFilesData] : []);\nconst dbFileMap = new Map();\nfor (const f of dbFileArray) {\n  if (f && f.article_id) {\n    dbFileMap.set(f.article_id, f);\n  }\n}\n\n// 3. Mapear arquivos existentes atualmente na Vector Store\nconst vsFiles = $node[\"Mapear Arquivos Atuais na Vector Store\"].json.data || [];\n\n// 4. Regex ancorada explicitamente em id: para não perder a primeira rotina (R-1.0)\nconst articleRegex = /(?:^|\\r?\\n)---\\s*\\r?\\n(id:\\s*[\\s\\S]*?)\\r?\\n---\\s*\\r?\\n([\\s\\S]*?)(?=(?:\\r?\\n---\\s*\\r?\\nid:)|$)/g;\n\nconst compiledFiles = [];\nlet match;\n\nwhile ((match = articleRegex.exec(rawContent)) !== null) {\n  const frontmatterRaw = match[1];\n  const body = match[2].trim();\n\n  let meta = {};\n  try {\n    meta = yaml.load(frontmatterRaw) || {};\n  } catch (e) {\n    continue;\n  }\n\n  const id = String(meta.id || '').trim();\n  if (!id) continue;\n\n  const titulo = String(meta.titulo || '').trim();\n  const tags = Array.isArray(meta.tags) ? meta.tags.map(String) : [];\n  const sinonimos = Array.isArray(meta.sinonimos) ? meta.sinonimos.map(String) : [];\n  const temVideo = Boolean(meta.video && meta.video.tem_video);\n\n  const secaoMatch = id.match(/^([A-Z])/i);\n  const secao = secaoMatch ? secaoMatch[1].toUpperCase() : 'R';\n\n  // 11 Módulos Homologados\n  const combined = `${id} ${titulo} ${tags.join(\" \")}`.toLowerCase();\n  let modulo = 'geral';\n  if (/(cart[aã]o|aut[oó]grafo|reconhecimento|abertura de ficha|ficha|firma)/i.test(combined)) modulo = 'firmas';\n  else if (/(dep[oó]sito pr[eé]vio|recibo|fechamento|despesa|receita|emolumento|caixa|financeiro)/i.test(combined)) modulo = 'caixa';\n  else if (/(escritura|procura[cç][aã]o|testamento|invent[aá]rio|partilha|div[oó]rcio|ata notarial|notas)/i.test(combined)) modulo = 'notas';\n  else if (/(selo|ressarcimento|valida[cç][aã]o de selo|lote de selo)/i.test(combined)) modulo = 'selos';\n  else if (/(censec|ccn|srei|onr|e-notariado|censo|sinoreg|central)/i.test(combined)) modulo = 'centrais';\n  else if (/(termo de abertura|termo de encerramento|folhas|encaderna[cç][aã]o|traslado|livro)/i.test(combined)) modulo = 'livros';\n  else if (/(certid[aã]o|segunda via|pedido de certid[aã]o|busca de ato)/i.test(combined)) modulo = 'certidoes';\n  else if (/(login|senha|usu[aá]rio|permiss[aã]o|perfil|operador|acesso)/i.test(combined)) modulo = 'acesso';\n  else if (/(par[aâ]metro|modelo|editor|backup|ambiente|configura)/i.test(combined)) modulo = 'config';\n  else if (/(whatsapp|e-mail|notifica[cç][aã]o|mensagem|comunica)/i.test(combined)) modulo = 'comunicacao';\n\n  // Categoria\n  let categoria = 'procedimento_geral';\n  if (temVideo || secao === 'V') categoria = 'videoaula_tutorial';\n  else if (secao === 'M') categoria = 'manual_operacional';\n  else if (secao === 'D') categoria = 'demonstracao_pratica';\n  else if (secao === 'C' || tags.some(t => /0800|suporte|erro/i.test(t))) categoria = 'troubleshooting_0800';\n\n  const slug = titulo.toLowerCase()\n    .normalize('NFD').replace(/[\\u0300-\\u036f]/g, \"\")\n    .replace(/[^a-z0-9]+/g, \"-\")\n    .replace(/^-+|-+$/g, \"\")\n    .slice(0, 45);\n\n  const fileName = `${id}-${slug}.md`;\n  const filePath = `kb/rotinas/${modulo}/${fileName}`;\n  const fileContent = `---\\n${frontmatterRaw.trim()}\\n---\\n\\n${body}\\n`;\n  const sha256 = crypto.createHash('sha256').update(fileContent, 'utf8').digest('hex');\n\n  compiledFiles.push({\n    article_id: id,\n    file_path: filePath,\n    file_name: fileName,\n    file_content: fileContent,\n    sha256_hash: sha256,\n    modulo: modulo,\n    secao: secao,\n    tem_video: temVideo,\n    categoria: categoria,\n    titulo: titulo,\n    sinonimos: sinonimos,\n    token_count: Math.ceil(fileContent.length / 3.8),\n    attributes: {\n      id: id,\n      modulo: modulo,\n      secao: secao,\n      tem_video: temVideo ? \"true\" : \"false\",\n      categoria: categoria\n    }\n  });\n}\n\n// 5. Inclusão dos Arquivos Estruturais (_indice.md e _glossario.md)\n// _indice.md (Catálogo padrão llms.txt)\nlet indiceMd = `# ÍNDICE GERAL DE ROTINAS — ORION TN (Dual-Layer RAG V3.2)\\n> Catálogo mestre de roteamento semântico, sinônimos e palavras-chave.\\n\\n`;\nconst byMod = {};\nfor (const r of compiledFiles) {\n  if (!byMod[r.modulo]) byMod[r.modulo] = [];\n  byMod[r.modulo].push(r);\n}\nfor (const m of Object.keys(byMod).sort()) {\n  indiceMd += `## MÓDULO: ${m.toUpperCase()}\\n`;\n  for (const r of byMod[m]) {\n    const s = r.sinonimos.length ? ` | Sinônimos: ${r.sinonimos.slice(0, 3).join(\", \")}` : '';\n    indiceMd += `- [${r.article_id}] ${r.titulo} (` + r.file_path + `)${s}\\n`;\n  }\n  indiceMd += `\\n`;\n}\nconst indiceSha = crypto.createHash('sha256').update(indiceMd, 'utf8').digest('hex');\ncompiledFiles.push({\n  article_id: '_indice',\n  file_path: 'kb/_indice.md',\n  file_name: '_indice.md',\n  file_content: indiceMd,\n  sha256_hash: indiceSha,\n  modulo: 'geral',\n  secao: 'SYS',\n  tem_video: false,\n  categoria: 'indice_mestre',\n  token_count: Math.ceil(indiceMd.length / 3.8),\n  attributes: {\n    id: '_indice',\n    modulo: 'geral',\n    secao: 'SYS',\n    tem_video: 'false',\n    categoria: 'indice_mestre'\n  }\n});\n\n// _glossario.md\nconst glossarioMd = `# GLOSSÁRIO TÉCNICO E NOTARIAL — SIPLAN / ORION TN\\n> Vocabulário controlado, termos jurídicos, siglas das centrais e nomenclaturas operacionais.\\n\\n### Abertura de Firma / Ficha de Assinatura\\nRegistro inaugural dos dados pessoais, biométricos e padrão de assinatura do cliente no cartório de notas.\\n\\n### Cartão de Autógrafo\\nFicha física ou registro digital onde se encontra arquivada a assinatura do titular da firma para confronto.\\n\\n### CENSEC\\nCentral Notarial de Serviços Eletrônicos Compartilhados que congrega CESDI, RCTO, CEP e CCN.\\n\\n### CCN (Central de Comunicação de Notas)\\nMódulo integrante da CENSEC para comunicação obrigatória da lavratura de atos notariais.\\n\\n### Selo Digital de Fiscalização\\nCódigo alfanumérico único fiscalizado pela Corregedoria Geral da Justiça do Tribunal de Justiça.\\n\\n### Sinal Público\\nConfirmação e reconhecimento de assinatura de tabelião ou preposto de outra comarca.\\n\\n### Depósito Prévio\\nQuantia adiantada pelo usuário ao cartório para cobrir emolumentos de atos solicitados.\\n\\n### Livro de Notas (Livro 1)\\nLivro oficial obrigatório onde são lavradas escrituras em geral.\\n\\n### Livro de Procurações (Livro 2)\\nLivro destinado exclusivamente ao registro de instrumentos públicos de mandato.\\n\\n### Livro de Testamentos (Livro 3)\\nLivro com guarda restrita para registro de testamentos públicos e revogações.\\n\\n### Traslado\\nPrimeira cópia autêntica e integral do ato notarial entregue às partes.\\n\\n### E-Notariado\\nPlataforma oficial do notariado para prática de atos notariais eletrônicos por videoconferência.\\n\\n### Orion TN\\nSistema corporativo da Siplan Informática para Tabelionatos de Notas e Protestos.\\n`;\nconst glossarioSha = crypto.createHash('sha256').update(glossarioMd, 'utf8').digest('hex');\ncompiledFiles.push({\n  article_id: '_glossario',\n  file_path: 'kb/_glossario.md',\n  file_name: '_glossario.md',\n  file_content: glossarioMd,\n  sha256_hash: glossarioSha,\n  modulo: 'geral',\n  secao: 'SYS',\n  tem_video: false,\n  categoria: 'glossario_termos',\n  token_count: Math.ceil(glossarioMd.length / 3.8),\n  attributes: {\n    id: '_glossario',\n    modulo: 'geral',\n    secao: 'SYS',\n    tem_video: 'false',\n    categoria: 'glossario_termos'\n  }\n});\n\n// 6. Delta Engine\nconst filesToUpload = [];\nconst filesToDelete = [];\nconst activeArticleIds = new Set(compiledFiles.map(f => f.article_id));\n\n// Detectar deletados no banco\nfor (const [artId, dbRecord] of dbFileMap.entries()) {\n  if (!activeArticleIds.has(artId) && dbRecord.openai_file_id) {\n    filesToDelete.push({\n      old_file_id: dbRecord.openai_file_id,\n      article_id: artId,\n      reason: 'deleted_from_base'\n    });\n  }\n}\n\n// Expurgo do Monolítico Antigo se ainda estiver na Vector Store\nconst knownAtomicOpenAiIds = new Set(Array.from(dbFileMap.values()).map(f => f.openai_file_id).filter(Boolean));\nfor (const vsf of vsFiles) {\n  if (!knownAtomicOpenAiIds.has(vsf.id)) {\n    filesToDelete.push({\n      old_file_id: vsf.id,\n      article_id: 'legacy_monolithic',\n      reason: 'monolithic_purge'\n    });\n  }\n}\n\n// Detectar novos ou alterados\nfor (const file of compiledFiles) {\n  const existing = dbFileMap.get(file.article_id);\n  if (!existing || existing.sha256_hash !== file.sha256_hash) {\n    if (existing && existing.openai_file_id) {\n      filesToDelete.push({\n        old_file_id: existing.openai_file_id,\n        article_id: file.article_id,\n        reason: 'updated_routine_replace'\n      });\n    }\n\n    filesToUpload.push({\n      json: {\n        has_changes: true,\n        has_uploads: true,\n        has_deletes: filesToDelete.length > 0,\n        article_id: file.article_id,\n        file_path: file.file_path,\n        file_name: file.file_name,\n        modulo: file.modulo,\n        secao: file.secao,\n        tem_video: file.tem_video,\n        categoria: file.categoria,\n        sha256_hash: file.sha256_hash,\n        token_count: file.token_count,\n        attributes: file.attributes,\n        vector_store_id: 'vs_6a85e00895f081918844a28887a34a17',\n        files_to_delete: filesToDelete\n      },\n      binary: {\n        data: {\n          data: Buffer.from(file.file_content, 'utf8').toString('base64'),\n          mimeType: 'text/markdown',\n          fileName: file.file_name\n        }\n      }\n    });\n  }\n}\n\n// Garantia Explícita: Se qualquer rotina entrou em filesToUpload ou filesToDelete,\n// força a inclusão de _indice.md em filesToUpload para refletir o novo catálogo imediatamente\nconst hasRoutineChanges = filesToUpload.some(f => f.json.article_id !== '_indice' && f.json.article_id !== '_glossario') ||\n  filesToDelete.some(f => f.article_id !== '_indice' && f.article_id !== '_glossario' && f.article_id !== 'legacy_monolithic');\n\nif (hasRoutineChanges) {\n  const indiceAlreadyInUpload = filesToUpload.some(f => f.json.article_id === '_indice');\n  if (!indiceAlreadyInUpload) {\n    const indiceItem = compiledFiles.find(f => f.article_id === '_indice');\n    if (indiceItem) {\n      const existingIndice = dbFileMap.get('_indice');\n      if (existingIndice && existingIndice.openai_file_id) {\n        filesToDelete.push({\n          old_file_id: existingIndice.openai_file_id,\n          article_id: '_indice',\n          reason: 'index_update_with_routine_changes'\n        });\n      }\n      filesToUpload.push({\n        json: {\n          has_changes: true,\n          has_uploads: true,\n          has_deletes: filesToDelete.length > 0,\n          article_id: indiceItem.article_id,\n          file_path: indiceItem.file_path,\n          file_name: indiceItem.file_name,\n          modulo: indiceItem.modulo,\n          secao: indiceItem.secao,\n          tem_video: indiceItem.tem_video,\n          categoria: indiceItem.categoria,\n          sha256_hash: indiceItem.sha256_hash,\n          token_count: indiceItem.token_count,\n          attributes: indiceItem.attributes,\n          vector_store_id: 'vs_6a85e00895f081918844a28887a34a17',\n          files_to_delete: filesToDelete\n        },\n        binary: {\n          data: {\n            data: Buffer.from(indiceItem.file_content, 'utf8').toString('base64'),\n            mimeType: 'text/markdown',\n            fileName: indiceItem.file_name\n          }\n        }\n      });\n    }\n  }\n}\n\n// Garantir que todos os itens de filesToUpload compartilhem a lista completa e atualizada de filesToDelete\nfor (const item of filesToUpload) {\n  item.json.files_to_delete = filesToDelete;\n}\n\nif (filesToUpload.length === 0) {\n  if (filesToDelete.length === 0) {\n    return [{\n      json: {\n        has_changes: false,\n        has_uploads: false,\n        has_deletes: false,\n        total_compiled: compiledFiles.length,\n        to_upload_count: 0,\n        to_delete_count: 0,\n        files_to_delete: [],\n        message: \"Base Orion TN 100% sincronizada. 0 deltas detectados.\"\n      }\n    }];\n  } else {\n    return [{\n      json: {\n        has_changes: true,\n        has_uploads: false,\n        has_deletes: true,\n        total_compiled: compiledFiles.length,\n        to_upload_count: 0,\n        to_delete_count: filesToDelete.length,\n        files_to_delete: filesToDelete,\n        message: `Expurgo de ${filesToDelete.length} arquivos antigos/monolíticos pendente.`\n      }\n    }];\n  }\n}\n\nreturn filesToUpload;"
+      },
+      "id": "157bb329-3865-4fde-916d-11f784653905",
+      "name": "Compilar Rotinas & Delta Calculator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3640,
+        -600
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-has-changes",
+              "leftValue": "={{ $json.has_changes }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b22a7d21-18f8-4b15-a106-4752b2a6d233",
+      "name": "IF - Há Alguma Alteração?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3400,
+        -600
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-has-uploads",
+              "leftValue": "={{ $json.has_uploads }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c33b8e32-29f9-5c26-b217-5863c3b7e344",
+      "name": "IF - Há Novos Uploads?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3160,
+        -750
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "purpose",
+              "value": "assistants"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "421a9de9-df6e-4a2c-8671-999932c52343",
+      "name": "Upload para OpenAI Files API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2920,
+        -900
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "wDDwY8E0NUat6Ia7",
+          "name": "OpenAI Conta Assistentes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/vector_stores/vs_6a85e00895f081918844a28887a34a17/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "OpenAI-Beta",
+              "value": "assistants=v2"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"file_id\": \"{{ $json.id }}\",\n  \"chunking_strategy\": {\n    \"type\": \"static\",\n    \"static\": {\n      \"max_chunk_size_tokens\": 1800,\n      \"chunk_overlap_tokens\": 0\n    }\n  },\n  \"attributes\": {\n    \"id\": \"{{ $('Compilar Rotinas & Delta Calculator').item.json.attributes.id }}\",\n    \"modulo\": \"{{ $('Compilar Rotinas & Delta Calculator').item.json.attributes.modulo }}\",\n    \"secao\": \"{{ $('Compilar Rotinas & Delta Calculator').item.json.attributes.secao }}\",\n    \"tem_video\": \"{{ $('Compilar Rotinas & Delta Calculator').item.json.attributes.tem_video }}\",\n    \"categoria\": \"{{ $('Compilar Rotinas & Delta Calculator').item.json.attributes.categoria }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "4ab6c434-0a2e-426a-a342-397f209b9301",
+      "name": "Vincular Novo Arquivo à Vector Store",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2680,
+        -900
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "wDDwY8E0NUat6Ia7",
+          "name": "OpenAI Conta Assistentes"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Agrupa todos os uploads recém-concluídos para chamada única de RPC no Supabase\nconst uploadNodes = $node[\"Upload para OpenAI Files API\"].all();\nconst compilerItems = $node[\"Compilar Rotinas & Delta Calculator\"].all();\n\nconst batch = [];\nfor (let i = 0; i < compilerItems.length; i++) {\n  const comp = compilerItems[i].json;\n  const up = uploadNodes[i] ? uploadNodes[i].json : null;\n\n  if (comp && comp.article_id && up && up.id) {\n    batch.push({\n      article_id: comp.article_id,\n      file_path: comp.file_path,\n      file_name: comp.file_name,\n      modulo: comp.modulo,\n      secao: comp.secao,\n      tem_video: comp.tem_video,\n      categoria: comp.categoria,\n      sha256_hash: comp.sha256_hash,\n      openai_file_id: up.id,\n      vector_store_id: comp.vector_store_id || 'vs_6a85e00895f081918844a28887a34a17',\n      token_count: comp.token_count,\n      sync_status: 'synced'\n    });\n  }\n}\n\nreturn [{\n  json: {\n    batch_payload: batch,\n    total_saved: batch.length\n  }\n}];"
+      },
+      "id": "b510d604-bceb-4b67-9c7d-b8a6ad299d6e",
+      "name": "Preparar Lote para Gravar no Supabase",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2440,
+        -900
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://okvufcwkophaadttmjwa.supabase.co/rest/v1/rpc/upsert_assistant_knowledge_file_batch",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_files\": {{ JSON.stringify($json.batch_payload) }}\n}",
+        "options": {}
+      },
+      "id": "096664e7-43f9-4fd0-8c14-b6795abc8944",
+      "name": "Persistir Arquivos no Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2200,
+        -900
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "xHsaYah1jaanhiNt",
+          "name": "Supabase Siplan HUB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Isola a lista de arquivos obsoletos e monolíticos para exclusão segura\nconst compilerItems = $node[\"Compilar Rotinas & Delta Calculator\"].all();\nlet toDelete = [];\n\nfor (const it of compilerItems) {\n  if (it.json && Array.isArray(it.json.files_to_delete) && it.json.files_to_delete.length > 0) {\n    toDelete = it.json.files_to_delete;\n    break;\n  }\n}\n\nif (!toDelete.length) {\n  return [{\n    json: {\n      has_obsolete: false,\n      total_to_delete: 0\n    }\n  }];\n}\n\nreturn toDelete.map(item => ({\n  json: {\n    has_obsolete: true,\n    old_file_id: item.old_file_id,\n    article_id: item.article_id,\n    reason: item.reason\n  }\n}));"
+      },
+      "id": "5967ca05-6b49-4dfb-aaa8-ba174a0b6582",
+      "name": "Isolar Arquivos Obsoletos e Monolítico",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1960,
+        -750
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-has-obsolete",
+              "leftValue": "={{ $json.has_obsolete }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "666e2bd0-5bda-41df-9255-d6eb0644dd0e",
+      "name": "IF - Há Arquivos a Deletar?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1720,
+        -750
+      ]
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://api.openai.com/v1/vector_stores/vs_6a85e00895f081918844a28887a34a17/files/{{ $json.old_file_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "OpenAI-Beta",
+              "value": "assistants=v2"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d1b32fc4-0a16-4e7d-984b-76f86ce579bb",
+      "name": "Desvincular Arquivo Antigo da Vector Store",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1480,
+        -850
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "wDDwY8E0NUat6Ia7",
+          "name": "OpenAI Conta Assistentes"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://api.openai.com/v1/files/{{ $json.old_file_id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "ea7114d6-a3cc-47dc-a81f-d2a7f39e6190",
+      "name": "Deletar Arquivo Físico da Conta OpenAI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1240,
+        -850
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "wDDwY8E0NUat6Ia7",
+          "name": "OpenAI Conta Assistentes"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Consolida a conclusão de todos os branches em 1 único item para finalizar o webhook\nreturn [{\n  json: {\n    success: true,\n    vector_store_id: 'vs_6a85e00895f081918844a28887a34a17',\n    dual_layer_version: 'v3.2',\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "f8e7d6c5-b4a3-4211-9087-abcdef123456",
+      "name": "Consolidar Execução Final",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1000,
+        -600
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://okvufcwkophaadttmjwa.supabase.co/rest/v1/rpc/update_knowledge_version_sync_status",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_version_id\": \"{{ $node[\"Webhook - Atualização Base Orion TN\"].json.body.record.id || $node[\"Webhook - Atualização Base Orion TN\"].json.body.version_id }}\",\n  \"p_status\": \"synced\",\n  \"p_metadata\": {\n    \"vector_store_id\": \"vs_6a85e00895f081918844a28887a34a17\",\n    \"indexed_at\": \"{{ $now.toISO() }}\",\n    \"dual_layer_version\": \"v3.2\",\n    \"chunking\": \"static_1800_overlap_0\"\n  }\n}",
+        "options": {}
+      },
+      "id": "139bedb0-7458-41d3-91b8-38452bfea85a",
+      "name": "Atualizar Status Sucesso no Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -760,
+        -600
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "xHsaYah1jaanhiNt",
+          "name": "Supabase Siplan HUB"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"success\",\n  \"message\": \"Base de conhecimento Orion TN sincronizada granularmente na OpenAI Vector Store com Dual-Layer RAG V3.2!\",\n  \"vector_store_id\": \"vs_6a85e00895f081918844a28887a34a17\",\n  \"dual_layer_version\": \"v3.2\",\n  \"chunking\": \"static_1800_overlap_0\",\n  \"indexed_at\": \"{{ $now.toISO() }}\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "30683160-fbee-49a0-8a3b-b2455abb0381",
+      "name": "Responder Sucesso ao Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -520,
+        -600
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook - Atualização Base Orion TN": {
+      "main": [
+        [
+          {
+            "node": "Mapear Arquivos Atuais na Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapear Arquivos Atuais na Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Consultar assistant_knowledge_files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar assistant_knowledge_files": {
+      "main": [
+        [
+          {
+            "node": "Baixar Markdown do Supabase Storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Baixar Markdown do Supabase Storage": {
+      "main": [
+        [
+          {
+            "node": "Compilar Rotinas & Delta Calculator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compilar Rotinas & Delta Calculator": {
+      "main": [
+        [
+          {
+            "node": "IF - Há Alguma Alteração?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Há Alguma Alteração?": {
+      "main": [
+        [
+          {
+            "node": "IF - Há Novos Uploads?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Consolidar Execução Final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Há Novos Uploads?": {
+      "main": [
+        [
+          {
+            "node": "Upload para OpenAI Files API",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Isolar Arquivos Obsoletos e Monolítico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload para OpenAI Files API": {
+      "main": [
+        [
+          {
+            "node": "Vincular Novo Arquivo à Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vincular Novo Arquivo à Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Preparar Lote para Gravar no Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Lote para Gravar no Supabase": {
+      "main": [
+        [
+          {
+            "node": "Persistir Arquivos no Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Persistir Arquivos no Supabase": {
+      "main": [
+        [
+          {
+            "node": "Isolar Arquivos Obsoletos e Monolítico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Isolar Arquivos Obsoletos e Monolítico": {
+      "main": [
+        [
+          {
+            "node": "IF - Há Arquivos a Deletar?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Há Arquivos a Deletar?": {
+      "main": [
+        [
+          {
+            "node": "Desvincular Arquivo Antigo da Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Consolidar Execução Final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Desvincular Arquivo Antigo da Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Deletar Arquivo Físico da Conta OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deletar Arquivo Físico da Conta OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Consolidar Execução Final",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidar Execução Final": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Status Sucesso no Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar Status Sucesso no Supabase": {
+      "main": [
+        [
+          {
+            "node": "Responder Sucesso ao Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
