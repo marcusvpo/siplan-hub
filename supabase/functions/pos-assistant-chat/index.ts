@@ -7,9 +7,36 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const PROMPT_ID = "pmpt_6a85e041a0e08196a659d0560497de3402bd152c918f12f4";
-const PROMPT_VERSION = "3";
+const PROMPT_ID = Deno.env.get("OPENAI_PROMPT_ID") || "pmpt_6a85e041a0e08196a659d0560497de3402bd152c918f12f4";
+const PROMPT_VERSION = Deno.env.get("OPENAI_PROMPT_VERSION") || "3";
 const VECTOR_STORE_ID = "vs_6a85e00895f081918844a28887a34a17";
+
+// Configuração Oficial de Produção do Assistente Orion TN (Parâmetros Fixos de Inferência e RAG)
+const orionAssistantConfig = {
+  // 1. MODELO OFICIAL (Homologado para melhor custo-benefício e obediência a tools)
+  model: "gpt-4o-mini",
+
+  // 2. PARÂMETROS DE INFERÊNCIA & CONTROLE DE ALUCINAÇÃO
+  temperature: 0.1, // Baixíssima aleatoriedade: garante respostas determinísticas e fiéis à documentação
+  max_output_tokens: 1200, // Limite seguro: impede respostas prolixas e protege custos de saída
+  top_p: 0.9,
+
+  // 3. FERRAMENTA FILE SEARCH COM CALIBRAÇÃO AVANÇADA
+  tools: [
+    {
+      type: "file_search",
+      vector_store_ids: [VECTOR_STORE_ID], // Vector Store Oficial Homologada
+      max_num_results: 5, // Traz apenas os 5 chunks mais relevantes (evita poluição de contexto)
+      ranking_options: {
+        score_threshold: 0.25, // FILTRO ANTI-RUÍDO: descarta qualquer arquivo periférico com similaridade baixa
+        hybrid_search: {
+          rrf_text_weight: 1.3, // PRIORIDADE BM25: essencial para bater nomes exatos de botões e telas em negrito
+          rrf_embedding_weight: 1.0, // BUSCA SEMÂNTICA: para intenções e sinônimos de balcão
+        },
+      },
+    },
+  ],
+};
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -123,29 +150,26 @@ Deno.serve(async (req: Request) => {
     }
 
     // Prepare OpenAI Responses API payload
+    // As instruções (System Prompt) são resolvidas diretamente a partir do Prompt cadastrado na OpenAI Platform,
+    // garantindo total flexibilidade para refinar e versionar as instruções diretamente pelo painel da OpenAI sem redeploy.
     const openAiPayload: Record<string, unknown> = {
       prompt: {
         id: PROMPT_ID,
         version: PROMPT_VERSION,
       },
+      model: orionAssistantConfig.model,
+      temperature: orionAssistantConfig.temperature,
+      max_output_tokens: orionAssistantConfig.max_output_tokens,
+      top_p: orionAssistantConfig.top_p,
       input: [
         {
           role: "user",
           content: message.trim(),
         },
       ],
-      reasoning: {
-        effort: "low",
-      },
-      tools: [
-        {
-          type: "file_search",
-          vector_store_ids: [VECTOR_STORE_ID],
-        },
-      ],
+      tools: orionAssistantConfig.tools,
       store: true,
       include: [
-        "reasoning.encrypted_content",
         "web_search_call.action.sources",
       ],
     };
@@ -168,7 +192,7 @@ Deno.serve(async (req: Request) => {
     // Start timing for latency measurement
     const startTime = performance.now();
 
-    // Call OpenAI
+    // Call OpenAI Responses API
     const openAiRes = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
@@ -198,7 +222,7 @@ Deno.serve(async (req: Request) => {
       for (const item of openAiJson.output) {
         if (item.type === "message" && Array.isArray(item.content)) {
           for (const c of item.content) {
-            if (c.type === "output_text" && c.text) {
+            if ((c.type === "output_text" || c.type === "text") && c.text) {
               replyText += (replyText ? "\n\n" : "") + c.text;
             }
           }
@@ -211,7 +235,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const responseId = openAiJson.id || null;
-    const model = openAiJson.model || "gpt-5-nano";
+    const model = openAiJson.model || orionAssistantConfig.model;
     const usage = openAiJson.usage || {};
     const inputTokens = usage.input_tokens || 0;
     const outputTokens = usage.output_tokens || 0;
