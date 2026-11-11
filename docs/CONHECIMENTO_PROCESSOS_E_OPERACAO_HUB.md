@@ -504,18 +504,19 @@ A partir dessa sincronização, foi arquitetada e gerada a **Base de Conheciment
 ### 13.5. Parâmetros Canônicos de Backend na OpenAI Responses API & Prompt Dinâmico na OpenAI Platform
 * **Localização no Backend:** Edge Function Supabase `supabase/functions/pos-assistant-chat/index.ts` (chamada à API `POST https://api.openai.com/v1/responses`).
 * **Arquitetura Desacoplada (Backend Fixo vs. Prompt Dinâmico):**
-  * **No Backend:** Mantêm-se estritamente os parâmetros fixos de infraestrutura, custo e calibração de busca (`model`, `temperature`, `max_output_tokens`, `top_p` e `tools`).
-  * **Na OpenAI Platform:** O System Prompt (instruções) é mantido e versionado diretamente dentro do prompt template cadastrado na OpenAI (`pmpt_6a85e041a0e08196a659d0560497de3402bd152c918f12f4`), garantindo liberdade total para ajustes de prompt, tom e refinamento contínuo pelo painel da OpenAI sem a necessidade de novos deploys de código.
-* **Configuração Homologada (`orionAssistantConfig`):**
-  * `model: "gpt-4o-mini"`: Homologado para máximo custo-benefício, baixa latência e obediência estrita a tools.
-  * `temperature: 0.1`: Baixíssima aleatoriedade para garantir respostas determinísticas, anulando invenções, gírias ou telas hipotéticas.
-  * `max_output_tokens: 1200`: Limite seguro e econômico garantindo obediência ao formato de pirâmide invertida sem prolixidade.
-  * `top_p: 0.9`: Estabilidade e consistência estatística de vocabulário notarial.
+  * **No Backend:** Mantêm-se estritamente os parâmetros fixos de infraestrutura, custo e calibração de busca (`tools` com `vector_store_ids`, `max_num_results: 5` e `score_threshold: 0.25`, e `reasoning: { effort: "low" }`).
+  * **Na OpenAI Platform:** O System Prompt (instruções), modelo e diretrizes são mantidos e versionados diretamente dentro do prompt template cadastrado na OpenAI (`pmpt_6a85e041a0e08196a659d0560497de3402bd152c918f12f4`), garantindo liberdade total para ajustes de prompt, tom e refinamento contínuo pelo painel da OpenAI sem a necessidade de novos deploys de código.
+* **Compatibilidade Estrita da OpenAI Responses API:**
+  * **`ranking_options` no `file_search`:** A API oficial da OpenAI aceita apenas `score_threshold` (ex: `0.25`) e `ranker` (`"auto"`). A busca híbrida (BM25 + vetorial com RRF) é executada nativamente pelo motor interno da OpenAI; o parâmetro `hybrid_search` não é aceito no payload da API da OpenAI.
+  * **Parâmetros de Inferência e Modelos de Raciocínio:** Quando o prompt na OpenAI Platform utiliza modelos de raciocínio (como `gpt-5-nano` ou família `o`), a API rejeita os parâmetros `temperature` e `top_p`, e exige `reasoning.effort` configurado no mínimo como `"low"` para habilitar a execução de `file_search`.
+* **Configuração Homologada em Produção (Resolução Dinâmica de Versão):**
+  * `prompt`: `{ id: PROMPT_ID, ...(configuredVersion ? { version: configuredVersion } : {}) }`. O campo `version` é omitido por padrão, fazendo com que a OpenAI consuma automaticamente a versão mais recente publicada (latest) no Dashboard, eliminando qualquer necessidade de redeploy de backend para novas versões de prompt.
+  * `model` resolvido: `gpt-4o-mini-2024-07-18` (respostas rápidas em ~6,4s, zero reasoning tokens, alta fidelidade e custo mínimo).
   * `tools` (`file_search`):
-    * `vector_store_ids: ["vs_6a85e00895f081918844a28887a34a17"]`: Vector Store oficial indexada.
-    * `max_num_results: 5`: Traz apenas os 5 arquivos atômicos mais relevantes, evitando poluição de contexto.
-    * `ranking_options.score_threshold: 0.25`: Filtro anti-ruído que descarta documentos irrelevantes para evitar *sycophancy*.
-    * `ranking_options.hybrid_search`: Combinação de `rrf_text_weight: 1.3` (prioridade BM25 para capturar botões literais e telas em negrito) com `rrf_embedding_weight: 1.0` (busca semântica para intenções e sinônimos de balcão).
+    * `vector_store_ids: ["vs_6a85e00895f081918844a28887a34a17"]`
+    * `max_num_results: 5`
+    * `ranking_options: { score_threshold: 0.25 }`
+  * `store`: `true`
 * **Diretrizes Oficiais Mantidas na OpenAI Platform (System Prompt V3.3):**
   * **Anti-vazamento de IDs internos:** Proibição estrita de citar `R-X.X`, `V-X.X`, `M-X.X`, `D-X.X`, `C-X.X`, `S-X.X` ou nomes de arquivos (`rotina-...md`, `_indice.md`).
   * **Pirâmide Invertida:** Diagnóstico direto (1 a 2 frases) + Passo a passo numerado com elementos em **negrito** + Dica + Vídeo Bunny.net.

@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 const PROMPT_ID = Deno.env.get("OPENAI_PROMPT_ID") || "pmpt_6a85e041a0e08196a659d0560497de3402bd152c918f12f4";
-const PROMPT_VERSION = Deno.env.get("OPENAI_PROMPT_VERSION") || "3";
 const VECTOR_STORE_ID = "vs_6a85e00895f081918844a28887a34a17";
 
 // Configuração Oficial de Produção do Assistente Orion TN (Parâmetros Fixos de Inferência e RAG)
@@ -29,10 +28,6 @@ const orionAssistantConfig = {
       max_num_results: 5, // Traz apenas os 5 chunks mais relevantes (evita poluição de contexto)
       ranking_options: {
         score_threshold: 0.25, // FILTRO ANTI-RUÍDO: descarta qualquer arquivo periférico com similaridade baixa
-        hybrid_search: {
-          rrf_text_weight: 1.3, // PRIORIDADE BM25: essencial para bater nomes exatos de botões e telas em negrito
-          rrf_embedding_weight: 1.0, // BUSCA SEMÂNTICA: para intenções e sinônimos de balcão
-        },
       },
     },
   ],
@@ -53,8 +48,7 @@ Deno.serve(async (req: Request) => {
     const body = await req.json();
     const action = body.action || "chat";
 
-    // 1. Action: feedback
-    if (action === "feedback") {
+    // 1. Action: feedback {
       const { message_id, visitor_id, feedback, comment } = body;
       if (!message_id || !visitor_id || !feedback) {
         return new Response(
@@ -149,18 +143,16 @@ Deno.serve(async (req: Request) => {
       console.error("Error storing user message:", userMsgErr);
     }
 
+    const configuredPromptVersion = Deno.env.get("OPENAI_PROMPT_VERSION")?.trim();
+
     // Prepare OpenAI Responses API payload
-    // As instruções (System Prompt) são resolvidas diretamente a partir do Prompt cadastrado na OpenAI Platform,
-    // garantindo total flexibilidade para refinar e versionar as instruções diretamente pelo painel da OpenAI sem redeploy.
+    // As instruções (System Prompt) são resolvidas diretamente a partir do Prompt cadastrado na OpenAI Platform.
+    // O campo version é opcional na OpenAI: quando omitido, consome automaticamente a versão mais recente ativa no Dashboard.
     const openAiPayload: Record<string, unknown> = {
       prompt: {
         id: PROMPT_ID,
-        version: PROMPT_VERSION,
+        ...(configuredPromptVersion ? { version: configuredPromptVersion } : {}),
       },
-      model: orionAssistantConfig.model,
-      temperature: orionAssistantConfig.temperature,
-      max_output_tokens: orionAssistantConfig.max_output_tokens,
-      top_p: orionAssistantConfig.top_p,
       input: [
         {
           role: "user",
@@ -169,9 +161,6 @@ Deno.serve(async (req: Request) => {
       ],
       tools: orionAssistantConfig.tools,
       store: true,
-      include: [
-        "web_search_call.action.sources",
-      ],
     };
 
     if (previous_response_id) {
@@ -243,6 +232,11 @@ Deno.serve(async (req: Request) => {
     const reasoningTokens = usage.output_tokens_details?.reasoning_tokens || 0;
     const cachedTokens = usage.input_tokens_details?.cached_tokens || 0;
 
+    const resolvedPromptVersion =
+      openAiJson.prompt?.version ||
+      configuredPromptVersion ||
+      "latest";
+
     // Record assistant response in DB with metrics
     const { data: assistantMsg, error: asstMsgErr } = await supabaseAdmin
       .from("pos_ai_chat_messages")
@@ -261,7 +255,7 @@ Deno.serve(async (req: Request) => {
         latency_ms: latencyMs,
         model: model,
         prompt_id: PROMPT_ID,
-        prompt_version: PROMPT_VERSION,
+        prompt_version: resolvedPromptVersion,
       })
       .select()
       .single();
