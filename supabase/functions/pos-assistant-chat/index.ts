@@ -48,7 +48,8 @@ Deno.serve(async (req: Request) => {
     const body = await req.json();
     const action = body.action || "chat";
 
-    // 1. Action: feedback {
+    // 1. Action: feedback
+    if (action === "feedback") {
       const { message_id, visitor_id, feedback, comment } = body;
       if (!message_id || !visitor_id || !feedback) {
         return new Response(
