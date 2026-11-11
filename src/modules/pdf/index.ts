@@ -21,6 +21,7 @@ export * from './services/pdfService';
 // Templates Padrão
 export * from './templates/BaseReportTemplate';
 export * from './templates/WeeklyExecutiveReportTemplate';
+export * from './templates/SdClosuresReportTemplate';
 
 // Relatório Executivo Semanal de Implantação
 export * from './types/weeklyReport';
