@@ -39,13 +39,8 @@ import { ptBR } from "date-fns/locale";
  * Detects if an assistant message is merely a triage / menu selection list
  * (e.g. asking the user to choose 1, 2, 3) rather than a full step-by-step resolution.
  */
-export function isTriageMessage(content: string, assistantIndex?: number): boolean {
+export function isTriageMessage(content: string, _assistantIndex?: number): boolean {
   if (!content) return false;
-
-  // The first assistant message in any session is ALWAYS the initial triage menu
-  if (assistantIndex === 0) {
-    return true;
-  }
 
   const lower = content.toLowerCase();
 
@@ -165,12 +160,12 @@ export default function PublicPosChat() {
     const isOptionChoice = /^(?:opç[aã]o\s*)?[0-9]{1,2}\)?$/i.test(textToSend);
 
     // Only require feedback if:
-    // 1. There are at least 2 assistant messages in the conversation (meaning a tutorial/resolution was already delivered)
+    // 1. There is at least 1 assistant message in the conversation (meaning an answer was already delivered)
     // 2. The user is NOT just submitting an option number choice
     // 3. The last assistant message was NOT a triage message
     // 4. The last assistant message has not been rated yet
     const shouldPromptFeedback =
-      assistantMessages.length >= 2 &&
+      assistantMessages.length >= 1 &&
       !isOptionChoice &&
       lastAssistantMsg &&
       !lastAssistantMsg.feedback &&
@@ -635,7 +630,7 @@ function MessageItem({
   onFeedback: (id: string, fb: "helpful" | "unhelpful") => void;
 }) {
   const isUser = message.role === "user";
-  const isTriage = !isUser && (assistantIndex === 0 || isTriageMessage(message.content, assistantIndex));
+  const isTriage = !isUser && isTriageMessage(message.content, assistantIndex);
 
   return (
     <div

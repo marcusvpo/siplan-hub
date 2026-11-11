@@ -523,6 +523,15 @@ A partir dessa sincronização, foi arquitetada e gerada a **Base de Conheciment
   * **Supressão Limpa de Vídeo:** Se `tem_video: false` ou ausente, a seção de vídeo é 100% omitida (sem "não há vídeo" ou placeholders vazios).
   * **Vocabulário Corporativo do Suporte:** Indicação estrita para abertura de **chamado** (nunca a palavra "ticket") direcionando para o Help Desk oficial `https://sac.siplancontrolm.com.br`.
 
+### 13.6. Coleta Ativa de Feedbacks no Chat de Pós-Implantação (`/public/pos-chat/...`)
+* **Exibição Imediata na 1ª Mensagem:**
+  * Com as versões modernas de prompt (V8 / latest) respondendo diretamente com o tutorial/resolução já na primeira interação, o botão **"Essa rotina ajudou?"** (com ações 👍 e 👎) é renderizado imediatamente no rodapé da primeira mensagem do assistente.
+  * A supressão antiga (que ocultava o feedback até o 2º ou 3º turno devido ao fluxo antigo de triagem de opções) foi descontinuada. Mensagens substantivas exibem o bloco de avaliação desde o índice 0.
+* **Modal Interceptor de Avaliação Obrigatória (`FeedbackPromptModal`):**
+  * Caso o usuário tente enviar uma nova pergunta ou mensagem sem ter avaliado a resposta imediatamente anterior do assistente, a interface intercepta o envio e abre o modal animado de avaliação (*"A resposta anterior te ajudou?"*).
+  * A condição de disparo foi calibrada para `assistantMessages.length >= 1`, forçando a coleta de feedback logo na primeira oportunidade de continuidade da conversa.
+  * Assim que o usuário clica em "Sim, foi útil!" ou "Não ajudou", o feedback é salvo no Supabase via RPC (`save_pos_chat_feedback_for_visitor`) e a pergunta pendente é transmitida automaticamente.
+
 ## 14. Arquitetura de Webhooks Assíncronos, Triggers das Etapas e Sincronização de Trâmites
 
 ### 14.1. Resiliência de Webhooks n8n (pg_net)
