@@ -111,6 +111,7 @@ Passo a passo:
 ▶️ Assista ao tutorial: [[Aquisição e Distribuição - Orion TN]](https://iframe.mediadelivery.net/embed/467408/bb9395dc-a4e9-4140-92ba-bd8195e75c82?t=0)`;
 
     expect(isTriageMessage(resolutionMsg, 1)).toBe(false);
+    expect(isTriageMessage(resolutionMsg, 0)).toBe(false);
   });
 
   it("intercepts double-bracket video link and renders iframe player without autoplay", () => {
