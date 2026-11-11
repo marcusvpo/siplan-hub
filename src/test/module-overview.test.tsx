@@ -185,4 +185,23 @@ describe("ModuleOverview", () => {
     );
     expect(screen.queryByText("Consulta de horas")).not.toBeInTheDocument();
   });
+
+  it("apresenta Encerramentos quando o perfil possui a permissão específica", () => {
+    hasPermission.mockImplementation(
+      (resource: string, action: string) =>
+        action === "view" && resource === "sd_closures",
+    );
+
+    render(
+      <MemoryRouter>
+        <ModuleOverview moduleName="SD" />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("link", { name: /Encerramentos/i })).toHaveAttribute(
+      "href",
+      "/sd/encerramentos",
+    );
+    expect(screen.queryByText("BI de Atendimento")).not.toBeInTheDocument();
+  });
 });

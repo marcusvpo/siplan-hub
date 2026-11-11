@@ -288,6 +288,13 @@ export const menuItems: MenuItem[] = [
                 description: "Análise de performance, chamados, equipes e tipos de atendimento",
                 permissionKey: "sd_attendance_bi",
             },
+            {
+                title: "Encerramentos",
+                path: "/sd/encerramentos",
+                icon: FileCheck,
+                description: "Chamados fechados por analista, produto, cliente e período",
+                permissionKey: "sd_closures",
+            },
         ],
     },
     {

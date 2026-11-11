@@ -1,7 +1,7 @@
 # 🏛️ Conhecimento Mestre: Processos Operacionais e Prática do Siplan HUB
 
 > **Fonte Única da Verdade para Desenvolvedores e Agentes de IA (Codex, Antigravity, Gemini, Claude, Cursor)**  
-> *Versão:* 1.1.0 — *Atualizado em:* 2026-11-05  
+> *Versão:* 1.2.0 — *Atualizado em:* 2026-11-11  
 > *Status:* **Documento Permanente e Auto-Alimentável**
 
 ---
@@ -197,6 +197,14 @@ Abaixo está o quadro dos 28 colaboradores com permissão/atuação em SD cadast
 | **Vinícius Sebastião**| Analista de Suporte SD | *[A preencher pelo time]* | Atendimento N1/N2 no Ellevo 0800 |
 | **Wagner Souza** | Analista de Suporte SD | *[A preencher pelo time]* | Atendimento N1/N2 no Ellevo 0800 |
 
+### 5.1. Conferência de Encerramentos e SLA
+
+* **Tela operacional:** `/sd/encerramentos` concentra os chamados efetivamente fechados no Ellevo/0800, usando a **data real de encerramento** como referência do período.
+* **Uso esperado:** gestores, líderes e analistas autorizados podem filtrar por produto, atendente, grupo e cliente; a visão consolidada compara volume e cumprimento de SLA por analista, enquanto a visão analítica permite conferir cada chamado.
+* **Fonte da verdade:** o HUB apenas espelha e consolida os dados oficiais do Ellevo. O responsável, o vencimento e o momento do fechamento não são recalculados nem alterados pelo frontend.
+* **Classificação de prazo:** `No prazo` compara encerramento com o vencimento oficial; `Fora do prazo` representa fechamento posterior ao vencimento; `Sem vencimento` identifica chamados sem prazo oficial disponível no espelho.
+* **Emissão formal:** os relatórios consolidado e analítico são exportados exclusivamente pela camada oficial `@/modules/pdf`, usando `@react-pdf/renderer`.
+
 ---
 
 ## 6. Módulos Especiais: Modelos OrionTN, Produtos Secundários e Bloqueios Comerciais
@@ -264,6 +272,7 @@ O módulo de CS/CX (`/cs-cx/registros` e `/cs-cx/nps`) acompanha o relacionament
 │ • Confeccionar minutas assistidas por IA em /orion-tn-models           │
 │ • Copiar trâmite sugerido em /deployments/secondary-products           │
 │ • Marcar Fase 1 como 'done' em /projects                               │
+│ • Conferir fechamentos e SLA dos analistas em /sd/encerramentos        │
 └────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
@@ -305,6 +314,7 @@ O módulo de CS/CX (`/cs-cx/registros` e `/cs-cx/nps`) acompanha o relacionament
 | **Conversão** | `/conversion/engines` | `ConversionEngines.tsx` | `conversion_engines` | Ademar, Hugo | Scripts SQL/Python por sistema legado e mapeamento de-para |
 | **SD** | `/sd/solucoes` | `Solutions.tsx` | `sd_solutions` | Equipe SD | Base de conhecimento de diagnósticos e scripts de correção técnica |
 | **SD** | `/sd/horas` | `TimeManagement.tsx` | `sd_time_entries` | Equipe SD | Apontamento de horas trabalhadas por chamado e cartório |
+| **SD** | `/sd/encerramentos` | `SdClosures.tsx` | `chamados_processo_venda` | Gestão / Liderança / Equipe SD autorizada | Relatório consolidado e analítico de chamados fechados por produto, analista, grupo, cliente e SLA |
 | **Implantadores**| `/implantadores/aderencia` | `EditarFormAderencia.tsx` | `implantadores_aderencia` | Implantadores | Checklist de aderência, justificativas com IA e relatório A4 em PDF |
 | **Implantadores**| `/implantadores/homologation`| `ImplantadoresHomologation.tsx`| `conversion_homologation` | Implantadores | Conferência de saldos e livros convertidos, termo de aceite |
 | **CS/CX** | `/cs-cx/registros` | `CsCxRequests.tsx` | `cs_cx_registros` | Equipe CS/CX | Chamados internos de CS/CX, modo Lista e Kanban, SLAs |

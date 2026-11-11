@@ -70,6 +70,7 @@ const SdTimeManagementReport = lazy(
   () => import("./pages/sd/TimeManagementReport"),
 );
 const SdAttendanceBi = lazy(() => import("./pages/sd/SdAttendanceBi"));
+const SdClosures = lazy(() => import("./pages/sd/SdClosures"));
 const OrionTNModels = lazy(() => import("./pages/conversion/OrionTNModels"));
 const OrionTNProjects = lazy(
   () => import("./pages/conversion/OrionTNProjects"),
@@ -831,6 +832,14 @@ const App = () => (
                             element={
                               <RequirePermission resource="sd_attendance_bi">
                                 <SdAttendanceBi />
+                              </RequirePermission>
+                            }
+                          />
+                          <Route
+                            path="/sd/encerramentos"
+                            element={
+                              <RequirePermission resource="sd_closures">
+                                <SdClosures />
                               </RequirePermission>
                             }
                           />

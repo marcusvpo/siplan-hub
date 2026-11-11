@@ -11,6 +11,7 @@ const timeManagement = readSource("src/pages/sd/TimeManagement.tsx");
 const timeEntryDialog = readSource("src/components/sd/time/TimeEntryDialog.tsx");
 const timeReport = readSource("src/pages/sd/TimeManagementReport.tsx");
 const attendanceBi = readSource("src/pages/sd/SdAttendanceBi.tsx");
+const closures = readSource("src/pages/sd/SdClosures.tsx");
 
 describe("responsividade das telas do SD", () => {
   it("mantém a navegação e a busca de soluções dentro da largura do celular", () => {
@@ -59,5 +60,14 @@ describe("responsividade das telas do SD", () => {
     expect(attendanceBi).toContain("<Collapsible open={filtersOpen}");
     expect(attendanceBi).toContain("Abrir filtros do BI");
     expect(attendanceBi).toContain("activeFilterCount");
+  });
+
+  it("troca as tabelas de encerramentos por cartões e respeita a safe area", () => {
+    expect(closures).toContain('data-testid="sd-closures-page"');
+    expect(closures).toContain("overflow-x-hidden");
+    expect(closures).toContain("safe-area-inset-bottom");
+    expect(closures).toContain('data-testid="sd-closures-analyst-mobile-list"');
+    expect(closures).toContain('data-testid="sd-closures-detail-mobile-list"');
+    expect(closures).toContain("window.innerWidth >= 768");
   });
 });

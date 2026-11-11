@@ -48,7 +48,7 @@ interface ProjectRow {
   post_end_date: string | null;
 }
 
-type ProcessoVendaScope = "processo_venda" | "processo_venda_legado";
+type ProcessoVendaScope = "processo_venda" | "processo_venda_legado" | "sd_closures";
 
 interface ProcessoVendaSyncRequest {
   id: string;
@@ -81,12 +81,15 @@ interface ProcessoVendaSyncResult {
 const PROCESSO_VENDA_SCOPES: ProcessoVendaScope[] = [
   "processo_venda",
   "processo_venda_legado",
+  "sd_closures",
 ];
 
 const PROCESSO_VENDA_CATALOGS: Record<ProcessoVendaScope, {
   sourceView: string;
   label: string;
   legacy: boolean;
+  periodField: "opened" | "closed";
+  allProducts?: boolean;
 }> = {
   processo_venda: {
     sourceView: `(
@@ -128,6 +131,7 @@ const PROCESSO_VENDA_CATALOGS: Record<ProcessoVendaScope, {
     ) AS chamados_produtos_atuais`,
     label: "produtos atuais",
     legacy: false,
+    periodField: "opened",
   },
   processo_venda_legado: {
     sourceView: `(
@@ -164,6 +168,44 @@ const PROCESSO_VENDA_CATALOGS: Record<ProcessoVendaScope, {
     ) AS chamados_legado`,
     label: "legado",
     legacy: true,
+    periodField: "opened",
+  },
+  sd_closures: {
+    sourceView: `(
+      SELECT NumeroChamado, codigoCliente, NomeCliente, RazaoSocialCliente,
+             TituloChamado, descricaotramite, Natureza, StatusChamado,
+             Software, Produto, EquipeResponsavelChamado, AnalistaResponsavel,
+             DataAberturaChamado, SolDataFechamento
+      FROM (
+        SELECT
+             c.NumeroChamado,
+             c.CodPN AS codigoCliente,
+             c.NomeCliente,
+             c.NomeCliente AS RazaoSocialCliente,
+             c.SolTitulo AS TituloChamado,
+             CAST(c.DescricaoChamado AS nvarchar(max)) AS descricaotramite,
+             c.Natureza,
+             c.StatusChamado,
+             c.Software,
+             c.Produto,
+             c.EquipeResponsavelChamado,
+             c.ResponsavelChamado AS AnalistaResponsavel,
+             c.DataAberturaChamadoComHoras AS DataAberturaChamado,
+             c.SolDataFechamentoComHoras AS SolDataFechamento,
+             ROW_NUMBER() OVER (
+               PARTITION BY c.NumeroChamado
+               ORDER BY c.DataUltimaEdicaoTramite DESC
+             ) AS rn
+        FROM plataformaellevo.dbo.vw_ChamadosTodosStatus AS c WITH (NOLOCK)
+        WHERE c.SolDataFechamentoComHoras >= @startDate
+          AND c.SolDataFechamentoComHoras < DATEADD(DAY, 1, @endDate)
+      ) AS closed_chamado
+      WHERE rn = 1
+    ) AS chamados_encerrados_sd`,
+    label: "encerramentos do SD",
+    legacy: false,
+    periodField: "closed",
+    allProducts: true,
   },
 };
 
@@ -813,9 +855,12 @@ async function runProcessoVendaOnce(
       .request()
       .input("startDate", sql.Date, startDate)
       .input("endDate", sql.Date, endDate);
+    const periodColumn = catalog.periodField === "closed"
+      ? "SolDataFechamento"
+      : "DataAberturaChamado";
     const whereClauses = [
-      "DataAberturaChamado >= @startDate",
-      "DataAberturaChamado < DATEADD(DAY, 1, @endDate)",
+      `${periodColumn} >= @startDate`,
+      `${periodColumn} < DATEADD(DAY, 1, @endDate)`,
     ];
 
     if (filters.client_codes && filters.client_codes.length > 0) {
@@ -838,7 +883,18 @@ async function runProcessoVendaOnce(
       );
     }
 
-    if (catalog.legacy) {
+    if (catalog.allProducts) {
+      if (filters.products && filters.products.length > 0) {
+        const parameters = filters.products.map((product, index) => {
+          const name = `product${index}`;
+          chamadoRequest.input(name, sql.NVarChar(300), product);
+          return `@${name}`;
+        });
+        whereClauses.push(
+          `COALESCE(NULLIF(LTRIM(RTRIM(Software)), ''), NULLIF(LTRIM(RTRIM(Produto)), '')) COLLATE Latin1_General_CI_AI IN (${parameters.join(", ")})`
+        );
+      }
+    } else if (catalog.legacy) {
       if (filters.products && filters.products.length > 0) {
         const parameters = filters.products.map((product, index) => {
           const name = `product${index}`;

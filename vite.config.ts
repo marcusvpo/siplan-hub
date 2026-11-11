@@ -151,6 +151,19 @@ export default defineConfig(({ mode }) => ({
             normalizedId.includes("/node_modules/ajv/") ||
             normalizedId.includes("/node_modules/ajv-formats/")
           ) return "form-validation";
+          // O runtime oficial de PDF é carregado sob demanda. A divisão por pacote
+          // evita concentrar todo o renderer em um único chunk acima do orçamento.
+          if (normalizedId.includes("/node_modules/pdfkit/")) return "pdfkit";
+          if (normalizedId.includes("/node_modules/yoga-layout/")) return "pdf-yoga";
+          if (
+            normalizedId.includes("/node_modules/fontkit/") ||
+            normalizedId.includes("/node_modules/unicode-properties/") ||
+            normalizedId.includes("/node_modules/unicode-trie/") ||
+            normalizedId.includes("/node_modules/restructure/") ||
+            normalizedId.includes("/node_modules/dfa/")
+          ) return "pdf-fonts";
+          const reactPdfPackage = normalizedId.match(/\/node_modules\/@react-pdf\/([^/]+)\//)?.[1];
+          if (reactPdfPackage) return `react-pdf-${reactPdfPackage}`;
           return undefined;
         },
       },

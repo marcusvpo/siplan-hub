@@ -1432,6 +1432,7 @@ export const pageHelpData: PageHelpInfo[] = [
       "Gerenciamento e registro diário de horas trabalhadas",
       "Relatórios de consolidação de atendimento por cliente",
       "Dashboard analítico de performance e tipos de demanda (BI)",
+      "Relatório de chamados encerrados por analista e cumprimento de SLA",
     ],
     steps: [
       {
@@ -1454,6 +1455,7 @@ export const pageHelpData: PageHelpInfo[] = [
       { label: "Gerenciamento de Horas", path: "/sd/horas" },
       { label: "Consulta de Horas", path: "/sd/consulta-horas" },
       { label: "BI de Atendimento", path: "/sd/bi-atendimento" },
+      { label: "Encerramentos", path: "/sd/encerramentos" },
     ],
   },
   {
@@ -1556,6 +1558,51 @@ export const pageHelpData: PageHelpInfo[] = [
         description:
           "Acompanhe o percentual de chamados resolvidos dentro do prazo estipulado.",
         icon: BarChart3,
+      },
+    ],
+  },
+  {
+    route: "/sd/encerramentos",
+    title: "Encerramentos do SD",
+    subtitle: "Relatório de Chamados Fechados no 0800",
+    moduleName: "SD",
+    icon: FileCheck,
+    description:
+      "Relatório operacional dos chamados encerrados no Ellevo/0800. Permite analisar o volume fechado por atendente e detalhar cada chamado, respeitando a data real de encerramento e o vencimento oficial do SLA.",
+    keyFeatures: [
+      "Filtros por período de encerramento, produto, analista, grupo e cliente",
+      "Visão consolidada com total, no prazo, fora do prazo, sem vencimento e reabertos",
+      "Visão analítica com cliente, produto, responsável, datas, duração e SLA",
+      "Exportação em PDF pelo padrão oficial do Siplan HUB",
+    ],
+    steps: [
+      {
+        stepNumber: 1,
+        title: "Defina o Período de Encerramento",
+        description:
+          "Informe as datas inicial e final. O relatório considera o momento em que o chamado foi efetivamente fechado no Ellevo.",
+        icon: Calendar,
+      },
+      {
+        stepNumber: 2,
+        title: "Refine o Recorte",
+        description:
+          "Selecione produtos, analistas, grupos de atendimento ou clientes e clique em 'Aplicar filtros'.",
+        icon: Filter,
+      },
+      {
+        stepNumber: 3,
+        title: "Escolha a Visão",
+        description:
+          "Use 'Consolidado' para comparar atendentes ou 'Analítico' para conferir cada chamado encerrado.",
+        icon: FileCheck,
+      },
+      {
+        stepNumber: 4,
+        title: "Exporte o Relatório",
+        description:
+          "Clique em 'Exportar PDF' para baixar a visão atual com os filtros aplicados.",
+        icon: FileText,
       },
     ],
   },
