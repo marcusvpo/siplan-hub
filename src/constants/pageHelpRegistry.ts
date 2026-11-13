@@ -2167,10 +2167,11 @@ export const pageHelpData: PageHelpInfo[] = [
     moduleName: "CS/CX",
     icon: Star,
     description:
-      "Gestão das pesquisas de NPS aplicadas aos cartórios. Permite analisar as notas atribuídas, categorizar clientes em Promotores, Neutros ou Detratores e criar planos de tratativa.",
+      "Gestão das pesquisas de NPS aplicadas aos cartórios. Permite acompanhar a abertura dos links enviados, analisar as notas atribuídas, categorizar clientes em Promotores, Neutros ou Detratores e criar planos de tratativa.",
     keyFeatures: [
       "Métricas consolidadas de NPS global da empresa",
       "Histórico de notas e comentários por cartório",
+      "Confirmação de abertura do link com data, hora e localização aproximada quando disponível",
       "Controle de planos de ação para clientes detratores",
       "Relatório PDF filtrado com melhores notas, clientes em atenção e desempenho por nota média",
     ],
@@ -2184,13 +2185,20 @@ export const pageHelpData: PageHelpInfo[] = [
       },
       {
         stepNumber: 2,
+        title: "Confira a Abertura do Link",
+        description:
+          "Na aba Solicitações, abra o ícone informativo para consultar o primeiro e o último acesso e o histórico de aberturas.",
+        icon: Eye,
+      },
+      {
+        stepNumber: 3,
         title: "Trate feedbacks de Detratores",
         description:
           "Acompanhe notas baixas para abrir imediatamente um plano de contorno.",
         icon: AlertCircle,
       },
       {
-        stepNumber: 3,
+        stepNumber: 4,
         title: "Exporte o Recorte Analisado",
         description:
           "Aplique os filtros de período, cartório e produto e exporte o PDF com os clientes de notas 9 e 10, os que precisam de atenção e o desempenho por nota média.",

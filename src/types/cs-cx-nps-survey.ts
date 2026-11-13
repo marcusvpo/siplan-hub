@@ -50,12 +50,29 @@ export interface CsCxNpsInvitation {
   expires_at: string;
   responded_at: string | null;
   response_id: string | null;
+  first_accessed_at: string | null;
+  last_accessed_at: string | null;
+  access_count: number;
+  last_access_city: string | null;
+  last_access_region: string | null;
+  last_access_country_code: string | null;
+  last_access_timezone: string | null;
   created_at: string;
   created_by: string | null;
   registry_office: { id: string; name: string } | null;
   product: { id: string; name: string; product_code: string | null } | null;
   contact: { id: string; contact_person: string } | null;
   questionnaire: { id: string; title: string } | null;
+}
+
+export interface CsCxNpsAccessEvent {
+  id: string;
+  invitation_id: string;
+  accessed_at: string;
+  city: string | null;
+  region: string | null;
+  country_code: string | null;
+  timezone: string | null;
 }
 
 export interface PublicNpsInvitation {

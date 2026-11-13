@@ -26,9 +26,11 @@ const MIGRATIONS = [
   "20260818190000_cs_cx_scoped_access.sql",
   "20260818200000_cs_cx_request_update_editing.sql",
   "20260824130000_cs_cx_multiple_office_responsibles.sql",
+  "20260825110000_cs_cx_nps_by_product.sql",
   "20260826170000_cs_cx_request_status_history.sql",
   "20260904120000_cs_cx_office_is_analyzed.sql",
   "20260930150000_cs_cx_routine_analysis_status_fix.sql",
+  "20261113120000_cs_cx_nps_access_tracking.sql",
 ];
 const FEATURE_MIGRATIONS = new Map([
   ["cs_cx_user_map.mapping_ignored", "20260812107000_cs_cx_user_mapping_exceptions.sql"],
@@ -41,9 +43,11 @@ const FEATURE_MIGRATIONS = new Map([
   ["cs_cx scoped access", "20260818190000_cs_cx_scoped_access.sql"],
   ["cs_cx request update editing", "20260818200000_cs_cx_request_update_editing.sql"],
   ["cs_cx multiple office responsibles", "20260824130000_cs_cx_multiple_office_responsibles.sql"],
+  ["cs_cx nps by product", "20260825110000_cs_cx_nps_by_product.sql"],
   ["cs_cx request status history", "20260826170000_cs_cx_request_status_history.sql"],
   ["cs_cx registry office analysis column", "20260904120000_cs_cx_office_is_analyzed.sql"],
   ["cs_cx routine analysis status", "20260930150000_cs_cx_routine_analysis_status_fix.sql"],
+  ["cs_cx nps access tracking", "20261113120000_cs_cx_nps_access_tracking.sql"],
 ]);
 const EXPECTED_TABLES = [
   "cs_cx_user_map",
@@ -82,6 +86,7 @@ const EXPECTED_TABLES = [
   "cs_cx_access_profile_permissions",
   "cs_cx_user_access",
   "cs_cx_registry_office_responsibles",
+  "cs_cx_nps_access_events",
 ];
 const BASE_TABLES = EXPECTED_TABLES.slice(0, 25);
 const EXPECTED_RESOURCES = [
@@ -305,6 +310,33 @@ async function getMissingFeatures() {
     ,to_regprocedure(
       'public.cs_cx_set_registry_office_analysis_status(uuid,boolean)'
     ) IS NOT NULL AS routine_analysis_status
+    ,EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'cs_cx_nps_invitations'
+        AND column_name = 'product_id'
+    ) AND EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'cs_cx_nps_responses'
+        AND column_name = 'product_id'
+    ) AND to_regprocedure(
+      'public.cs_cx_create_nps_invitation(uuid,uuid,uuid,uuid,text,text,timestamp with time zone)'
+    ) IS NOT NULL AS nps_by_product
+    ,to_regclass('public.cs_cx_nps_access_events') IS NOT NULL
+      AND (
+        SELECT count(*)::int FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'cs_cx_nps_invitations'
+          AND column_name IN (
+            'first_accessed_at', 'last_accessed_at', 'access_count',
+            'last_access_city', 'last_access_region',
+            'last_access_country_code', 'last_access_timezone'
+          )
+      ) = 7
+      AND to_regprocedure(
+        'public.cs_cx_get_public_nps_invitation(uuid,text,text,text,text)'
+      ) IS NOT NULL AS nps_access_tracking
   `);
   const missing = [];
   if (!result.rows[0].mapping_ignored)
@@ -333,6 +365,10 @@ async function getMissingFeatures() {
     missing.push("cs_cx registry office analysis column");
   if (!result.rows[0].routine_analysis_status)
     missing.push("cs_cx routine analysis status");
+  if (!result.rows[0].nps_by_product)
+    missing.push("cs_cx nps by product");
+  if (!result.rows[0].nps_access_tracking)
+    missing.push("cs_cx nps access tracking");
   return missing;
 }
 

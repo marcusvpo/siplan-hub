@@ -35,7 +35,7 @@ const migrations = [
 
 describe("preflight do schema CS/CX", () => {
   it("mantém uma lista explícita e existente de migrations", () => {
-    expect(migrations).toHaveLength(25);
+    expect(migrations).toHaveLength(27);
     expect(new Set(migrations).size).toBe(migrations.length);
     for (const migration of migrations) {
       expect(
@@ -238,11 +238,17 @@ describe("preflight do schema CS/CX", () => {
     expect(runner).toContain(
       "20260930150000_cs_cx_routine_analysis_status_fix.sql",
     );
+    expect(runner).toContain("20260825110000_cs_cx_nps_by_product.sql");
+    expect(runner).toContain(
+      "20261113120000_cs_cx_nps_access_tracking.sql",
+    );
     expect(runner).toContain(
       "public.cs_cx_set_registry_office_analysis_status(uuid,boolean)",
     );
     expect(runner).toContain("cs_cx routine analysis status");
     expect(runner).toContain("cs_cx multiple office responsibles");
+    expect(runner).toContain("cs_cx nps by product");
+    expect(runner).toContain("cs_cx nps access tracking");
   });
 
   it("isola usuários e perfis de acesso do CS/CX", () => {

@@ -134,6 +134,30 @@ vi.mock("@/hooks/useCsCxEngagement", () => ({
 vi.mock("@/hooks/useCsCxNpsSurveys", () => ({
   effectiveInvitationStatus: (invitation: { status: string }) =>
     invitation.status,
+  useNpsInvitationAccesses: () => ({
+    accesses: [
+      {
+        id: "access-2",
+        invitation_id: "orion-tn",
+        accessed_at: "2026-09-02T14:30:00Z",
+        city: "Campo Grande",
+        region: "MS",
+        country_code: "BR",
+        timezone: "America/Campo_Grande",
+      },
+      {
+        id: "access-1",
+        invitation_id: "orion-tn",
+        accessed_at: "2026-09-02T13:00:00Z",
+        city: null,
+        region: null,
+        country_code: "BR",
+        timezone: "America/Campo_Grande",
+      },
+    ],
+    isLoading: false,
+    error: null,
+  }),
   useCsCxNpsSurveys: () => ({
     questionnaires: [
       {
@@ -510,6 +534,16 @@ describe("CS/CX visitas, solicitações e NPS — permissões", () => {
       expires_at: "2026-09-30T00:00:00Z",
       responded_at: null,
       response_id: null,
+      first_accessed_at:
+        id === "orion-tn" ? "2026-09-02T13:00:00Z" : null,
+      last_accessed_at:
+        id === "orion-tn" ? "2026-09-02T14:30:00Z" : null,
+      access_count: id === "orion-tn" ? 2 : 0,
+      last_access_city: id === "orion-tn" ? "Campo Grande" : null,
+      last_access_region: id === "orion-tn" ? "MS" : null,
+      last_access_country_code: id === "orion-tn" ? "BR" : null,
+      last_access_timezone:
+        id === "orion-tn" ? "America/Campo_Grande" : null,
       created_at: "2026-09-01T00:00:00Z",
       created_by: "profile-1",
       registry_office: { id: "office-1", name: "Cartório Central" },
@@ -563,6 +597,20 @@ describe("CS/CX visitas, solicitações e NPS — permissões", () => {
       screen.getByText("Nenhuma solicitação encontrada para o produto selecionado."),
     ).toBeInTheDocument();
     expect(screen.getByText("Mostrando 0–0 de 0 solicitações")).toBeInTheDocument();
+
+    fireEvent.click(productFilter);
+    fireEvent.click(screen.getByRole("option", { name: "OrionTN" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Ver 2 acessos ao link NPS" }),
+    );
+    expect(screen.getByRole("dialog")).toHaveTextContent("Acessos do link NPS");
+    expect(screen.getByRole("dialog")).toHaveTextContent("Total de aberturas");
+    expect(screen.getByRole("dialog")).toHaveTextContent(
+      "Campo Grande · MS · BR · America/Campo_Grande",
+    );
+    expect(screen.getByRole("dialog")).toHaveTextContent(
+      "O endereço IP não é armazenado.",
+    );
   });
 
   it("permite solicitar NPS sem liberar inclusão ou importação de respostas", () => {

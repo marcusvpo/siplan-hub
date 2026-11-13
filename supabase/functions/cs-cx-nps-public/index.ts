@@ -31,12 +31,31 @@ Deno.serve(async (request) => {
     );
 
     if (request.method === "GET") {
+      const requestUrl = new URL(request.url);
       const token = parsePublicNpsToken(
-        new URL(request.url).searchParams.get("token"),
+        requestUrl.searchParams.get("token"),
       );
       const { data, error } = await supabase.rpc(
         "cs_cx_get_public_nps_invitation",
-        { p_token: token },
+        {
+          p_token: token,
+          p_country_code: requestLocationHeader(request, [
+            "x-vercel-ip-country",
+            "cf-ipcountry",
+          ]),
+          p_region: requestLocationHeader(request, [
+            "x-vercel-ip-country-region",
+            "cf-region",
+          ]),
+          p_city: requestLocationHeader(request, [
+            "x-vercel-ip-city",
+            "cf-ipcity",
+          ]),
+          p_timezone: normalizedText(
+            requestUrl.searchParams.get("timezone"),
+            120,
+          ),
+        },
       );
       if (error) throw error;
       if (!data) return respond({ erro: "Convite NPS não encontrado." }, 404);
@@ -96,4 +115,22 @@ function respond(payload: Record<string, unknown>, status: number) {
     status,
     headers: jsonHeaders,
   });
+}
+
+function requestLocationHeader(request: Request, names: string[]) {
+  for (const name of names) {
+    const value = normalizedText(request.headers.get(name), 120);
+    if (!value) continue;
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return value;
+    }
+  }
+  return null;
+}
+
+function normalizedText(value: string | null, maxLength: number) {
+  const normalized = value?.trim();
+  return normalized ? normalized.slice(0, maxLength) : null;
 }

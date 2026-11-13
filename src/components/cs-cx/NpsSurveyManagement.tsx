@@ -11,8 +11,10 @@ import {
   Copy,
   FileEdit,
   ImageUp,
+  Info,
   Link2,
   Loader2,
+  MapPin,
   Palette,
   Pencil,
   Plus,
@@ -59,6 +61,7 @@ import { useCsCxContacts } from "@/hooks/useCsCxEngagement";
 import {
   effectiveInvitationStatus,
   useCsCxNpsSurveys,
+  useNpsInvitationAccesses,
 } from "@/hooks/useCsCxNpsSurveys";
 import { useCsCxRecordPermissions } from "@/hooks/useCsCxRecordPermissions";
 import { useToast } from "@/hooks/use-toast";
@@ -76,6 +79,7 @@ import {
 } from "@/lib/cs-cx-nps-survey";
 import { cn } from "@/lib/utils";
 import type {
+  CsCxNpsInvitation,
   CsCxNpsQuestionnaire,
   NpsQuestion,
   NpsQuestionnaireTheme,
@@ -119,6 +123,8 @@ export function NpsInvitationsPanel({
   const [recipientEmail, setRecipientEmail] = useState("");
   const [validDays, setValidDays] = useState("15");
   const [generatedLink, setGeneratedLink] = useState("");
+  const [accessInvitation, setAccessInvitation] =
+    useState<CsCxNpsInvitation | null>(null);
   const activeQuestionnaires = questionnaires.filter((item) => item.is_active);
   const filteredContacts = contacts.filter(
     (contact) => contact.registry_office_id === officeId,
@@ -304,7 +310,7 @@ export function NpsInvitationsPanel({
               <article key={invitation.id} className="min-w-0 rounded-lg border bg-card p-3">
                 <div className="flex min-w-0 items-start justify-between gap-2"><div className="min-w-0"><p className="break-words text-sm font-bold">{invitation.registry_office?.name}</p><p className="mt-0.5 truncate text-xs text-muted-foreground">{invitation.recipient_name}{invitation.recipient_email ? ` · ${invitation.recipient_email}` : ""}</p></div><InvitationBadge status={status} /></div>
                 <div className="mt-2 flex flex-wrap gap-1.5"><Badge variant="outline">{invitation.product?.name ?? "Sem produto"}</Badge><span className="break-words text-xs">{invitation.questionnaire?.title ?? invitation.questionnaire_snapshot.title}</span></div>
-                <div className="mt-3 flex items-center justify-between border-t pt-2"><p className="text-[10px] text-muted-foreground">Validade: {formatDate(invitation.expires_at)}</p><div className="flex"><Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Copiar link NPS" onClick={() => copyInvitation(invitation.public_token)}><Copy className="h-4 w-4" /></Button>{canEditRecord(invitation.created_by) && status === "PENDENTE" && <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" aria-label="Cancelar solicitação NPS" onClick={() => cancel(invitation.id)}><Ban className="h-4 w-4" /></Button>}</div></div>
+                <div className="mt-3 flex items-center justify-between border-t pt-2"><p className="text-[10px] text-muted-foreground">Validade: {formatDate(invitation.expires_at)}</p><div className="flex"><NpsAccessButton invitation={invitation} onClick={() => setAccessInvitation(invitation)} /><Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Copiar link NPS" onClick={() => copyInvitation(invitation.public_token)}><Copy className="h-4 w-4" /></Button>{canEditRecord(invitation.created_by) && status === "PENDENTE" && <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" aria-label="Cancelar solicitação NPS" onClick={() => cancel(invitation.id)}><Ban className="h-4 w-4" /></Button>}</div></div>
               </article>
             ); })}
           </div>}
@@ -318,7 +324,7 @@ export function NpsInvitationsPanel({
                 <TableHead>Criado</TableHead>
                 <TableHead>Validade</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="w-24" />
+                <TableHead className="w-32" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -357,6 +363,10 @@ export function NpsInvitationsPanel({
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-end">
+                        <NpsAccessButton
+                          invitation={invitation}
+                          onClick={() => setAccessInvitation(invitation)}
+                        />
                         <Button
                           variant="ghost"
                           size="icon"
@@ -599,8 +609,173 @@ export function NpsInvitationsPanel({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <NpsAccessDialog
+        invitation={accessInvitation}
+        onOpenChange={(open) => {
+          if (!open) setAccessInvitation(null);
+        }}
+      />
     </>
   );
+}
+
+function NpsAccessButton({
+  invitation,
+  onClick,
+}: {
+  invitation: CsCxNpsInvitation;
+  onClick: () => void;
+}) {
+  const accessCount = invitation.access_count ?? 0;
+  const hasAccess = accessCount > 0;
+  const label = hasAccess
+    ? `Ver ${accessCount} ${accessCount === 1 ? "acesso" : "acessos"} ao link NPS`
+    : "Link NPS ainda não acessado";
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className={cn(
+        "h-8 w-8 rounded-full border",
+        hasAccess
+          ? "border-sky-200 bg-sky-50 text-sky-700 hover:bg-sky-100 hover:text-sky-800"
+          : "border-transparent text-muted-foreground hover:border-slate-200",
+      )}
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+    >
+      <Info className="h-4 w-4" />
+    </Button>
+  );
+}
+
+function NpsAccessDialog({
+  invitation,
+  onOpenChange,
+}: {
+  invitation: CsCxNpsInvitation | null;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const hasAccess = (invitation?.access_count ?? 0) > 0;
+  const { accesses, isLoading, error } = useNpsInvitationAccesses(
+    invitation?.id,
+    hasAccess,
+  );
+
+  return (
+    <Dialog open={Boolean(invitation)} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto p-4 sm:max-h-[92vh] sm:max-w-lg sm:p-6">
+        <DialogHeader>
+          <DialogTitle>Acessos do link NPS</DialogTitle>
+          <DialogDescription>
+            {invitation?.registry_office?.name ?? "Cartório"} · {invitation?.recipient_name}
+          </DialogDescription>
+        </DialogHeader>
+
+        {!hasAccess ? (
+          <div className="rounded-xl border border-dashed px-4 py-8 text-center">
+            <Info className="mx-auto h-8 w-8 text-muted-foreground" />
+            <p className="mt-3 font-semibold">Link ainda não acessado</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              O primeiro carregamento válido da pesquisa aparecerá aqui.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <AccessSummary
+                label="Primeiro acesso"
+                value={formatOptionalDate(invitation?.first_accessed_at)}
+              />
+              <AccessSummary
+                label="Último acesso"
+                value={formatOptionalDate(invitation?.last_accessed_at)}
+              />
+              <AccessSummary
+                label="Total de aberturas"
+                value={String(invitation?.access_count ?? 0)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-semibold">
+                Histórico {accesses.length === 50 ? "(últimos 50)" : ""}
+              </p>
+              {isLoading && (
+                <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Carregando acessos
+                </div>
+              )}
+              {error && (
+                <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  Não foi possível carregar o histórico de acessos.
+                </p>
+              )}
+              {!isLoading && !error && accesses.length === 0 && (
+                <p className="rounded-lg border p-3 text-sm text-muted-foreground">
+                  O resumo indica acesso, mas o histórico detalhado ainda não está disponível.
+                </p>
+              )}
+              <div className="space-y-2">
+                {accesses.map((access) => (
+                  <div
+                    key={access.id}
+                    className="flex min-w-0 flex-col gap-1 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <span className="text-sm font-medium">
+                      {formatDate(access.accessed_at)}
+                    </span>
+                    <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                      <MapPin className="h-3.5 w-3.5 shrink-0" />
+                      <span className="break-words text-right">
+                        {formatAccessLocation(access)}
+                      </span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        <p className="rounded-lg bg-muted/60 px-3 py-2 text-xs leading-5 text-muted-foreground">
+          O registro confirma a abertura do link, mas não identifica a pessoa. A localização é aproximada, depende da rede e pode não estar disponível. O endereço IP não é armazenado.
+        </p>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AccessSummary({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border bg-muted/30 p-3">
+      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 text-sm font-bold">{value}</p>
+    </div>
+  );
+}
+
+function formatAccessLocation(access: {
+  city: string | null;
+  region: string | null;
+  country_code: string | null;
+  timezone: string | null;
+}) {
+  const location = [access.city, access.region, access.country_code]
+    .filter(Boolean)
+    .filter((value, index, values) => values.indexOf(value) === index)
+    .join(" · ");
+  if (location && access.timezone) return `${location} · ${access.timezone}`;
+  return location || access.timezone || "Localização não disponível";
+}
+
+function formatOptionalDate(value: string | null | undefined) {
+  return value ? formatDate(value) : "Não informado";
 }
 
 export function NpsQuestionnairesPanel() {

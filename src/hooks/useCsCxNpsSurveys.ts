@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type {
+  CsCxNpsAccessEvent,
   CsCxNpsInvitation,
   CsCxNpsQuestionnaire,
   NpsQuestionnaireSnapshot,
@@ -75,7 +76,9 @@ export function useCsCxNpsSurveys() {
           `
         id, public_token, questionnaire_id, registry_office_id, product_id, contact_id,
         recipient_name, recipient_email, questionnaire_snapshot, status,
-        expires_at, responded_at, response_id, created_at, created_by,
+        expires_at, responded_at, response_id, first_accessed_at, last_accessed_at,
+        access_count, last_access_city, last_access_region,
+        last_access_country_code, last_access_timezone, created_at, created_by,
         cs_cx_registry_offices (id, name),
         cs_cx_products (id, name, product_code),
         cs_cx_contacts (id, contact_person),
@@ -215,6 +218,34 @@ export function useCsCxNpsSurveys() {
     setDefaultQuestionnaire,
     createInvitation,
     cancelInvitation,
+  };
+}
+
+export function useNpsInvitationAccesses(
+  invitationId: string | undefined,
+  enabled = true,
+) {
+  const query = useQuery({
+    queryKey: ["cs-cx", "nps-invitation-accesses", invitationId],
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("cs_cx_nps_access_events")
+        .select(
+          "id, invitation_id, accessed_at, city, region, country_code, timezone",
+        )
+        .eq("invitation_id", invitationId)
+        .order("accessed_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data ?? []) as CsCxNpsAccessEvent[];
+    },
+    enabled: enabled && Boolean(invitationId),
+  });
+
+  return {
+    accesses: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error,
   };
 }
 

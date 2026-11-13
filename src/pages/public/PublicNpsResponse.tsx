@@ -50,6 +50,9 @@ export default function PublicNpsResponse() {
     queryFn: () => loadInvitation(token),
     enabled: Boolean(token),
     retry: false,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
   const invitation = invitationQuery.data;
   const theme = normalizeNpsTheme(invitation?.questionnaire?.theme);
@@ -555,9 +558,10 @@ function messageOf(error: unknown) {
 }
 
 async function loadInvitation(token: string) {
-  const response = await fetch(
-    `${functionUrl}?token=${encodeURIComponent(token)}`,
-  );
+  const params = new URLSearchParams({ token });
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if (timezone) params.set("timezone", timezone);
+  const response = await fetch(`${functionUrl}?${params.toString()}`);
   const payload = await response.json().catch(() => ({}));
   if (!response.ok)
     throw new Error(payload.erro ?? "Não foi possível abrir a pesquisa.");

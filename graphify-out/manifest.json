@@ -850,8 +850,8 @@
     "semantic_hash": "8cbc837200552502e544dcd4d195de98"
   },
   "src/integrations/supabase/types.ts": {
-    "mtime": 1794425209.2225077,
-    "ast_hash": "220e067cf61fc586aae31ddad9550a12",
+    "mtime": 1794598046.0718138,
+    "ast_hash": "3293aaba90027a16b2eb1493afc3cf46",
     "semantic_hash": ""
   },
   "src/layouts/AdminLayout.tsx": {
@@ -2255,8 +2255,8 @@
     "semantic_hash": ""
   },
   "scripts/prepare-cs-cx-schema.mjs": {
-    "mtime": 1792587328.2788198,
-    "ast_hash": "c1cedc0bcb9732e3078713e6ba234067",
+    "mtime": 1794598057.6316032,
+    "ast_hash": "739f8c5c04028baa8d7c39438012d775",
     "semantic_hash": ""
   },
   "src/components/Admin/PosAiChatLinksManager.tsx": {
@@ -2300,8 +2300,8 @@
     "semantic_hash": ""
   },
   "src/components/cs-cx/NpsSurveyManagement.tsx": {
-    "mtime": 1788902401.067089,
-    "ast_hash": "a6a11bac2b00452e0cf5b60edaa3498a",
+    "mtime": 1794597643.248394,
+    "ast_hash": "ee964be96210bf698e50b9fe26944870",
     "semantic_hash": ""
   },
   "src/components/knowledge/ArticleMetadataCard.tsx": {
@@ -2445,8 +2445,8 @@
     "semantic_hash": ""
   },
   "src/hooks/useCsCxNpsSurveys.ts": {
-    "mtime": 1787686767.5957997,
-    "ast_hash": "5611ca5f4ac375f3f365ddaf27554299",
+    "mtime": 1794597566.5587268,
+    "ast_hash": "79199b09315af82dd4b737f3b1e32adf",
     "semantic_hash": ""
   },
   "src/hooks/useCsCxRecordPermissions.ts": {
@@ -2695,8 +2695,8 @@
     "semantic_hash": ""
   },
   "src/pages/public/PublicNpsResponse.tsx": {
-    "mtime": 1788378630.7737617,
-    "ast_hash": "31b5e637f70893d142d97694401cf4c8",
+    "mtime": 1794597941.1305735,
+    "ast_hash": "c8b3e4c18833c96cb63980b347b26a4f",
     "semantic_hash": ""
   },
   "src/pages/public/PublicPosChat.tsx": {
@@ -2805,8 +2805,8 @@
     "semantic_hash": ""
   },
   "src/test/cs-cx-experience-permissions.test.tsx": {
-    "mtime": 1789050979.355746,
-    "ast_hash": "19ee9044dc24d1e395b22c943098ee0f",
+    "mtime": 1794597672.6658986,
+    "ast_hash": "eafc3d94f065a47c62296b4d98c64c89",
     "semantic_hash": ""
   },
   "src/test/cs-cx-nps-analytics.test.ts": {
@@ -2895,8 +2895,8 @@
     "semantic_hash": ""
   },
   "src/test/cs-cx-schema-preflight.test.ts": {
-    "mtime": 1792587328.2808197,
-    "ast_hash": "8ba84f6e85f7f9281e96d3828c5afc6f",
+    "mtime": 1794597870.0713916,
+    "ast_hash": "9341ae7a7922449eaddf74a4f7a77d49",
     "semantic_hash": ""
   },
   "src/test/cs-cx-user-matching.test.ts": {
@@ -2975,8 +2975,8 @@
     "semantic_hash": ""
   },
   "src/types/cs-cx-nps-survey.ts": {
-    "mtime": 1787686767.614908,
-    "ast_hash": "cbe1ea59ec208d62fc5c69d02cafad1c",
+    "mtime": 1794597566.5500298,
+    "ast_hash": "29f12724ccdc0e6d3607b05965ca4a31",
     "semantic_hash": ""
   },
   "src/types/knowledge.ts": {
@@ -3005,8 +3005,8 @@
     "semantic_hash": ""
   },
   "supabase/functions/cs-cx-nps-public/index.ts": {
-    "mtime": 1787147936.6930764,
-    "ast_hash": "790bb612938effabd002d5b2caff898c",
+    "mtime": 1794598057.6316032,
+    "ast_hash": "3e61a6992fe6d74ca27b33bf52175536",
     "semantic_hash": ""
   },
   "supabase/functions/cs-cx-nps-webhook/index.ts": {
@@ -3365,8 +3365,8 @@
     "semantic_hash": ""
   },
   "docs/cs-cx/DATA_MIGRATION.md": {
-    "mtime": 1792587328.2442367,
-    "ast_hash": "93aae2ff53bcb66eb157bdb9ca5212d3",
+    "mtime": 1794597757.2819705,
+    "ast_hash": "941cbcdfd2875677232179c5b278270b",
     "semantic_hash": ""
   },
   "docs/cs-cx/HOMOLOGATION.md": {
@@ -4015,8 +4015,8 @@
     "semantic_hash": ""
   },
   "src/constants/pageHelpRegistry.ts": {
-    "mtime": 1794427006.5003033,
-    "ast_hash": "e2de1b73636cda31cd1e1ac9614a6502",
+    "mtime": 1794597787.172498,
+    "ast_hash": "4fc72606df2d45267d83ae0a82724f28",
     "semantic_hash": ""
   },
   "src/pages/admin/AdminChangelog.tsx": {
@@ -5460,8 +5460,8 @@
     "semantic_hash": ""
   },
   "docs/CONHECIMENTO_PROCESSOS_E_OPERACAO_HUB.md": {
-    "mtime": 1794427034.016153,
-    "ast_hash": "abf5c61a6f839530d45c088e450cb26e",
+    "mtime": 1794597787.1735022,
+    "ast_hash": "a8685d195202d466f874b8874c81f1bf",
     "semantic_hash": ""
   },
   "files/info_maquina.txt": {
@@ -5669,6 +5669,16 @@
   "novas_solicitacoes/bug rotinas_2_resultado.md": {
     "mtime": 1790793366.214561,
     "ast_hash": "e89a99811cba55b72dfb855651420c88",
+    "semantic_hash": ""
+  },
+  "src/test/cs-cx-nps-access-tracking.test.ts": {
+    "mtime": 1794597941.1315713,
+    "ast_hash": "d2da51906d4e7fda89f0044f97043b32",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20261113120000_cs_cx_nps_access_tracking.sql": {
+    "mtime": 1794598057.6300914,
+    "ast_hash": "a180540089329829fedab404781bf2d7",
     "semantic_hash": ""
   }
 }
