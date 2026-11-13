@@ -27,7 +27,12 @@ import {
   HelpCircle,
   Clock,
   Download,
-  Lock
+  Lock,
+  Play,
+  ExternalLink,
+  MonitorPlay,
+  Loader2,
+  Film
 } from "lucide-react";
 import {
   Table,
@@ -119,6 +124,17 @@ function EditableCell({ value, onChange, placeholder, className }: EditableCellP
 }
 
 // -------------------------------------------------------------
+// TUTORIAL VIDEO CONFIG (BUNNY STREAM)
+// -------------------------------------------------------------
+const INFRA_TUTORIAL_VIDEO = {
+  libraryId: "467408",
+  videoId: "93236026-0223-44da-ac6a-56272a2bb9a9",
+  directPlayUrl: "https://iframe.mediadelivery.net/play/467408/93236026-0223-44da-ac6a-56272a2bb9a9",
+  embedUrl: "https://iframe.mediadelivery.net/embed/467408/93236026-0223-44da-ac6a-56272a2bb9a9?autoplay=true&preload=true&playerjs=true",
+  thumbnailUrl: "https://vz-f849dcb4-55a.b-cdn.net/93236026-0223-44da-ac6a-56272a2bb9a9/thumbnail.jpg",
+} as const;
+
+// -------------------------------------------------------------
 // MAIN PUBLIC PAGE COMPONENT
 // -------------------------------------------------------------
 export default function PublicInfraCollection() {
@@ -127,6 +143,10 @@ export default function PublicInfraCollection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [isTutorialPlaying, setIsTutorialPlaying] = useState(false);
+  const [isTutorialLoading, setIsTutorialLoading] = useState(false);
+  const [tutorialThumbError, setTutorialThumbError] = useState(false);
+  const [tutorialPlayerError, setTutorialPlayerError] = useState(false);
 
   const serverFileInputRef = useRef<HTMLInputElement>(null);
   const workstationFileInputRef = useRef<HTMLInputElement>(null);
@@ -723,6 +743,130 @@ export default function PublicInfraCollection() {
               </div>
             </div>
           </CardHeader>
+        </Card>
+
+        {/* Tutorial Video Section (Bunny Stream) */}
+        <Card className="bg-white border-slate-200 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 left-0 bottom-0 w-1 bg-gradient-to-b from-[hsl(346,84%,45%)] to-indigo-600 hidden sm:block" />
+          <div className="p-5 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            <div className="lg:col-span-5 space-y-3">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[hsl(346,84%,45%)]/10 text-[hsl(346,84%,45%)] border border-[hsl(346,84%,45%)]/20 text-[11px] font-bold uppercase tracking-wider">
+                <MonitorPlay className="h-3.5 w-3.5" />
+                Tutorial Recomendado para o TI
+              </div>
+
+              <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight leading-snug">
+                Como executar os scripts de coleta
+              </h2>
+
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                Assista a este vídeo tutorial antes de iniciar a execução dos scripts de coleta no servidor e nas estações de trabalho, ou sempre que tiver dúvidas sobre o preenchimento e envio dos arquivos <span className="font-semibold text-slate-800">.txt</span>.
+              </p>
+
+              <div className="pt-1 flex flex-wrap items-center gap-3">
+                {!isTutorialPlaying && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      setIsTutorialPlaying(true);
+                      setIsTutorialLoading(true);
+                      setTutorialPlayerError(false);
+                    }}
+                    className="bg-[hsl(346,84%,45%)] hover:bg-[hsl(346,84%,40%)] text-white font-bold text-xs gap-1.5 shadow-sm"
+                  >
+                    <Play className="h-3.5 w-3.5 fill-current" />
+                    Assistir Tutorial
+                  </Button>
+                )}
+
+                <a
+                  href={INFRA_TUTORIAL_VIDEO.directPlayUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[hsl(346,84%,45%)] transition-colors"
+                >
+                  Abrir vídeo em nova aba
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              </div>
+            </div>
+
+            <div className="lg:col-span-7">
+              <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-slate-950 border border-slate-200 shadow-md">
+                {!isTutorialPlaying ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsTutorialPlaying(true);
+                      setIsTutorialLoading(true);
+                      setTutorialPlayerError(false);
+                    }}
+                    aria-label="Assistir vídeo tutorial de execução dos scripts"
+                    className="group relative w-full h-full flex items-center justify-center cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(346,84%,45%)]"
+                  >
+                    {!tutorialThumbError ? (
+                      <img
+                        src={INFRA_TUTORIAL_VIDEO.thumbnailUrl}
+                        alt="Capa do vídeo tutorial de coleta de infraestrutura"
+                        onError={() => setTutorialThumbError(true)}
+                        className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-[1.02] transition-all duration-300"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950" />
+                    )}
+
+                    <div className="absolute inset-0 bg-slate-950/35 group-hover:bg-slate-950/25 transition-colors" />
+
+                    <div className="relative z-10 flex flex-col items-center gap-2.5">
+                      <span className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-[hsl(346,84%,45%)] text-white shadow-lg ring-4 ring-white/25 group-hover:scale-110 transition-transform duration-200">
+                        <Play className="h-6 w-6 sm:h-7 sm:w-7 fill-current ml-0.5" />
+                      </span>
+                      <span className="px-3 py-1 rounded-full bg-slate-950/75 text-white text-[11px] font-semibold backdrop-blur-sm border border-white/10">
+                        Clique para assistir ao tutorial
+                      </span>
+                    </div>
+                  </button>
+                ) : tutorialPlayerError ? (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-slate-300 text-xs p-4 text-center gap-2">
+                    <Film className="h-7 w-7 text-[hsl(346,84%,45%)]" />
+                    <p className="font-medium">Não foi possível carregar o player incorporado.</p>
+                    <a
+                      href={INFRA_TUTORIAL_VIDEO.directPlayUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[hsl(346,84%,45%)] text-white font-semibold hover:bg-[hsl(346,84%,40%)] transition-colors"
+                    >
+                      Assistir diretamente no Bunny
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  </div>
+                ) : (
+                  <>
+                    {isTutorialLoading && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950 text-slate-300 text-xs gap-2 z-10 pointer-events-none">
+                        <Loader2 className="h-6 w-6 animate-spin text-[hsl(346,84%,45%)]" />
+                        <span className="text-[11px] font-medium">Carregando tutorial...</span>
+                      </div>
+                    )}
+                    <iframe
+                      src={INFRA_TUTORIAL_VIDEO.embedUrl}
+                      title="Tutorial de execução dos scripts de coleta - Siplan"
+                      loading="lazy"
+                      className="absolute inset-0 w-full h-full border-0"
+                      allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+                      allowFullScreen
+                      onLoad={() => setIsTutorialLoading(false)}
+                      onError={() => {
+                        setIsTutorialLoading(false);
+                        setTutorialPlayerError(true);
+                      }}
+                    />
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </Card>
 
         {/* Upload Zone & Instructions */}
