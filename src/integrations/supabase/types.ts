@@ -843,6 +843,84 @@ export type AssistantKnowledgeFileInsert = {
 
 export type AssistantKnowledgeFileUpdate = Partial<AssistantKnowledgeFileInsert>;
 
+export type CsCxNpsInvitationRow = {
+  id: string;
+  public_token: string;
+  questionnaire_id: string;
+  registry_office_id: string;
+  product_id: string | null;
+  contact_id: string | null;
+  recipient_name: string;
+  recipient_email: string | null;
+  questionnaire_snapshot: Json;
+  status: "PENDENTE" | "RESPONDIDO" | "CANCELADO";
+  expires_at: string;
+  responded_at: string | null;
+  response_id: string | null;
+  cancelled_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  first_accessed_at: string | null;
+  last_accessed_at: string | null;
+  access_count: number;
+  last_access_city: string | null;
+  last_access_region: string | null;
+  last_access_country_code: string | null;
+  last_access_timezone: string | null;
+};
+
+export type CsCxNpsInvitationInsert = {
+  id?: string;
+  public_token?: string;
+  questionnaire_id: string;
+  registry_office_id: string;
+  product_id?: string | null;
+  contact_id?: string | null;
+  recipient_name: string;
+  recipient_email?: string | null;
+  questionnaire_snapshot: Json;
+  status?: "PENDENTE" | "RESPONDIDO" | "CANCELADO";
+  expires_at?: string;
+  responded_at?: string | null;
+  response_id?: string | null;
+  cancelled_at?: string | null;
+  created_by?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  first_accessed_at?: string | null;
+  last_accessed_at?: string | null;
+  access_count?: number;
+  last_access_city?: string | null;
+  last_access_region?: string | null;
+  last_access_country_code?: string | null;
+  last_access_timezone?: string | null;
+};
+
+export type CsCxNpsInvitationUpdate = Partial<CsCxNpsInvitationInsert>;
+
+export type CsCxNpsAccessEventRow = {
+  id: string;
+  invitation_id: string;
+  accessed_at: string;
+  city: string | null;
+  region: string | null;
+  country_code: string | null;
+  timezone: string | null;
+};
+
+export type CsCxNpsAccessEventInsert = {
+  id?: string;
+  invitation_id: string;
+  accessed_at?: string;
+  city?: string | null;
+  region?: string | null;
+  country_code?: string | null;
+  timezone?: string | null;
+};
+
+export type CsCxNpsAccessEventUpdate = Partial<CsCxNpsAccessEventInsert>;
+
 export type Tables<TableName extends string> =
   TableName extends "projects" ? ProjectRow
     :
@@ -872,6 +950,8 @@ export type Tables<TableName extends string> =
                                          : TableName extends "notifications" ? NotificationRow
                                            : TableName extends "user_topic_affinities" ? UserTopicAffinityRow
                                              : TableName extends "assistant_knowledge_files" ? AssistantKnowledgeFileRow
+                                              : TableName extends "cs_cx_nps_invitations" ? CsCxNpsInvitationRow
+                                              : TableName extends "cs_cx_nps_access_events" ? CsCxNpsAccessEventRow
                                     : UntypedSupabaseShape;
 
 export type TablesInsert<TableName extends string> =
@@ -903,6 +983,8 @@ export type TablesInsert<TableName extends string> =
                                          : TableName extends "notifications" ? NotificationInsert
                                            : TableName extends "user_topic_affinities" ? UserTopicAffinityInsert
                                              : TableName extends "assistant_knowledge_files" ? AssistantKnowledgeFileInsert
+                                              : TableName extends "cs_cx_nps_invitations" ? CsCxNpsInvitationInsert
+                                              : TableName extends "cs_cx_nps_access_events" ? CsCxNpsAccessEventInsert
                                     : UntypedSupabaseShape;
 
 export type TablesUpdate<TableName extends string> =
@@ -934,4 +1016,6 @@ export type TablesUpdate<TableName extends string> =
                                          : TableName extends "notifications" ? NotificationUpdate
                                            : TableName extends "user_topic_affinities" ? UserTopicAffinityUpdate
                                              : TableName extends "assistant_knowledge_files" ? AssistantKnowledgeFileUpdate
+                                              : TableName extends "cs_cx_nps_invitations" ? CsCxNpsInvitationUpdate
+                                              : TableName extends "cs_cx_nps_access_events" ? CsCxNpsAccessEventUpdate
                                     : UntypedSupabaseShape;

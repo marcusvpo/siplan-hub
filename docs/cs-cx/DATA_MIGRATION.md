@@ -48,9 +48,11 @@ O pacote controlado contém, nesta ordem:
 20. `20260818190000_cs_cx_scoped_access.sql`
 21. `20260818200000_cs_cx_request_update_editing.sql`
 22. `20260824130000_cs_cx_multiple_office_responsibles.sql`
-23. `20260826170000_cs_cx_request_status_history.sql`
-24. `20260904120000_cs_cx_office_is_analyzed.sql`
-25. `20260930150000_cs_cx_routine_analysis_status_fix.sql`
+23. `20260825110000_cs_cx_nps_by_product.sql`
+24. `20260826170000_cs_cx_request_status_history.sql`
+25. `20260904120000_cs_cx_office_is_analyzed.sql`
+26. `20260930150000_cs_cx_routine_analysis_status_fix.sql`
+27. `20261113120000_cs_cx_nps_access_tracking.sql`
 
 O histórico global de migrations do Supabase ainda não possui baseline confiável.
 Por isso, não use `supabase db push`: ele pode tentar reaplicar migrations antigas do
@@ -132,6 +134,13 @@ cartório/contato. O destinatário acessa `/nps/responder/:token` sem login; a E
 Function `cs-cx-nps-public` entrega apenas o snapshot público das perguntas e
 registra a resposta pela `service_role`. Cada token é UUID v4, tem validade,
 aceita uma única resposta e pode ser cancelado no HUB.
+
+Cada carregamento válido do link também registra uma abertura. A aba
+**Solicitações** mostra o primeiro e o último acesso, o total de aberturas e até os
+50 eventos mais recentes. A localização é aproximada e só aparece quando a
+infraestrutura de rede fornece cidade, região ou país; o navegador também informa
+o fuso horário. O fluxo não armazena endereço IP e a contagem representa aberturas,
+não pessoas autenticadas ou visitantes únicos.
 
 Questionários já enviados são preservados como snapshot no convite e na resposta,
 portanto uma edição posterior não muda pesquisas antigas. O endpoint limita o

@@ -256,6 +256,7 @@ O módulo de CS/CX (`/cs-cx/registros` e `/cs-cx/nps`) acompanha o relacionament
 * **Metodologia da Pesquisa NPS (Humanizada e Assistida):**
   * **Não é um formulário frio:** A pesquisa de NPS **não** é apenas disparada e abandonada à espera de resposta.
   * **O Processo Real:** O analista de CS envia o link tokenizado da pesquisa por WhatsApp para o titular ou substituto e, em seguida, **liga por telefone para o cliente**, acompanhando o preenchimento pergunta a pergunta, colhendo percepções qualitativas aprofundadas.
+  * **Acompanhamento da abertura:** Na aba **Solicitações**, o ícone informativo de cada convite indica se o link já foi aberto. O detalhamento mostra primeiro acesso, último acesso, total de aberturas e até os 50 eventos mais recentes, com data, hora e localização aproximada quando a infraestrutura de rede disponibilizar cidade, região ou país. O registro não armazena IP, não identifica a pessoa e não substitui o acompanhamento telefônico obrigatório.
 
 ---
 
@@ -318,7 +319,7 @@ O módulo de CS/CX (`/cs-cx/registros` e `/cs-cx/nps`) acompanha o relacionament
 | **Implantadores**| `/implantadores/aderencia` | `EditarFormAderencia.tsx` | `implantadores_aderencia` | Implantadores | Checklist de aderência, justificativas com IA e relatório A4 em PDF |
 | **Implantadores**| `/implantadores/homologation`| `ImplantadoresHomologation.tsx`| `conversion_homologation` | Implantadores | Conferência de saldos e livros convertidos, termo de aceite |
 | **CS/CX** | `/cs-cx/registros` | `CsCxRequests.tsx` | `cs_cx_registros` | Equipe CS/CX | Chamados internos de CS/CX, modo Lista e Kanban, SLAs |
-| **CS/CX** | `/cs-cx/nps` | `CsCxNps.tsx` | `cs_cx_nps` | Equipe CS/CX | Indicadores de NPS, disparo de pesquisas e acompanhamento por ligação |
+| **CS/CX** | `/cs-cx/nps` | `CsCxNps.tsx` | `cs_cx_nps` | Equipe CS/CX | Indicadores de NPS, disparo de pesquisas, confirmação de abertura do link e acompanhamento por ligação |
 | **Admin** | `/admin/users` | `UserManagement.tsx` | `users` | Administradores | Gestão de colaboradores, convites, alteração de perfis |
 | **Admin** | `/admin/roles` | `RolesManagement.tsx` | `roles` | Administradores | Matriz dinâmica de permissões RBAC com reflexo no RLS do banco |
 | **Admin** | `/admin/vacations` | `VacationManagement.tsx` | `vacations` | Administradores / Gestão | Cadastro de períodos de férias alinhados com Josiane |
