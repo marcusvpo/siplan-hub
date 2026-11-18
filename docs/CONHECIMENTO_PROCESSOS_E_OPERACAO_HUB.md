@@ -1,7 +1,7 @@
 # 🏛️ Conhecimento Mestre: Processos Operacionais e Prática do Siplan HUB
 
 > **Fonte Única da Verdade para Desenvolvedores e Agentes de IA (Codex, Antigravity, Gemini, Claude, Cursor)**  
-> *Versão:* 1.2.0 — *Atualizado em:* 2026-11-11  
+> *Versão:* 1.3.0 — *Atualizado em:* 2026-11-17  
 > *Status:* **Documento Permanente e Auto-Alimentável**
 
 ---
@@ -109,13 +109,17 @@ flowchart LR
   * *Orion TN:* Rodrigo Brites, Ricardo Vieira.
 * **Início Mandatório:** **Segunda-feira**.
 * **Término Mandatório:** **Sexta-feira**.
-* **Automação de Fechamento:** Na data de término da Fase 1, o sistema conclui automaticamente a etapa (`implementation_status = 'done'` e `phase1.status = 'done'`) e inicializa a Etapa 6 de Pós-Implantação (`post_status = 'in-progress'`).
+* **Confirmação de Implantação (`isConfirmed` + `confirmedAt`):** Quando o cliente confirma as datas após contato da Siplan e o interruptor **"Implantação Confirmada"** é ativado na Fase 1, o sistema grava automaticamente o carimbo exato `confirmedAt` e exibe abaixo do card do interruptor a observação: *"Implantação foi **confirmada** pelo cliente após contato em **[data/hora]**!"*.
+* **Automação de Início (Go-Live):** No dia exato em que `phase1.startDate <= data_atual < phase1.endDate` (no fuso de Brasília) e `isConfirmed = true`, o sistema altera automaticamente os status de **5. Implantação & Treinamento** (`implementation_status`) e **Fase 1 Treinamento & Acompanhamento** (`phase1.status`) de `"Não Iniciado"` (`todo`) para `"Em Andamento"` (`in-progress`).
+* **Automação de Fechamento (Sexta-feira) e Agendamento Automático do Pós (Próximo Dia Útil):** Na data de término da Fase 1 (`data_atual >= phase1.endDate`, ex: sexta-feira), o sistema altera automaticamente os status de **Fase 1** e **Implantação & Treinamento** para `"Finalizado"` (`done`) e preenche os campos **"Início"** (`post_start_date` = próximo dia útil, ex: segunda-feira) e **"Término"** (`post_end_date` / `post_support_end_date` = +9 dias úteis, totalizando **2 semanas contabilizando apenas dias úteis / 10 dias úteis**, ex: término em `13/11` $\rightarrow$ Pós de `16/11` a `27/11`). A partir do próximo dia útil (`data_atual >= post_start_date`), o status da etapa **Pós-Implantação** muda automaticamente para `"Em Andamento"` (`in-progress`).
+* **Sincronização Estrita de Datas e Reversibilidade:** As tags de previsão/confirmação no cabeçalho do modal e dos cards leem exclusivamente `phase1.startDate` e `phase1.endDate`. Limpar as datas na Fase 1 limpa também `implementation_start_date` e `implementation_end_date` no banco, e reverter manualmente a implantação permite correção limpa sem travas.
 
-#### Etapa 6: Pós-Implantação (Suporte Imediato de 15 Dias Corridos)
+#### Etapa 6: Pós-Implantação (Suporte Imediato de 2 Semanas Úteis)
 * **Objetivo:** Suporte hiperfocado de primeiros socorros nos dias subsequentes ao Go-Live.
-* **Duração Estrita:** **Exatamente 15 dias corridos** (`post_start_date` até `post_support_end_date`).
+* **Início Automático:** Sempre no **próximo dia útil** após o término da Fase 1 (ex: implantação encerrada na sexta-feira $\rightarrow$ Pós-Implantação entra `"Em Andamento"` automaticamente na segunda-feira).
+* **Duração Padrão:** **2 semanas contabilizando apenas os dias úteis (10 dias úteis, de segunda a sexta)** (`post_start_date` até `post_end_date` / `post_support_end_date`; ex: término da Fase 1 em `13/11` $\rightarrow$ Pós de `16/11` a `27/11`).
 * **Canal:** **Grupo dedicado de WhatsApp** reunindo o cartório, o implantador da Fase 1 e a equipe de pós-implantação daquele sistema.
-* **Encerramento:** Ao término do 15º dia, o grupo de WhatsApp é encerrado e o cliente passa a ser atendido pela Central Oficial 0800 (Ellevo).
+* **Encerramento:** Ao término do período de 2 semanas úteis, o grupo de WhatsApp é encerrado e o cliente passa a ser atendido pela Central Oficial 0800 (Ellevo).
 * **Equipe de Pós por Sistema:**
   * *Orion TN:* Erik Marques, Henrique Troiano, Carlos Neves, Carlos Silva.
   * *Orion PRO:* Marcos Fernandes, Alana Silva, Bruna Pomini.
@@ -413,8 +417,8 @@ As diretrizes abaixo são **invioláveis**. Nenhuma alteração de código ou su
    * A alocação de implantadores depende de análise de disponibilidade de viagens, imprevistos em campo e negociações com o cartório. O implantador da Fase 1 deve ser definido manualmente por Maria Santos ou Lunna Santana.
 2. **Nunca extinguir o fluxo de comunicação por e-mail na Homologação:**
    * O envio de e-mails de homologação com credenciais, arquivos de backup e links mantém cópia formal para a Diretoria e histórico de segurança jurídica. O HUB apoia o processo, mas não elimina o e-mail formal.
-3. **Pós-Implantação dura sempre 15 dias corridos:**
-   * O canal imediato é o grupo de WhatsApp. Passados 15 dias, o cliente migra obrigatoriamente para a fila do suporte 0800 (Ellevo).
+3. **Pós-Implantação inicia no próximo dia útil e dura 2 semanas úteis (10 dias úteis):**
+   * O canal imediato é o grupo de WhatsApp, iniciando no próximo dia útil após o término da implantação (ex: sexta 13/11 $\rightarrow$ segunda 16/11 a sexta 27/11). Ao término das 2 semanas úteis, o cliente migra obrigatoriamente para a fila do suporte 0800 (Ellevo).
 4. **Relatórios e PDFs devem usar exclusivamente `@react-pdf/renderer`:**
    * É terminantemente proibido o uso de `window.print()`, `html2canvas` ou headless browsers para emissão de relatórios no projeto. Todas as emissões consomem a camada modular oficial em `@/modules/pdf`.
 5. **Orion REG é especialidade exclusiva de Julio Araujo:**
@@ -549,7 +553,12 @@ A partir dessa sincronização, foi arquitetada e gerada a **Base de Conheciment
 * Os triggers de transição de status para `in-progress` nas etapas 1 (Infraestrutura), 2 (Aderência), 3 (Conversão de Dados) e 4 (Preparação de Ambiente) invocam webhooks do n8n via chamadas assíncronas `net.http_post` e `supabase_functions.http_request`.
 * **Regra de Blindagem Transacional:** As invocações de webhooks externos em triggers de banco de dados são estritamente encapsuladas em blocos `BEGIN ... EXCEPTION WHEN OTHERS THEN RAISE WARNING ...; END;`. Dessa forma, nenhuma indisponibilidade de rede, timeout ou erro no endpoint externo é capaz de abortar o UPDATE da aplicação no frontend (ex.: analistas assumindo ambientes ou movendo cards no Kanban).
 
-### 14.2. Desacoplamento da Tabela de Trâmites Técnicos
+### 14.2. Desacoplamento da Tabela de Trâmites Técnicos e Aba "Chamado 0800" via View Ellevo (`vm-worker`)
 * A tabela `chamados_processo_venda_tramites` armazena o histórico 1:N de trâmites de atendimentos do Ellevo tanto dos projetos principais do Processo de Venda quanto de Chamados Secundários (`secondary_tickets`) e chamados 0800.
 * A tabela não possui chave estrangeira restritiva para `chamados_processo_venda`, garantindo que produtos secundários independentes e atendimentos correlatos possam persistir seus trâmites sem erros de integridade referencial (`violates foreign key constraint`).
+* **Aba "Chamado 0800" (`Chamado0800Tab.tsx`):** Consome integralmente as tabelas espelho alimentadas pelo `vm-worker` (`chamados_processo_venda`, `chamados_processo_venda_tramites` e `chamados_0800`) via hook `useProjectChamado0800(project.ticketNumber)`, exibindo metadados oficiais, SLA do Ellevo, descrição completa e todos os trâmites com busca, ordenação e sincronização sob demanda por `ticket_numbers` sem poluir a tabela `public.projects` (as colunas legadas `"TituloChamado"`, `"descricaotramite"`, `"ResponsavelAtividade"`, `"EtapasProjeto"` e a tabela `public.project_tramites` foram descontinuadas e removidas).
+
+### 14.3. Motor de Auditoria Granular e Histórico de Alterações do Projeto (`LogsTab.tsx`)
+* Toda abertura do modal ou página de detalhes do projeto registra automaticamente um evento de visualização (`type = 'project_view'`) em `public.timeline_events` identificando o usuário (`profiles.full_name`, e-mail e papel) e o horário exato.
+* Qualquer alteração em qualquer aba ou etapa do projeto (`computeProjectAuditChanges` em `src/utils/project-audit-diff.ts`), bem como ações de botões, uploads/exclusões de arquivos, vínculos de produtos secundários, alterações de Roadmap, provisionamento Siplan Skills e execuções de IA, gera registros estruturados com os valores anteriores (**Como estava antes**) e novos (**Como ficou depois**) legíveis em linhas expansíveis/retráteis e filtros avançados por busca, aba, tipo de ação, etapa, usuário e período.
 

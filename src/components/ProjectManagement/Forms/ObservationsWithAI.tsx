@@ -1,4 +1,6 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useContext, useRef, useState } from "react";
+import { QueryClientContext } from "@tanstack/react-query";
+import { recordProjectButtonLog } from "@/services/projectLogService";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
@@ -77,6 +79,7 @@ export function ObservationsWithAI({
   requestedBy,
 }: ObservationsWithAIProps) {
   const { online } = useModelWorkerStatus();
+  const queryClient = useContext(QueryClientContext) || undefined;
   const awaitingRef = useRef(false);
   const [running, setRunning] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
@@ -100,12 +103,36 @@ export function ObservationsWithAI({
     awaitingRef.current = true;
     setRunning(true);
     enqueueJob.mutate({ inputText: observations || "", requestedBy, jobType: "improve_text" });
+    const isGeneral = title === "Observações Gerais";
+    void recordProjectButtonLog({
+      projectId,
+      category: isGeneral ? "general" : "stages",
+      tabLabel: isGeneral ? "Informações Gerais" : "Etapas",
+      stageLabel: label || undefined,
+      actionType: "ai_action",
+      buttonLabel: "Melhorar texto com IA",
+      message: `Solicitada melhoria de texto com IA em "${title}"${label ? ` (${label})` : ""}`,
+      queryClient,
+    });
   };
 
   const applyGenerated = () => {
     if (!pending) return;
     onChange(plainTextToLexicalJson(pending));
     setEditorKey((k) => k + 1); // forca remount para carregar o novo conteudo
+    if (projectId) {
+      const isGeneral = title === "Observações Gerais";
+      void recordProjectButtonLog({
+        projectId,
+        category: isGeneral ? "general" : "stages",
+        tabLabel: isGeneral ? "Informações Gerais" : "Etapas",
+        stageLabel: label || undefined,
+        actionType: "ai_action",
+        buttonLabel: "Aplicar texto gerado pela IA",
+        message: `Texto melhorado pela IA aplicado em "${title}"${label ? ` (${label})` : ""}`,
+        queryClient,
+      });
+    }
     setPending(null);
   };
 

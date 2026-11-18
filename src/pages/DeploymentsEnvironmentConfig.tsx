@@ -106,8 +106,7 @@ export default function DeploymentsEnvironmentConfig() {
         phase1?.startDate ||
         phase1?.start_date ||
         phase1?.endDate ||
-        phase1?.end_date ||
-        p.stages?.implementation?.startDate
+        phase1?.end_date
       );
 
       // REGRA: entra se etapa 4 estiver 'in-progress' / 'done', OU se já tiver data prevista na Fase 1

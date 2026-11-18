@@ -778,5 +778,107 @@ describe("project-transformers", () => {
       expect(dbResult.environment_dispatched_at).toBe(timeEnv);
       expect(dbResult.conversion_dispatched_at).toBe(timeConv);
     });
+
+    it("should set implementation_start_date and implementation_end_date to null when phase1 dates are cleared", () => {
+      const oldStart = new Date("2026-11-16T12:00:00");
+      const oldEnd = new Date("2026-11-20T12:00:00");
+      const currentProject: ProjectV2 = {
+        id: "p-clear-dates",
+        clientName: "Cartório Limpeza Datas",
+        ticketNumber: "88888",
+        systemType: "Orion TN",
+        implantationType: "new",
+        projectType: "new",
+        healthScore: "ok",
+        globalStatus: "in-progress",
+        overallProgress: 50,
+        projectLeader: "",
+        tags: [],
+        priority: "normal",
+        createdAt: new Date(),
+        lastUpdatedAt: new Date(),
+        lastUpdatedBy: "",
+        stages: {
+          infra: { status: "done" },
+          adherence: { status: "done", hasProductGap: false, analysisComplete: true },
+          environment: { status: "done", approvedByInfra: true, testAvailable: true },
+          conversion: { status: "done" },
+          implementation: {
+            status: "in-progress",
+            responsible: "Ricardo Vieira",
+            startDate: oldStart,
+            endDate: oldEnd,
+            phase1: {
+              status: "in-progress",
+              responsible: "Ricardo Vieira",
+              startDate: oldStart,
+              endDate: oldEnd,
+            },
+            phase2: { status: "todo" },
+          },
+          post: { status: "todo", followupNeeded: false },
+        },
+        isDeleted: false,
+        isArchived: false,
+      };
+
+      const updates: Partial<ProjectV2> = {
+        stages: {
+          implementation: {
+            status: "todo",
+            responsible: "Ricardo Vieira",
+            startDate: undefined,
+            endDate: undefined,
+            phase1: {
+              status: "todo",
+              responsible: "Ricardo Vieira",
+              startDate: undefined,
+              endDate: undefined,
+            },
+            phase2: { status: "todo" },
+          },
+        } as any,
+      };
+
+      const dbResult = transformToDB(updates, currentProject);
+      expect(dbResult.implementation_start_date).toBeNull();
+      expect(dbResult.implementation_end_date).toBeNull();
+      expect(dbResult.implementation_responsible).toBe("Ricardo Vieira");
+    });
+
+    it("should preserve confirmedAt on phase1 across DB round-trip and omit legacy 0800 columns", () => {
+      const confirmedAt = "2026-11-17T18:30:00.000Z";
+      const dbRow: Record<string, unknown> = {
+        id: "proj-confirmed-rt",
+        client_name: "Cartório Confirmação",
+        ticket_number: "90909",
+        system_type: "Orion PRO",
+        TituloChamado: "Legado",
+        descricaotramite: "Legado",
+        ResponsavelAtividade: "Legado",
+        EtapasProjeto: "Legado",
+        project_tramites: [{ id: "1" }],
+        implementation_status: "in-progress",
+        implementation_phase1: {
+          status: "in-progress",
+          responsible: "Rodrigo Mizuno",
+          isConfirmed: true,
+          confirmedAt,
+          startDate: "2026-11-16T15:00:00.000Z",
+          endDate: "2026-11-20T15:00:00.000Z",
+        },
+      };
+
+      const domain = transformToProjectV3(dbRow);
+      expect((domain as any).TituloChamado).toBeUndefined();
+      expect((domain as any).tramites).toBeUndefined();
+      expect(domain.stages.implementation.phase1.isConfirmed).toBe(true);
+      expect(domain.stages.implementation.phase1.confirmedAt).toBe(confirmedAt);
+
+      const backToDb = transformToDB(domain);
+      expect(backToDb.TituloChamado).toBeUndefined();
+      expect(backToDb.implementation_responsible).toBe("Rodrigo Mizuno");
+      expect((backToDb.implementation_phase1 as any).confirmedAt).toBe(confirmedAt);
+    });
   });
 });

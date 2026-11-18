@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -24,6 +24,7 @@ import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { cn } from "@/lib/utils";
 import { OrionAdminAnimatedButton } from "@/components/ProjectManagement/OrionAdminAnimatedButton";
 import { SiplanSkillsHeaderButton } from "@/components/ProjectManagement/SiplanSkillsHeaderButton";
+import { recordProjectButtonLog, recordProjectViewLog } from "@/services/projectLogService";
 
 export default function ProjectDetails() {
   const { id } = useParams<{ id: string }>();
@@ -40,11 +41,33 @@ export default function ProjectDetails() {
   const handleProductBadgeClick = (productName: string) => {
     setTargetSecondaryProduct(productName);
     setActiveTab("secondary_products");
+    if (id) {
+      void recordProjectButtonLog({
+        projectId: id,
+        category: "secondary_products",
+        tabLabel: "Cabeçalho do Projeto",
+        buttonLabel: `Atalho Produto Secundário (${productName})`,
+        message: `Atalho do produto secundário "${productName}" acionado no cabeçalho da página`,
+        queryClient,
+      });
+    }
   };
 
   const handleOpenOrionAdmin = () => {
     setActiveTab("steps");
     setActiveStepId("environment");
+    if (id) {
+      void recordProjectButtonLog({
+        projectId: id,
+        category: "stages",
+        tabLabel: "Cabeçalho do Projeto",
+        stageId: "environment",
+        stageLabel: "4. Preparação de Ambiente",
+        buttonLabel: "Orion Admin",
+        message: 'Botão "Orion Admin" acionado no cabeçalho da página do projeto',
+        queryClient,
+      });
+    }
     setTimeout(() => {
       const el = document.getElementById("orion-admin-stage-section");
       if (el) {
@@ -65,6 +88,12 @@ export default function ProjectDetails() {
   }, [searchParams]);
 
   const { project, isLoading, error } = useProjectDetails(id || null);
+
+  useEffect(() => {
+    if (id) {
+      void recordProjectViewLog(id, "page", queryClient);
+    }
+  }, [id, queryClient]);
 
   if (error) {
     return (
@@ -141,14 +170,6 @@ export default function ProjectDetails() {
                     <span className="font-semibold text-foreground/90">{ticket.number}</span>
                   </button>
                 ))}
-                {project?.TituloChamado && (
-                  <>
-                    <div className="hidden md:block h-3.5 w-px bg-border mx-0.5 shrink-0" />
-                    <span className="font-medium text-foreground/80 break-words max-w-full text-[13px]">
-                      {project.TituloChamado}
-                    </span>
-                  </>
-                )}
               </div>
               <p className="text-[11px] text-muted-foreground">Detalhes e gerenciamento do projeto.</p>
             </div>
@@ -168,7 +189,22 @@ export default function ProjectDetails() {
             <Button
               variant={isEditing ? "destructive" : "outline"}
               size="sm"
-              onClick={() => setIsEditing(!isEditing)}
+              onClick={() => {
+                const nextEditing = !isEditing;
+                setIsEditing(nextEditing);
+                if (id) {
+                  void recordProjectButtonLog({
+                    projectId: id,
+                    category: "edit",
+                    tabLabel: "Cabeçalho do Projeto",
+                    buttonLabel: nextEditing ? "Editar Projeto" : "Cancelar Edição",
+                    message: nextEditing
+                      ? "Modo de edição cadastral do projeto aberto"
+                      : "Modo de edição cadastral do projeto fechado",
+                    queryClient,
+                  });
+                }
+              }}
               className="gap-2 h-8 text-xs"
             >
               {isEditing ? (
@@ -227,7 +263,7 @@ export default function ProjectDetails() {
                     ? ` (${project?.secondaryTicketsCount})`
                     : ""}
                 </option>
-                {project && (project.TituloChamado || project.descricaotramite || project.ResponsavelAtividade || project.EtapasProjeto) && (
+                {project?.ticketNumber?.trim() && (
                   <option value="chamado_0800">Chamado 0800</option>
                 )}
                 <option value="steps">Etapas</option>
@@ -265,7 +301,7 @@ export default function ProjectDetails() {
                       </span>
                     )}
                   </TabsTrigger>
-                  {project && (project.TituloChamado || project.descricaotramite || project.ResponsavelAtividade || project.EtapasProjeto) && (
+                  {project?.ticketNumber?.trim() && (
                     <TabsTrigger
                       value="chamado_0800"
                       className="h-full rounded-none border-b-2 border-transparent data-[state=active]:border-rose-500 data-[state=active]:text-rose-600 text-rose-500/80 font-medium data-[state=active]:bg-transparent px-2 flex items-center gap-1.5 transition-all duration-200 hover:text-rose-500 hover:border-rose-500/30"
@@ -403,7 +439,7 @@ export default function ProjectDetails() {
                       <PosImplantacaoTab project={project} />
                     </motion.div>
                   </TabsContent>
-                  {project && (project.TituloChamado || project.descricaotramite || project.ResponsavelAtividade || project.EtapasProjeto) && (
+                  {project?.ticketNumber?.trim() && (
                     <TabsContent value="chamado_0800" className="m-0 border-none p-0 outline-none">
                       <motion.div
                         initial={{ opacity: 0, y: 6 }}

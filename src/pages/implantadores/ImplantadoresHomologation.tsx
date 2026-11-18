@@ -52,7 +52,8 @@ import { formatDistanceToNow, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useConversionPosts } from "@/hooks/useConversionPosts";
 import { useHomologationEvents } from "@/hooks/useHomologationEvents";
-import { ProjectTramite } from "@/types/ProjectV2";
+import { useChamadoTramites } from "@/hooks/useChamados0800";
+import { normalizeEllevoTicketNumber } from "@/lib/ellevo-ticket";
 import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 
 interface ConversionQueueItem {
@@ -94,30 +95,8 @@ export default function ImplantadoresHomologation() {
   // Fetch context posts and events for the active project
   const { posts, loading: postsLoading } = useConversionPosts(selectedItem?.projectId || null);
   const { events, loading: eventsLoading } = useHomologationEvents(selectedItem?.projectId || null);
-
-  const [tramites, setTramites] = useState<ProjectTramite[]>([]);
-  const [tramitesLoading, setTramitesLoading] = useState(false);
-
-  useEffect(() => {
-    if (!selectedItem?.projectId) {
-      setTramites([]);
-      return;
-    }
-    const fetchTramites = async () => {
-      setTramitesLoading(true);
-      try {
-        const { data, error } = await supabase.from("project_tramites").select("*").eq("project_id", selectedItem.projectId).order("data_tramite", { ascending: false });
-        if (!error && data) {
-          setTramites(data);
-        }
-      } catch (err) {
-        console.error("Error fetching tramites:", err);
-      } finally {
-        setTramitesLoading(false);
-      }
-    };
-    fetchTramites();
-  }, [selectedItem?.projectId]);
+  const selectedTicketNumber = normalizeEllevoTicketNumber(selectedItem?.ticketNumber) ?? undefined;
+  const { tramites, isLoading: tramitesLoading } = useChamadoTramites(selectedTicketNumber);
 
   const combinedTimeline = useMemo(() => {
     const items: Array<{
@@ -189,13 +168,19 @@ export default function ImplantadoresHomologation() {
     });
 
     tramites.forEach((tramite) => {
+      const parsedTimestamp = tramite.dataTramite ? new Date(tramite.dataTramite) : null;
+      const timestamp = parsedTimestamp && !Number.isNaN(parsedTimestamp.getTime())
+        ? parsedTimestamp
+        : new Date(0);
       items.push({
-        id: tramite.id,
-        timestamp: new Date(tramite.data_tramite),
+        id: `tramite-${tramite.sequenciaTramite}`,
+        timestamp,
         type: "tramite",
-        title: tramite.etapa_projeto || "Trâmite (0800)",
-        author: tramite.responsavel_atividade || "Sistema",
-        content: (tramite.descricao_tramite || "").replace(/^\uFEFF/, ""),
+        title:
+          tramite.atividade ||
+          (tramite.numeroTramite ? `Trâmite #${tramite.numeroTramite} (0800)` : "Trâmite (0800)"),
+        author: tramite.responsavel || tramite.equipeResponsavel || "Sistema",
+        content: (tramite.descricao || "").replace(/^\uFEFF/, ""),
         badgeStyle: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900/40 dark:text-slate-400",
       });
     });
@@ -924,12 +909,18 @@ export default function ImplantadoresHomologation() {
                             </p>
 
                             {item.content && (
-                              <div
-                                className="text-[11px] leading-relaxed p-2 bg-background border rounded-md max-w-full overflow-x-auto break-words prose prose-sm dark:prose-invert max-h-36 overflow-y-auto"
-                                dangerouslySetInnerHTML={{
-                                  __html: item.content,
-                                }}
-                              />
+                              item.type === "tramite" ? (
+                                <div className="text-[11px] leading-relaxed p-2 bg-background border rounded-md max-w-full overflow-x-auto break-words whitespace-pre-wrap max-h-36 overflow-y-auto">
+                                  {item.content}
+                                </div>
+                              ) : (
+                                <div
+                                  className="text-[11px] leading-relaxed p-2 bg-background border rounded-md max-w-full overflow-x-auto break-words prose prose-sm dark:prose-invert max-h-36 overflow-y-auto"
+                                  dangerouslySetInnerHTML={{
+                                    __html: item.content,
+                                  }}
+                                />
+                              )
                             )}
                           </div>
                         );

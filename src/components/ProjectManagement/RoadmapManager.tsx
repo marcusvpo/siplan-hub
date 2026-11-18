@@ -1,6 +1,12 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
+import { QueryClientContext } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import {
+  recordProjectActivityLog,
+  recordProjectButtonLog,
+  type ProjectLogChangeItem,
+} from "@/services/projectLogService";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -63,6 +69,7 @@ export function RoadmapManager({ projectId }: RoadmapManagerProps) {
   const [welcomeMessage, setWelcomeMessage] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#800000");
   const { canEditProjects } = usePermissions();
+  const queryClient = useContext(QueryClientContext) || undefined;
 
   const fetchRoadmap = useCallback(async () => {
     try {
@@ -103,6 +110,8 @@ export function RoadmapManager({ projectId }: RoadmapManagerProps) {
     try {
       setSaving(true);
       const theme: CustomTheme = { primary: primaryColor };
+      const previousWelcome = roadmap?.welcome_message || "";
+      const previousColor = roadmap?.custom_theme?.primary || "#800000";
 
       if (roadmap) {
         const { error } = await supabase
@@ -134,6 +143,52 @@ export function RoadmapManager({ projectId }: RoadmapManagerProps) {
         if (error) throw error;
         setRoadmap(data as unknown as RoadmapSettings);
       }
+
+      const changes: ProjectLogChangeItem[] = [];
+      if (previousWelcome.trim() !== welcomeMessage.trim()) {
+        changes.push({
+          field: "roadmaps.welcome_message",
+          label: "Mensagem de Boas-vindas",
+          oldValue: previousWelcome.trim() || "(vazio)",
+          newValue: welcomeMessage.trim() || "(vazio)",
+        });
+      }
+      if (previousColor.toLowerCase() !== primaryColor.toLowerCase()) {
+        changes.push({
+          field: "roadmaps.custom_theme.primary",
+          label: "Cor de Destaque",
+          oldValue: previousColor,
+          newValue: primaryColor,
+        });
+      }
+
+      void recordProjectActivityLog({
+        projectId,
+        type: "roadmap_change",
+        category: "roadmap",
+        actionType: "roadmap_change",
+        tabLabel: "Roadmap",
+        fieldLabel: "Customização do Roadmap",
+        oldValue: changes[0]?.oldValue,
+        newValue: changes[0]?.newValue,
+        changes:
+          changes.length > 0
+            ? changes
+            : [
+                {
+                  field: "roadmaps.settings",
+                  label: "Configurações do Roadmap",
+                  oldValue: previousWelcome || "(padrão)",
+                  newValue: welcomeMessage || `Cor ${primaryColor}`,
+                },
+              ],
+        message:
+          changes.length > 0
+            ? "Customização do Roadmap externo atualizada"
+            : "Configurações do Roadmap externo salvas",
+        queryClient,
+      });
+
       toast.success("Configurações salvas com sucesso!");
     } catch (error) {
       console.error("Error saving settings:", error);
@@ -146,6 +201,7 @@ export function RoadmapManager({ projectId }: RoadmapManagerProps) {
   const handleToggleActive = async (checked: boolean) => {
     try {
       setSaving(true);
+      const wasActive = Boolean(roadmap?.is_active);
       if (roadmap) {
         const { error } = await supabase
           .from("roadmaps")
@@ -165,6 +221,28 @@ export function RoadmapManager({ projectId }: RoadmapManagerProps) {
         if (error) throw error;
         setRoadmap(data as unknown as RoadmapSettings);
       }
+
+      void recordProjectActivityLog({
+        projectId,
+        type: "roadmap_change",
+        category: "roadmap",
+        actionType: "roadmap_change",
+        tabLabel: "Roadmap",
+        fieldLabel: "Status do Roadmap Externo",
+        oldValue: wasActive ? "Ativo" : "Inativo",
+        newValue: checked ? "Ativo" : "Inativo",
+        changes: [
+          {
+            field: "roadmaps.is_active",
+            label: "Status do Roadmap Externo",
+            oldValue: wasActive ? "Ativo" : "Inativo",
+            newValue: checked ? "Ativo" : "Inativo",
+          },
+        ],
+        message: checked ? "Roadmap externo ativado" : "Roadmap externo desativado",
+        queryClient,
+      });
+
       toast.success(checked ? "Roadmap ativado!" : "Roadmap desativado");
     } catch (error) {
       toast.error("Erro ao atualizar roadmap");
@@ -178,6 +256,14 @@ export function RoadmapManager({ projectId }: RoadmapManagerProps) {
     const url = `${window.location.origin}/roadmap/${roadmap.share_token}`;
     navigator.clipboard.writeText(url);
     toast.success("Link copiado para a área de transferência!");
+    void recordProjectButtonLog({
+      projectId,
+      category: "roadmap",
+      tabLabel: "Roadmap",
+      buttonLabel: "Copiar Link do Roadmap",
+      message: "Link de acesso externo do Roadmap copiado",
+      queryClient,
+    });
   };
 
   if (loading) {
@@ -292,9 +378,17 @@ export function RoadmapManager({ projectId }: RoadmapManagerProps) {
             <Button
               className="w-full gap-1.5 bg-[#800000] hover:bg-[#600000] h-8 text-xs font-semibold shadow-sm"
               disabled={!roadmap?.is_active}
-              onClick={() =>
-                window.open(`/roadmap/${roadmap?.share_token}`, "_blank")
-              }
+              onClick={() => {
+                window.open(`/roadmap/${roadmap?.share_token}`, "_blank");
+                void recordProjectButtonLog({
+                  projectId,
+                  category: "roadmap",
+                  tabLabel: "Roadmap",
+                  buttonLabel: "Visualizar como Cliente",
+                  message: "Visualização do Roadmap como Cliente aberta em nova aba",
+                  queryClient,
+                });
+              }}
             >
               <ExternalLink className="h-3.5 w-3.5" />
               Visualizar como Cliente

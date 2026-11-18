@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
+import { QueryClientContext } from "@tanstack/react-query";
+import { recordProjectButtonLog } from "@/services/projectLogService";
 import { ProjectV2 } from "@/types/ProjectV2";
 import type { SecondaryTicketHubStatus } from "@/integrations/supabase/types";
 import {
@@ -95,6 +97,7 @@ export function SecondaryProductsTab({
   const { hasPermission, canEditProjects } = usePermissions();
   const canEdit = hasPermission("secondary_products", "edit") || canEditProjects;
   const { user } = useAuth();
+  const queryClient = useContext(QueryClientContext);
   const currentUserName =
     (user?.user_metadata?.full_name as string | undefined) || user?.email || "Usuário";
 
@@ -266,12 +269,15 @@ export function SecondaryProductsTab({
               className="h-9 gap-1.5 text-xs"
               disabled={requestSync0800Now.isPending}
               onClick={() => {
-                requestSync0800Now.mutate(undefined, {
-                  onSuccess: () =>
-                    toast.success("Sincronização solicitada ao worker! Os dados do 0800 serão atualizados em instantes."),
-                  onError: () =>
-                    toast.error("Não foi possível solicitar a sincronização agora."),
-                });
+                requestSync0800Now.mutate(
+                  { projectId: project.id },
+                  {
+                    onSuccess: () =>
+                      toast.success("Sincronização solicitada ao worker! Os dados do 0800 serão atualizados em instantes."),
+                    onError: () =>
+                      toast.error("Não foi possível solicitar a sincronização agora."),
+                  },
+                );
               }}
             >
               <RefreshCw
@@ -414,6 +420,7 @@ export function SecondaryProductsTab({
               onSaveUpdate={(updates) =>
                 updateSecondaryTicket.mutateAsync({
                   id: ticket.id,
+                  projectId: project.id,
                   ...updates,
                   updated_by: currentUserName,
                 })
@@ -629,6 +636,7 @@ function SecondaryTicketItemCard({
   onOpenTramites,
   onRequestUnlink,
 }: SecondaryTicketItemCardProps) {
+  const queryClient = useContext(QueryClientContext);
   const [responsibleDraft, setResponsibleDraft] = useState(ticket.responsible || "");
   const [observationsDraft, setObservationsDraft] = useState(ticket.observations || "");
   const [isSavingDetails, setIsSavingDetails] = useState(false);
@@ -744,6 +752,25 @@ function SecondaryTicketItemCard({
       const url = buildEllevoTicketUrl(ticket.ticket_number);
       if (url) window.open(url, "_blank", "noopener,noreferrer");
     }
+
+    void recordProjectButtonLog({
+      projectId: currentProject.id,
+      category: "secondary_products",
+      tabLabel: "Produtos Secundários",
+      buttonLabel: openEllevoAfter
+        ? "Copiar Trâmite Sugerido + Abrir no 0800"
+        : "Copiar Texto do Trâmite",
+      message: openEllevoAfter
+        ? `Trâmite sugerido de ${ticket.product_name} (#${ticket.ticket_number}) copiado e chamado aberto no 0800`
+        : `Texto de trâmite sugerido de ${ticket.product_name} (#${ticket.ticket_number}) copiado`,
+      extraMetadata: {
+        secondaryTicketId: ticket.id,
+        ticketNumber: ticket.ticket_number,
+        productName: ticket.product_name,
+        openEllevoAfter,
+      },
+      queryClient: queryClient || undefined,
+    });
   };
 
   return (

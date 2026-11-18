@@ -46,6 +46,8 @@ interface ProjectRow {
   ticket_number: string | null;
   post_start_date: string | null;
   post_end_date: string | null;
+  global_status?: string | null;
+  post_status?: string | null;
 }
 
 type ProcessoVendaScope = "processo_venda" | "processo_venda_legado" | "sd_closures";
@@ -71,6 +73,7 @@ interface ProcessoVendaSyncFilters {
   statuses?: string[];
   search_terms?: string[];
   search_term?: string | null;
+  ticket_numbers?: string[];
 }
 
 interface ProcessoVendaSyncResult {
@@ -328,6 +331,12 @@ function normalizeProcessoVendaFilters(
     searchTerms.push(filters.search_term.trim());
   }
 
+  const ticketNumbers = [...new Set(
+    cleanFilterValues(filters?.ticket_numbers)
+      .map((value) => value.replace(/^#/, "").trim())
+      .filter((value) => /^\d+$/.test(value))
+  )];
+
   return {
     client_codes: cleanFilterValues(filters?.client_codes),
     client_names: cleanFilterValues(filters?.client_names),
@@ -342,6 +351,7 @@ function normalizeProcessoVendaFilters(
       .filter((status): status is string => Boolean(status)),
     search_terms: searchTerms,
     search_term: searchTerms.length === 1 ? searchTerms[0] : null,
+    ticket_numbers: ticketNumbers,
   };
 }
 
@@ -668,22 +678,350 @@ async function syncSecondaryTicketsMirror(pool: sql.ConnectionPool): Promise<num
   return updatedCount;
 }
 
+async function enrichAndUpsertProcessoVendaRows(
+  pool: sql.ConnectionPool,
+  viewRows: ProcessoVendaViewRow[],
+  control?: ProcessoVendaRunControl,
+): Promise<string[]> {
+  if (viewRows.length === 0) return [];
+
+  const nowIso = new Date().toISOString();
+  const rows = viewRows.map((r) => ({
+    numero_chamado: String(r.NumeroChamado).trim(),
+    codigo_cliente: r.codigoCliente ? String(r.codigoCliente).trim() : null,
+    nome_cliente: cleanNomeCliente(r.NomeCliente),
+    razao_social_cliente: r.RazaoSocialCliente || null,
+    data_pedido_venda: null,
+    numero_pedido_venda: null,
+    titulo: r.TituloChamado || null,
+    descricao: decodeDescricao(r.descricaotramite),
+    natureza: r.Natureza || null,
+    status: normalizeChamadoStatus(r.StatusChamado) || "Não iniciado",
+    software: r.Software || null,
+    produto: r.Produto || null,
+    equipe_responsavel: r.EquipeResponsavelChamado?.trim() || null,
+    analista_responsavel: r.AnalistaResponsavel?.trim() || null,
+    data_abertura: r.DataAberturaIso?.slice(0, 10) || toIsoDate(r.DataAberturaChamado),
+    data_encerramento: r.DataEncerramentoIso?.slice(0, 10) || toIsoDate(r.SolDataFechamento),
+    aberto_em: r.DataAberturaIso || null,
+    encerrado_em: r.DataEncerramentoIso || null,
+    synced_at: nowIso,
+  }));
+
+  // Deduplica por numero_chamado preservando a ultima ocorrencia
+  const dedupedMap = new Map<string, (typeof rows)[number]>();
+  for (const row of rows) {
+    dedupedMap.set(row.numero_chamado, row);
+  }
+  const uniqueRows = [...dedupedMap.values()];
+
+  // O Ellevo já calcula primeira resposta, vencimento, pausas e ajustes de
+  // calendário. Espelhamos esses valores oficiais em vez de recalculá-los no
+  // navegador. A view base fornece criticidade/equipe e Solicitacao fornece
+  // os relógios vigentes, inclusive alterações manuais auditáveis.
+  const slaPorChamado = new Map<string, ProcessoVendaOfficialSlaRow>();
+  const slaTicketBatchSize = 500;
+  const numerosChamados = uniqueRows.map((row) => row.numero_chamado);
+  for (let from = 0; from < numerosChamados.length; from += slaTicketBatchSize) {
+    assertProcessoVendaRunActive(control);
+    const batch = numerosChamados.slice(from, from + slaTicketBatchSize);
+    const slaRequest = pool.request();
+    const ticketParameters = batch.map((ticket, index) => {
+      const name = `slaTicket${index}`;
+      slaRequest.input(name, sql.VarChar(50), ticket);
+      return `@${name}`;
+    });
+    const slaResult = await executeControlledQuery<ProcessoVendaOfficialSlaRow>(slaRequest, `
+      WITH chamado_meta AS (
+        SELECT CONVERT(varchar(50), c.NumeroChamado) AS NumeroChamado,
+               c.Severidade AS Criticidade,
+               c.EquipeResponsavelChamado,
+               ROW_NUMBER() OVER (
+                 PARTITION BY c.NumeroChamado
+                 ORDER BY c.DataUltimaEdicaoTramite DESC
+               ) AS rn
+        FROM plataformaellevo.dbo.vw_ChamadosTodosStatus AS c WITH (NOLOCK)
+        WHERE CONVERT(varchar(50), c.NumeroChamado) IN (${ticketParameters.join(", ")})
+      )
+      SELECT meta.NumeroChamado,
+             meta.Criticidade,
+             meta.EquipeResponsavelChamado,
+             CONVERT(varchar(19), solicitacao.DataPrevistaPriResp, 126) AS PrimeiraRespostaPrevistaIso,
+             CONVERT(varchar(19), solicitacao.DataRealPriResp, 126) AS PrimeiraRespostaRealIso,
+             CONVERT(varchar(19), solicitacao.SolVencimento, 126) AS VencimentoIso,
+             solicitacao.VencimentoPausado,
+             solicitacao.VencimentoInformadoManualmente,
+             solicitacao.TempoPriResp AS TempoPrimeiraRespostaMinutos,
+             solicitacao.SLAVlCalculado AS TempoVencimentoMinutos,
+             solicitacao.TempoRestanteVencimento AS TempoRestanteMinutos,
+             CONVERT(varchar(19), solicitacao.DataPrevistaRetorno, 126) AS RetornoPrevistoIso,
+             CONVERT(varchar(19), solicitacao.DataRealRetorno, 126) AS RetornoRealIso
+      FROM chamado_meta AS meta
+      LEFT JOIN plataformaellevo.dbo.Solicitacao AS solicitacao
+        ON CONVERT(varchar(50), solicitacao.SolID) = meta.NumeroChamado
+      WHERE meta.rn = 1
+    `, control);
+    for (const sla of slaResult.recordset) {
+      slaPorChamado.set(String(sla.NumeroChamado).trim(), sla);
+    }
+  }
+
+  const rowsComSla = uniqueRows.map((row) => {
+    const sla = slaPorChamado.get(row.numero_chamado);
+    return {
+      ...row,
+      criticidade: sla?.Criticidade || null,
+      equipe_responsavel:
+        sla?.EquipeResponsavelChamado?.trim() || row.equipe_responsavel || null,
+      sla_primeira_resposta_prevista_em: sla?.PrimeiraRespostaPrevistaIso || null,
+      sla_primeira_resposta_real_em: sla?.PrimeiraRespostaRealIso || null,
+      sla_vencimento_em: sla?.VencimentoIso || null,
+      sla_vencimento_pausado: sla?.VencimentoPausado === true,
+      sla_vencimento_manual: sla?.VencimentoInformadoManualmente === true,
+      sla_tempo_primeira_resposta_minutos: sla?.TempoPrimeiraRespostaMinutos ?? null,
+      sla_tempo_vencimento_minutos: sla?.TempoVencimentoMinutos ?? null,
+      sla_tempo_restante_minutos: sla?.TempoRestanteMinutos ?? null,
+      sla_retorno_previsto_em: sla?.RetornoPrevistoIso || null,
+      sla_retorno_real_em: sla?.RetornoRealIso || null,
+    };
+  });
+
+  // Upsert em lotes de 200 na tabela chamados_processo_venda
+  for (let i = 0; i < rowsComSla.length; i += 200) {
+    assertProcessoVendaRunActive(control);
+    const { error } = await supabase
+      .from("chamados_processo_venda")
+      .upsert(rowsComSla.slice(i, i + 200), { onConflict: "numero_chamado" });
+    if (error) throw new Error(`upsert chamados_processo_venda: ${error.message}`);
+  }
+
+  return numerosChamados;
+}
+
+async function syncProcessoVendaTramitesByTickets(
+  pool: sql.ConnectionPool,
+  ticketNumbers: string[],
+  options: {
+    startDate?: string;
+    endDate?: string;
+    restrictByOpenDate: boolean;
+  },
+  control?: ProcessoVendaRunControl,
+): Promise<number> {
+  const uniqueTickets = [...new Set(ticketNumbers.map((t) => t.trim()).filter(Boolean))];
+  if (uniqueTickets.length === 0) return 0;
+
+  const tramiteRows: ProcessoVendaTramiteRow[] = [];
+  const tramiteTicketBatchSize = 500;
+  const restrictDates = Boolean(
+    options.restrictByOpenDate && options.startDate && options.endDate
+  );
+
+  for (let from = 0; from < uniqueTickets.length; from += tramiteTicketBatchSize) {
+    assertProcessoVendaRunActive(control);
+    const batch = uniqueTickets.slice(from, from + tramiteTicketBatchSize);
+    const tramiteRequest = pool.request();
+    if (restrictDates && options.startDate && options.endDate) {
+      tramiteRequest
+        .input("startDate", sql.Date, options.startDate)
+        .input("endDate", sql.Date, options.endDate);
+    }
+    const ticketParameters = batch.map((ticket, index) => {
+      const name = `ticket${index}`;
+      tramiteRequest.input(name, sql.VarChar(50), ticket);
+      return `@${name}`;
+    });
+
+    const dateConditionSql = restrictDates
+      ? `DataAberturaChamado >= @startDate
+        AND DataAberturaChamado < DATEADD(DAY, 1, @endDate)
+        AND `
+      : "";
+
+    const tramitesResult = await executeControlledQuery<ProcessoVendaTramiteRow>(tramiteRequest, `
+      SELECT DISTINCT
+             NumeroChamado, NumeroTramite, SequenciaTramite,
+             CONVERT(varchar(19), DataTramite, 126) AS DataTramiteIso,
+             ResponsavelTramite, ResponsavelAtividade,
+             EquipeResponsavelAtividade, DescricaoAtividade,
+             CAST(descricaotramite AS nvarchar(max)) AS descricaotramite
+      FROM plataformaellevo..vw_ChamadosTodosStatus_Tramites_Tempos
+      WHERE ${dateConditionSql}CONVERT(varchar(50), NumeroChamado) IN (${ticketParameters.join(", ")})
+        AND SequenciaTramite IS NOT NULL
+    `, control);
+    tramiteRows.push(...tramitesResult.recordset);
+  }
+
+  const tramitesPorChave = new Map<string, {
+    numero_chamado: string;
+    sequencia_tramite: number;
+    numero_tramite: number | null;
+    data_tramite: string | null;
+    responsavel: string | null;
+    equipe_responsavel: string | null;
+    atividade: string | null;
+    descricao: string | null;
+    synced_at: string;
+  }>();
+  const nowIso = new Date().toISOString();
+
+  for (const tramite of tramiteRows) {
+    const numeroChamado = String(tramite.NumeroChamado).trim();
+    const sequenciaTramite = Number(tramite.SequenciaTramite);
+    const chave = `${numeroChamado}:${sequenciaTramite}`;
+    tramitesPorChave.set(chave, {
+      numero_chamado: numeroChamado,
+      sequencia_tramite: sequenciaTramite,
+      numero_tramite: tramite.NumeroTramite ?? null,
+      data_tramite: tramite.DataTramiteIso || null,
+      responsavel: tramite.ResponsavelTramite?.trim() || tramite.ResponsavelAtividade?.trim() || null,
+      equipe_responsavel: tramite.EquipeResponsavelAtividade?.trim() || null,
+      atividade: tramite.DescricaoAtividade?.trim() || null,
+      descricao: decodeDescricao(tramite.descricaotramite),
+      synced_at: nowIso,
+    });
+  }
+
+  const tramites = [...tramitesPorChave.values()];
+  for (let i = 0; i < tramites.length; i += 200) {
+    assertProcessoVendaRunActive(control);
+    const { error } = await supabase
+      .from("chamados_processo_venda_tramites")
+      .upsert(tramites.slice(i, i + 200), {
+        onConflict: "numero_chamado,sequencia_tramite",
+      });
+    if (error) {
+      throw new Error(`upsert chamados_processo_venda_tramites: ${error.message}`);
+    }
+  }
+
+  return tramites.length;
+}
+
+async function syncActiveProjectTicketsFullMirror(
+  pool: sql.ConnectionPool,
+  tickets: string[],
+): Promise<{ ticketsSynced: number; tramitesSynced: number }> {
+  const uniqueTickets = [...new Set(tickets.map((t) => t.trim()).filter((t) => /^\d{4,}$/.test(t)))];
+  if (uniqueTickets.length === 0) return { ticketsSynced: 0, tramitesSynced: 0 };
+
+  const allViewRows: ProcessoVendaViewRow[] = [];
+  const batchSize = 300;
+
+  for (let from = 0; from < uniqueTickets.length; from += batchSize) {
+    const batch = uniqueTickets.slice(from, from + batchSize);
+    const req = pool.request();
+    const ticketParameters = batch.map((ticket, index) => {
+      const param = `projTicket${index}`;
+      req.input(param, sql.VarChar(50), ticket);
+      return `@${param}`;
+    });
+
+    const res = await req.query<ProcessoVendaViewRow>(`
+      WITH proj_chamados AS (
+        SELECT
+          c.NumeroChamado,
+          c.CodPN AS codigoCliente,
+          c.NomeCliente,
+          c.NomeCliente AS RazaoSocialCliente,
+          c.SolTitulo AS TituloChamado,
+          CAST(c.DescricaoChamado AS nvarchar(max)) AS descricaotramite,
+          c.Natureza,
+          c.StatusChamado,
+          c.Software,
+          c.Produto,
+          c.EquipeResponsavelChamado,
+          c.ResponsavelChamado AS AnalistaResponsavel,
+          c.DataAberturaChamadoComHoras AS DataAberturaChamado,
+          c.SolDataFechamentoComHoras AS SolDataFechamento,
+          CONVERT(varchar(19), c.DataAberturaChamadoComHoras, 126) AS DataAberturaIso,
+          CONVERT(varchar(19), c.SolDataFechamentoComHoras, 126) AS DataEncerramentoIso,
+          ROW_NUMBER() OVER (
+            PARTITION BY c.NumeroChamado
+            ORDER BY c.DataUltimaEdicaoTramite DESC
+          ) AS rn
+        FROM plataformaellevo.dbo.vw_ChamadosTodosStatus AS c WITH (NOLOCK)
+        WHERE CONVERT(varchar(50), c.NumeroChamado) IN (${ticketParameters.join(", ")})
+      )
+      SELECT
+        NumeroChamado,
+        codigoCliente,
+        NomeCliente,
+        RazaoSocialCliente,
+        TituloChamado,
+        descricaotramite,
+        Natureza,
+        StatusChamado,
+        Software,
+        Produto,
+        EquipeResponsavelChamado,
+        AnalistaResponsavel,
+        DataAberturaChamado,
+        SolDataFechamento,
+        DataAberturaIso,
+        DataEncerramentoIso
+      FROM proj_chamados
+      WHERE rn = 1
+    `);
+
+    allViewRows.push(...res.recordset);
+  }
+
+  const syncedTickets = await enrichAndUpsertProcessoVendaRows(pool, allViewRows);
+  const tramitesSynced = await syncProcessoVendaTramitesByTickets(pool, syncedTickets, {
+    restrictByOpenDate: false,
+  });
+
+  return { ticketsSynced: syncedTickets.length, tramitesSynced };
+}
+
+async function runAutoFinishExpiredDeployments(): Promise<void> {
+  try {
+    const { data, error } = await supabase.rpc("fn_auto_finish_expired_deployments");
+    if (error) {
+      console.warn("[chamados-sync] aviso ao executar fn_auto_finish_expired_deployments:", error.message);
+    } else if (typeof data === "number" && data > 0) {
+      console.log(`[chamados-sync] fn_auto_finish_expired_deployments atualizou ${data} projeto(s).`);
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn("[chamados-sync] erro ao executar fn_auto_finish_expired_deployments:", msg);
+  }
+}
+
 async function runOnce(): Promise<string> {
   // 1. Projetos ativos com numero de chamado valido
   const { data: projects, error: projError } = await supabase
     .from("projects")
-    .select("ticket_number, post_start_date, post_end_date")
+    .select("ticket_number, post_start_date, post_end_date, global_status, post_status")
     .eq("is_deleted", false);
   if (projError) throw new Error(`select projects: ${projError.message}`);
 
+  const projectRows = (projects as ProjectRow[]) || [];
   const tickets = [
     ...new Set(
-      (projects as ProjectRow[])
+      projectRows
         .map((p) => (p.ticket_number || "").trim())
         .filter((t) => /^\d{4,}$/.test(t))
     ),
   ];
-  if (tickets.length === 0) return "0 projetos com ticket valido";
+  const activeTickets = [
+    ...new Set(
+      projectRows
+        .filter(
+          (p) =>
+            !["done", "archived"].includes((p.global_status || "").toLowerCase()) ||
+            p.post_status === "in-progress"
+        )
+        .map((p) => (p.ticket_number || "").trim())
+        .filter((t) => /^\d{4,}$/.test(t))
+    ),
+  ];
+
+  if (tickets.length === 0) {
+    await runAutoFinishExpiredDeployments();
+    return "0 projetos com ticket valido";
+  }
 
   const pool = await new sql.ConnectionPool({
     server: config.mssqlHost,
@@ -712,7 +1050,7 @@ async function runOnce(): Promise<string> {
     const hoje = new Date();
     const limiteGraca = new Date(hoje.getTime() - config.chamadosSyncGraceDays * 86400000);
     const janelaPorCliente = new Map<number, string>(); // IDCliente -> data inicio (ISO)
-    for (const p of projects as ProjectRow[]) {
+    for (const p of projectRows) {
       const ticket = (p.ticket_number || "").trim();
       const idCliente = ticketToCliente.get(ticket);
       if (!idCliente || !p.post_start_date) continue;
@@ -756,9 +1094,20 @@ async function runOnce(): Promise<string> {
       console.warn("[chamados-sync] erro ao sincronizar secondary_tickets:", msg);
     }
 
+    let activeProjectMirror = { ticketsSynced: 0, tramitesSynced: 0 };
+    try {
+      activeProjectMirror = await syncActiveProjectTicketsFullMirror(pool, activeTickets);
+    } catch (projMirrorErr) {
+      const msg = projMirrorErr instanceof Error ? projMirrorErr.message : String(projMirrorErr);
+      console.warn("[chamados-sync] erro ao sincronizar espelho completo dos projetos:", msg);
+    }
+
+    await runAutoFinishExpiredDeployments();
+
     const detail =
       `${rows.length} chamados (${origem.recordset.length} origem, ` +
-      `${doPeriodo.length} do periodo, ${janelaPorCliente.size} clientes em pos, ${secondarySynced} secundarios)`;
+      `${doPeriodo.length} do periodo, ${janelaPorCliente.size} clientes em pos, ` +
+      `${secondarySynced} secundarios, ${activeProjectMirror.ticketsSynced} projetos/${activeProjectMirror.tramitesSynced} tramites)`;
     console.log(`[chamados-sync] ok: ${detail}`);
     return detail;
   } finally {
@@ -851,17 +1200,63 @@ async function runProcessoVendaOnce(
 
   try {
     const filters = normalizeProcessoVendaFilters(requestedFilters);
-    const chamadoRequest = pool
-      .request()
-      .input("startDate", sql.Date, startDate)
-      .input("endDate", sql.Date, endDate);
+    const hasTicketNumbersFilter = Boolean(
+      filters.ticket_numbers && filters.ticket_numbers.length > 0
+    );
+    const chamadoRequest = pool.request();
     const periodColumn = catalog.periodField === "closed"
       ? "SolDataFechamento"
       : "DataAberturaChamado";
-    const whereClauses = [
-      `${periodColumn} >= @startDate`,
-      `${periodColumn} < DATEADD(DAY, 1, @endDate)`,
-    ];
+    const whereClauses: string[] = [];
+
+    let sourceViewSql = catalog.sourceView;
+    if (hasTicketNumbersFilter && filters.ticket_numbers) {
+      const ticketParameters = filters.ticket_numbers.map((ticket, index) => {
+        const name = `filterTicket${index}`;
+        chamadoRequest.input(name, sql.VarChar(50), ticket);
+        return `@${name}`;
+      });
+      const inClause = ticketParameters.join(", ");
+      whereClauses.push(`CONVERT(varchar(50), NumeroChamado) IN (${inClause})`);
+      sourceViewSql = `(
+        SELECT NumeroChamado, codigoCliente, NomeCliente, RazaoSocialCliente,
+               TituloChamado, descricaotramite, Natureza, StatusChamado,
+               Software, Produto, EquipeResponsavelChamado, AnalistaResponsavel,
+               DataAberturaChamado, SolDataFechamento
+        FROM (
+          SELECT
+               c.NumeroChamado,
+               c.CodPN AS codigoCliente,
+               c.NomeCliente,
+               c.NomeCliente AS RazaoSocialCliente,
+               c.SolTitulo AS TituloChamado,
+               CAST(c.DescricaoChamado AS nvarchar(max)) AS descricaotramite,
+               c.Natureza,
+               c.StatusChamado,
+               c.Software,
+               c.Produto,
+               c.EquipeResponsavelChamado,
+               c.ResponsavelChamado AS AnalistaResponsavel,
+               c.DataAberturaChamadoComHoras AS DataAberturaChamado,
+               c.SolDataFechamentoComHoras AS SolDataFechamento,
+               ROW_NUMBER() OVER (
+                 PARTITION BY c.NumeroChamado
+                 ORDER BY c.DataUltimaEdicaoTramite DESC
+               ) AS rn
+          FROM plataformaellevo.dbo.vw_ChamadosTodosStatus AS c WITH (NOLOCK)
+          WHERE CONVERT(varchar(50), c.NumeroChamado) IN (${inClause})
+        ) AS specific_chamados
+        WHERE rn = 1
+      ) AS chamados_especificos`;
+    } else {
+      chamadoRequest
+        .input("startDate", sql.Date, startDate)
+        .input("endDate", sql.Date, endDate);
+      whereClauses.push(
+        `${periodColumn} >= @startDate`,
+        `${periodColumn} < DATEADD(DAY, 1, @endDate)`,
+      );
+    }
 
     if (filters.client_codes && filters.client_codes.length > 0) {
       const parameters = filters.client_codes.map((clientCode, index) => {
@@ -883,45 +1278,47 @@ async function runProcessoVendaOnce(
       );
     }
 
-    if (catalog.allProducts) {
-      if (filters.products && filters.products.length > 0) {
-        const parameters = filters.products.map((product, index) => {
-          const name = `product${index}`;
-          chamadoRequest.input(name, sql.NVarChar(300), product);
-          return `@${name}`;
-        });
-        whereClauses.push(
-          `COALESCE(NULLIF(LTRIM(RTRIM(Software)), ''), NULLIF(LTRIM(RTRIM(Produto)), '')) COLLATE Latin1_General_CI_AI IN (${parameters.join(", ")})`
-        );
-      }
-    } else if (catalog.legacy) {
-      if (filters.products && filters.products.length > 0) {
-        const parameters = filters.products.map((product, index) => {
-          const name = `product${index}`;
-          chamadoRequest.input(name, sql.NVarChar(100), product);
-          return `@${name}`;
-        });
-        whereClauses.push(
-          `LTRIM(RTRIM(Produto)) COLLATE Latin1_General_CI_AI IN (${parameters.join(", ")})`
-        );
-      }
-      if (filters.softwares && filters.softwares.length > 0) {
-        const parameters = filters.softwares.map((software, index) => {
-          const name = `software${index}`;
-          chamadoRequest.input(name, sql.NVarChar(300), software);
-          return `@${name}`;
-        });
-        whereClauses.push(
-          `LTRIM(RTRIM(Software)) COLLATE Latin1_General_CI_AI IN (${parameters.join(", ")})`
-        );
-      }
-    } else {
-      const productPattern = getWorkerProductPattern(filters.product);
-      if (productPattern) {
-        chamadoRequest.input("softwarePattern", sql.NVarChar(100), productPattern);
-        whereClauses.push(
-          "LTRIM(RTRIM(Software)) COLLATE Latin1_General_CI_AI LIKE @softwarePattern"
-        );
+    if (!hasTicketNumbersFilter) {
+      if (catalog.allProducts) {
+        if (filters.products && filters.products.length > 0) {
+          const parameters = filters.products.map((product, index) => {
+            const name = `product${index}`;
+            chamadoRequest.input(name, sql.NVarChar(300), product);
+            return `@${name}`;
+          });
+          whereClauses.push(
+            `COALESCE(NULLIF(LTRIM(RTRIM(Software)), ''), NULLIF(LTRIM(RTRIM(Produto)), '')) COLLATE Latin1_General_CI_AI IN (${parameters.join(", ")})`
+          );
+        }
+      } else if (catalog.legacy) {
+        if (filters.products && filters.products.length > 0) {
+          const parameters = filters.products.map((product, index) => {
+            const name = `product${index}`;
+            chamadoRequest.input(name, sql.NVarChar(100), product);
+            return `@${name}`;
+          });
+          whereClauses.push(
+            `LTRIM(RTRIM(Produto)) COLLATE Latin1_General_CI_AI IN (${parameters.join(", ")})`
+          );
+        }
+        if (filters.softwares && filters.softwares.length > 0) {
+          const parameters = filters.softwares.map((software, index) => {
+            const name = `software${index}`;
+            chamadoRequest.input(name, sql.NVarChar(300), software);
+            return `@${name}`;
+          });
+          whereClauses.push(
+            `LTRIM(RTRIM(Software)) COLLATE Latin1_General_CI_AI IN (${parameters.join(", ")})`
+          );
+        }
+      } else {
+        const productPattern = getWorkerProductPattern(filters.product);
+        if (productPattern) {
+          chamadoRequest.input("softwarePattern", sql.NVarChar(100), productPattern);
+          whereClauses.push(
+            "LTRIM(RTRIM(Software)) COLLATE Latin1_General_CI_AI LIKE @softwarePattern"
+          );
+        }
       }
     }
 
@@ -994,200 +1391,32 @@ async function runProcessoVendaOnce(
              DataAberturaChamado, SolDataFechamento,
              CONVERT(varchar(19), DataAberturaChamado, 126) AS DataAberturaIso,
              CONVERT(varchar(19), SolDataFechamento, 126) AS DataEncerramentoIso
-      FROM ${catalog.sourceView}
+      FROM ${sourceViewSql}
       WHERE ${whereClauses.join("\n        AND ")}
     `, control);
 
     assertProcessoVendaRunActive(control);
 
-    const rows = res.recordset.map((r) => ({
-      numero_chamado: String(r.NumeroChamado),
-      codigo_cliente: r.codigoCliente ? String(r.codigoCliente) : null,
-      nome_cliente: cleanNomeCliente(r.NomeCliente),
-      razao_social_cliente: r.RazaoSocialCliente || null,
-      data_pedido_venda: null,
-      numero_pedido_venda: null,
-      titulo: r.TituloChamado || null,
-      descricao: decodeDescricao(r.descricaotramite),
-      natureza: r.Natureza || null,
-      status: normalizeChamadoStatus(r.StatusChamado) || "Não iniciado",
-      software: r.Software || null,
-      produto: r.Produto || null,
-      equipe_responsavel: r.EquipeResponsavelChamado?.trim() || null,
-      analista_responsavel: r.AnalistaResponsavel?.trim() || null,
-      data_abertura: r.DataAberturaIso?.slice(0, 10) || toIsoDate(r.DataAberturaChamado),
-      data_encerramento: r.DataEncerramentoIso?.slice(0, 10) || toIsoDate(r.SolDataFechamento),
-      aberto_em: r.DataAberturaIso || null,
-      encerrado_em: r.DataEncerramentoIso || null,
-      synced_at: new Date().toISOString(),
-    }));
+    const ticketNumbers = await enrichAndUpsertProcessoVendaRows(
+      pool,
+      res.recordset,
+      control
+    );
+    const tramitesSynced = await syncProcessoVendaTramitesByTickets(
+      pool,
+      ticketNumbers,
+      {
+        startDate,
+        endDate,
+        restrictByOpenDate: !hasTicketNumbersFilter,
+      },
+      control
+    );
 
-    // O Ellevo já calcula primeira resposta, vencimento, pausas e ajustes de
-    // calendário. Espelhamos esses valores oficiais em vez de recalculá-los no
-    // navegador. A view base fornece criticidade/equipe e Solicitacao fornece
-    // os relógios vigentes, inclusive alterações manuais auditáveis.
-    const slaPorChamado = new Map<string, ProcessoVendaOfficialSlaRow>();
-    const slaTicketBatchSize = 500;
-    const numerosChamados = [...new Set(rows.map((row) => row.numero_chamado))];
-    for (let from = 0; from < numerosChamados.length; from += slaTicketBatchSize) {
-      assertProcessoVendaRunActive(control);
-      const batch = numerosChamados.slice(from, from + slaTicketBatchSize);
-      const slaRequest = pool.request();
-      const ticketParameters = batch.map((ticket, index) => {
-        const name = `slaTicket${index}`;
-        slaRequest.input(name, sql.VarChar(50), ticket);
-        return `@${name}`;
-      });
-      const slaResult = await executeControlledQuery<ProcessoVendaOfficialSlaRow>(slaRequest, `
-        WITH chamado_meta AS (
-          SELECT CONVERT(varchar(50), c.NumeroChamado) AS NumeroChamado,
-                 c.Severidade AS Criticidade,
-                 c.EquipeResponsavelChamado,
-                 ROW_NUMBER() OVER (
-                   PARTITION BY c.NumeroChamado
-                   ORDER BY c.DataUltimaEdicaoTramite DESC
-                 ) AS rn
-          FROM plataformaellevo.dbo.vw_ChamadosTodosStatus AS c WITH (NOLOCK)
-          WHERE CONVERT(varchar(50), c.NumeroChamado) IN (${ticketParameters.join(", ")})
-        )
-        SELECT meta.NumeroChamado,
-               meta.Criticidade,
-               meta.EquipeResponsavelChamado,
-               CONVERT(varchar(19), solicitacao.DataPrevistaPriResp, 126) AS PrimeiraRespostaPrevistaIso,
-               CONVERT(varchar(19), solicitacao.DataRealPriResp, 126) AS PrimeiraRespostaRealIso,
-               CONVERT(varchar(19), solicitacao.SolVencimento, 126) AS VencimentoIso,
-               solicitacao.VencimentoPausado,
-               solicitacao.VencimentoInformadoManualmente,
-               solicitacao.TempoPriResp AS TempoPrimeiraRespostaMinutos,
-               solicitacao.SLAVlCalculado AS TempoVencimentoMinutos,
-               solicitacao.TempoRestanteVencimento AS TempoRestanteMinutos,
-               CONVERT(varchar(19), solicitacao.DataPrevistaRetorno, 126) AS RetornoPrevistoIso,
-               CONVERT(varchar(19), solicitacao.DataRealRetorno, 126) AS RetornoRealIso
-        FROM chamado_meta AS meta
-        LEFT JOIN plataformaellevo.dbo.Solicitacao AS solicitacao
-          ON CONVERT(varchar(50), solicitacao.SolID) = meta.NumeroChamado
-        WHERE meta.rn = 1
-      `, control);
-      for (const sla of slaResult.recordset) {
-        slaPorChamado.set(String(sla.NumeroChamado), sla);
-      }
-    }
-
-    const rowsComSla = rows.map((row) => {
-      const sla = slaPorChamado.get(row.numero_chamado);
-      return {
-        ...row,
-        criticidade: sla?.Criticidade || null,
-        equipe_responsavel:
-          sla?.EquipeResponsavelChamado?.trim() || row.equipe_responsavel || null,
-        sla_primeira_resposta_prevista_em: sla?.PrimeiraRespostaPrevistaIso || null,
-        sla_primeira_resposta_real_em: sla?.PrimeiraRespostaRealIso || null,
-        sla_vencimento_em: sla?.VencimentoIso || null,
-        sla_vencimento_pausado: sla?.VencimentoPausado === true,
-        sla_vencimento_manual: sla?.VencimentoInformadoManualmente === true,
-        sla_tempo_primeira_resposta_minutos: sla?.TempoPrimeiraRespostaMinutos ?? null,
-        sla_tempo_vencimento_minutos: sla?.TempoVencimentoMinutos ?? null,
-        sla_tempo_restante_minutos: sla?.TempoRestanteMinutos ?? null,
-        sla_retorno_previsto_em: sla?.RetornoPrevistoIso || null,
-        sla_retorno_real_em: sla?.RetornoRealIso || null,
-      };
-    });
-
-    if (rowsComSla.length > 0) {
-      // Upsert em lotes de 200 na tabela chamados_processo_venda
-      for (let i = 0; i < rowsComSla.length; i += 200) {
-        assertProcessoVendaRunActive(control);
-        const { error } = await supabase
-          .from("chamados_processo_venda")
-          .upsert(rowsComSla.slice(i, i + 200), { onConflict: "numero_chamado" });
-        if (error) throw new Error(`upsert chamados_processo_venda: ${error.message}`);
-      }
-    }
-
-    // A view usada acima mantem uma linha por chamado. O historico 1:N vem da
-    // view base do Ellevo, que possui uma linha por tramite. SequenciaTramite e
-    // a chave estavel; SELECT DISTINCT elimina repeticoes causadas pelos joins
-    // internos da view sem descartar movimentacoes diferentes.
-    const ticketNumbers = [...new Set(rowsComSla.map((row) => row.numero_chamado))];
-    const tramiteRows: ProcessoVendaTramiteRow[] = [];
-    const tramiteTicketBatchSize = 500;
-
-    // O historico e a parte mais pesada da view 1:N. Consultar somente os IDs
-    // encontrados pelo SELECT filtrado evita reler todos os tramites do periodo.
-    for (let from = 0; from < ticketNumbers.length; from += tramiteTicketBatchSize) {
-      assertProcessoVendaRunActive(control);
-      const batch = ticketNumbers.slice(from, from + tramiteTicketBatchSize);
-      const tramiteRequest = pool
-        .request()
-        .input("startDate", sql.Date, startDate)
-        .input("endDate", sql.Date, endDate);
-      const ticketParameters = batch.map((ticket, index) => {
-        const name = `ticket${index}`;
-        tramiteRequest.input(name, sql.VarChar(50), ticket);
-        return `@${name}`;
-      });
-
-      const tramitesResult = await executeControlledQuery<ProcessoVendaTramiteRow>(tramiteRequest, `
-        SELECT DISTINCT
-               NumeroChamado, NumeroTramite, SequenciaTramite,
-               CONVERT(varchar(19), DataTramite, 126) AS DataTramiteIso,
-               ResponsavelTramite, ResponsavelAtividade,
-               EquipeResponsavelAtividade, DescricaoAtividade,
-               CAST(descricaotramite AS nvarchar(max)) AS descricaotramite
-        FROM plataformaellevo..vw_ChamadosTodosStatus_Tramites_Tempos
-        WHERE DataAberturaChamado >= @startDate
-          AND DataAberturaChamado < DATEADD(DAY, 1, @endDate)
-          AND CONVERT(varchar(50), NumeroChamado) IN (${ticketParameters.join(", ")})
-          AND SequenciaTramite IS NOT NULL
-      `, control);
-      tramiteRows.push(...tramitesResult.recordset);
-    }
-
-    const tramitesPorChave = new Map<string, {
-      numero_chamado: string;
-      sequencia_tramite: number;
-      numero_tramite: number | null;
-      data_tramite: string | null;
-      responsavel: string | null;
-      equipe_responsavel: string | null;
-      atividade: string | null;
-      descricao: string | null;
-      synced_at: string;
-    }>();
-
-    for (const tramite of tramiteRows) {
-      const numeroChamado = String(tramite.NumeroChamado);
-      const sequenciaTramite = Number(tramite.SequenciaTramite);
-      const chave = `${numeroChamado}:${sequenciaTramite}`;
-      tramitesPorChave.set(chave, {
-        numero_chamado: numeroChamado,
-        sequencia_tramite: sequenciaTramite,
-        numero_tramite: tramite.NumeroTramite ?? null,
-        data_tramite: tramite.DataTramiteIso || null,
-        responsavel: tramite.ResponsavelTramite || tramite.ResponsavelAtividade || null,
-        equipe_responsavel: tramite.EquipeResponsavelAtividade || null,
-        atividade: tramite.DescricaoAtividade || null,
-        descricao: decodeDescricao(tramite.descricaotramite),
-        synced_at: new Date().toISOString(),
-      });
-    }
-
-    const tramites = [...tramitesPorChave.values()];
-    for (let i = 0; i < tramites.length; i += 200) {
-      assertProcessoVendaRunActive(control);
-      const { error } = await supabase
-        .from("chamados_processo_venda_tramites")
-        .upsert(tramites.slice(i, i + 200), {
-          onConflict: "numero_chamado,sequencia_tramite",
-        });
-      if (error) {
-        throw new Error(`upsert chamados_processo_venda_tramites: ${error.message}`);
-      }
-    }
-
-    const detail =
-      `${rows.length} chamados e ${tramites.length} tramites sincronizados ` +
-      `no periodo ${startDate} a ${endDate}`;
+    const detail = hasTicketNumbersFilter
+      ? `${ticketNumbers.length} chamados e ${tramitesSynced} tramites sincronizados sob demanda`
+      : `${ticketNumbers.length} chamados e ${tramitesSynced} tramites sincronizados ` +
+        `no periodo ${startDate} a ${endDate}`;
     console.log(`[processo-venda-sync:${catalog.label}] ok: ${detail}`);
     return { detail, ticketNumbers };
   } finally {

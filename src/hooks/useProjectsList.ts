@@ -21,12 +21,16 @@ import { normalizeSpecialty } from "@/utils/projectSpecialty";
 import { sanitizeOrionAdminConfig } from "@/lib/secondary-products";
 
 let lastAutoFinishCheck = 0;
+let lastAutoFinishDate = "";
 async function triggerAutoFinishCheckIfNeeded() {
-  const now = Date.now();
-  if (now - lastAutoFinishCheck < 15 * 60 * 1000) return;
+  const nowDate = new Date();
+  const todayStr = `${nowDate.getFullYear()}-${String(nowDate.getMonth() + 1).padStart(2, "0")}-${String(nowDate.getDate()).padStart(2, "0")}`;
+  const now = nowDate.getTime();
+  if (lastAutoFinishDate === todayStr && now - lastAutoFinishCheck < 15 * 60 * 1000) return;
+  lastAutoFinishDate = todayStr;
   lastAutoFinishCheck = now;
   try {
-    const sessionKey = 'siplan_last_auto_finish_check';
+    const sessionKey = `siplan_last_auto_finish_check_${todayStr}`;
     const lastSession = typeof window !== 'undefined' ? sessionStorage.getItem(sessionKey) : null;
     if (lastSession && now - Number(lastSession) < 15 * 60 * 1000) {
       return;
@@ -68,7 +72,6 @@ export const useProjectsList = (
           modelos_editor_status, modelos_editor_start_date, modelos_editor_end_date, modelos_editor_responsible,
           implementation_status, implementation_start_date, implementation_end_date, implementation_responsible, implementation_phase1,
           post_status, post_start_date, post_end_date, post_responsible,
-          TituloChamado, descricaotramite, ResponsavelAtividade, EtapasProjeto,
           secondary_tickets_count, secondary_tickets_pending_count, secondary_products_names,
           custom_fields
         `) 
@@ -144,10 +147,6 @@ interface ProjectRow {
     modelos_editor_status?: string;
     implementation_status?: string;
     post_status?: string;
-    TituloChamado?: string;
-    descricaotramite?: string;
-    ResponsavelAtividade?: string;
-    EtapasProjeto?: string;
     [key: string]: unknown; // Allow other columns
 }
 
@@ -182,7 +181,7 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
     }
 
     const phase1 = parsePhase1FromDb(row.implementation_phase1);
-    const hasPhase1Date = Boolean(phase1?.startDate || phase1?.endDate || row.implementation_start_date);
+    const hasPhase1Date = Boolean(phase1?.startDate || phase1?.endDate);
     const isEnvironmentEligible = row.environment_status === 'in-progress' || row.environment_status === 'done' || hasPhase1Date;
 
     // Returns a lightweight project object suitable for lists/cards
@@ -198,10 +197,6 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
         overallProgress: row.overall_progress,
         priority: row.priority as unknown as Priority,
         healthScore,
-        TituloChamado: row.TituloChamado,
-        descricaotramite: row.descricaotramite,
-        ResponsavelAtividade: row.ResponsavelAtividade,
-        EtapasProjeto: row.EtapasProjeto,
         secondaryTicketsCount: typeof row.secondary_tickets_count === "number" ? row.secondary_tickets_count : 0,
         secondaryTicketsPendingCount:
           typeof row.secondary_tickets_pending_count === "number" ? row.secondary_tickets_pending_count : 0,
@@ -319,8 +314,16 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
             } as ImplementationStageV2,
             post: { 
                 status: row.post_status || 'todo',
-                startDate: row.post_start_date ? new Date(row.post_start_date as string) : undefined,
-                endDate: row.post_end_date ? new Date(row.post_end_date as string) : undefined,
+                startDate: row.post_start_date
+                  ? (/^\d{4}-\d{2}-\d{2}$/.test(String(row.post_start_date).trim())
+                      ? new Date(`${String(row.post_start_date).trim()}T12:00:00.000Z`)
+                      : new Date(row.post_start_date as string))
+                  : undefined,
+                endDate: row.post_end_date
+                  ? (/^\d{4}-\d{2}-\d{2}$/.test(String(row.post_end_date).trim())
+                      ? new Date(`${String(row.post_end_date).trim()}T12:00:00.000Z`)
+                      : new Date(row.post_end_date as string))
+                  : undefined,
                 responsible: row.post_responsible as string | undefined
             } as PostStageV2,
         },

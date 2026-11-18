@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
+import { QueryClientContext } from '@tanstack/react-query';
 import { ProjectV2 } from '@/types/ProjectV2';
+import { invalidateProjectTimelineQueries, recordProjectButtonLog } from '@/services/projectLogService';
 import { useSiplanSkillsIntegration } from '@/hooks/useSiplanSkillsIntegration';
 import { usePermissions } from '@/hooks/usePermissions';
 import { SiplanSkillsActivityIndicator } from './SiplanSkillsActivityIndicator';
@@ -56,6 +58,7 @@ function formatLastActivityBr(isoDate?: string | null): string | null {
 
 export function SiplanSkillsCard({ project }: SiplanSkillsCardProps) {
   const { canEditProjects } = usePermissions();
+  const queryClient = useContext(QueryClientContext) || undefined;
   const {
     isEligible,
     isLoadingLiveStatus,
@@ -87,6 +90,14 @@ export function SiplanSkillsCard({ project }: SiplanSkillsCardProps) {
     if (ok) {
       setCopiedFull(true);
       setTimeout(() => setCopiedFull(false), 2000);
+      void recordProjectButtonLog({
+        projectId: project.id,
+        category: 'skills',
+        tabLabel: 'Siplan Skills',
+        buttonLabel: 'Copiar Acesso Completo',
+        message: `Credenciais completas do Siplan Skills copiadas (usuário: ${credentials?.username || '-'})`,
+        queryClient,
+      });
     }
   };
 
@@ -98,6 +109,17 @@ export function SiplanSkillsCard({ project }: SiplanSkillsCardProps) {
       description: value,
     });
     setTimeout(() => setCopiedField(null), 1800);
+    void recordProjectButtonLog({
+      projectId: project.id,
+      category: 'skills',
+      tabLabel: 'Siplan Skills',
+      buttonLabel: field === 'username' ? 'Copiar Usuário Skills' : 'Copiar Token Skills',
+      message:
+        field === 'username'
+          ? `Usuário de login do Siplan Skills copiado (${value})`
+          : 'Token de acesso do Siplan Skills copiado',
+      queryClient,
+    });
   };
 
   const handleStartEditUsername = () => {
@@ -113,6 +135,7 @@ export function SiplanSkillsCard({ project }: SiplanSkillsCardProps) {
     }
     try {
       await updateSkillsUsername(cleaned);
+      await invalidateProjectTimelineQueries(queryClient, project.id);
       setIsEditingUsername(false);
     } catch {
       // Erro tratado pelo hook
@@ -123,6 +146,7 @@ export function SiplanSkillsCard({ project }: SiplanSkillsCardProps) {
     if (!canEditProjects) return;
     try {
       await provisionSkillsAccess(undefined);
+      await invalidateProjectTimelineQueries(queryClient, project.id);
     } catch {
       // Erro tratado pelo hook
     }
@@ -271,7 +295,17 @@ export function SiplanSkillsCard({ project }: SiplanSkillsCardProps) {
                 size="icon"
                 variant="ghost"
                 className="h-9 w-9 text-muted-foreground hover:text-foreground"
-                onClick={() => window.open(credentials.portalUrl || 'https://skills.siplan.com.br/', '_blank')}
+                onClick={() => {
+                  window.open(credentials.portalUrl || 'https://skills.siplan.com.br/', '_blank');
+                  void recordProjectButtonLog({
+                    projectId: project.id,
+                    category: 'skills',
+                    tabLabel: 'Siplan Skills',
+                    buttonLabel: 'Abrir Portal Siplan Skills',
+                    message: 'Portal externo Siplan Skills aberto em nova aba',
+                    queryClient,
+                  });
+                }}
                 title="Abrir portal Siplan Skills em nova aba"
               >
                 <ExternalLink className="h-4 w-4" />

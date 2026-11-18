@@ -16,6 +16,7 @@ import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { convertBlocksToTiptap } from "@/lib/editor-utils";
 import { cn } from "@/lib/utils";
+import { formatConfirmationTimestamp, toLocalDateKey } from "@/utils/implementation-phase1";
 
 interface ImplementationStageFormProps {
   stage: ImplementationStageV2;
@@ -91,50 +92,79 @@ function ImplementationPhaseForm({
   };
 
   const statusColor = phase?.status || "todo";
+  const formattedConfirmedAt =
+    phaseKey === "phase1" && phase?.isConfirmed
+      ? formatConfirmationTimestamp(phase.confirmedAt)
+      : "";
 
   return (
     <div className={cn("relative overflow-hidden rounded-xl border p-4 shadow-sm", borderColor, bgGradient)}>
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <h4 className="font-bold flex items-center gap-2 relative text-left">
-          <Badge className={cn("text-white px-2 py-0.5 text-[10px] shadow-sm font-semibold flex items-center gap-1", badgeClass)}>
-            {phaseKey === "phase1" ? (
-              <Rocket className="h-3 w-3 shrink-0" />
-            ) : (
-              <GraduationCap className="h-3 w-3 shrink-0" />
-            )}
-            <span>{label}</span>
-          </Badge>
-          <span className={cn("text-base font-bold", titleColor)}>
-            {phaseKey === "phase1" ? "Treinamento & Acompanhamento" : "Possível Retorno"}
-          </span>
-        </h4>
+      <div className="mb-3 space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h4 className="font-bold flex items-center gap-2 relative text-left">
+            <Badge className={cn("text-white px-2 py-0.5 text-[10px] shadow-sm font-semibold flex items-center gap-1", badgeClass)}>
+              {phaseKey === "phase1" ? (
+                <Rocket className="h-3 w-3 shrink-0" />
+              ) : (
+                <GraduationCap className="h-3 w-3 shrink-0" />
+              )}
+              <span>{label}</span>
+            </Badge>
+            <span className={cn("text-base font-bold", titleColor)}>
+              {phaseKey === "phase1" ? "Treinamento & Acompanhamento" : "Possível Retorno"}
+            </span>
+          </h4>
 
-        {phaseKey === "phase1" && (
+          {phaseKey === "phase1" && (
+            <div
+              onClick={() => canEditProjects && onUpdatePhase("phase1", { isConfirmed: !phase?.isConfirmed })}
+              className={cn(
+                "flex min-h-10 sm:min-h-0 items-center gap-2.5 px-3 py-1.5 rounded-lg border transition-all select-none",
+                canEditProjects ? "cursor-pointer" : "opacity-60 cursor-not-allowed",
+                phase?.isConfirmed
+                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20"
+                  : "bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200/70"
+              )}
+            >
+              <Switch
+                checked={!!phase?.isConfirmed}
+                onCheckedChange={(checked) => onUpdatePhase("phase1", { isConfirmed: checked })}
+                onClick={(e) => e.stopPropagation()}
+                disabled={!canEditProjects}
+                className="data-[state=checked]:bg-emerald-600"
+              />
+              <span className="text-xs font-bold flex items-center gap-1">
+                {phase?.isConfirmed ? (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    Implantação Confirmada
+                  </>
+                ) : (
+                  <>
+                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                    Implantação Confirmada?
+                  </>
+                )}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {phaseKey === "phase1" && phase?.isConfirmed && (
           <div
-            onClick={() => canEditProjects && onUpdatePhase("phase1", { isConfirmed: !phase?.isConfirmed })}
-            className={cn(
-              "flex items-center gap-2.5 px-3 py-1.5 rounded-lg border transition-all cursor-pointer select-none",
-              phase?.isConfirmed
-                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20"
-                : "bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200/70"
-            )}
+            data-testid="phase1-confirmation-note"
+            className="flex items-start gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs leading-snug text-emerald-800 dark:text-emerald-200 text-left break-words"
           >
-            <Switch
-              checked={!!phase?.isConfirmed}
-              onCheckedChange={(checked) => onUpdatePhase("phase1", { isConfirmed: checked })}
-              disabled={!canEditProjects}
-              className="data-[state=checked]:bg-emerald-600"
-            />
-            <span className="text-xs font-bold flex items-center gap-1">
-              {phase?.isConfirmed ? (
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+            <span className="min-w-0 break-words">
+              {formattedConfirmedAt ? (
                 <>
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                  Implantação Confirmada
+                  Implantação foi <strong>confirmada</strong> pelo cliente após contato em{" "}
+                  <strong>{formattedConfirmedAt}</strong>!
                 </>
               ) : (
                 <>
-                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                  Implantação Confirmada?
+                  Implantação foi <strong>confirmada</strong> pelo cliente após contato!
                 </>
               )}
             </span>
@@ -220,11 +250,7 @@ function ImplementationPhaseForm({
           </Label>
           <Input
             type="date"
-            value={
-              phase?.startDate
-                ? new Date(phase.startDate).toISOString().split("T")[0]
-                : ""
-            }
+            value={toLocalDateKey(phase?.startDate) ?? ""}
             onChange={(e) =>
               onUpdatePhase(phaseKey, {
                 startDate: e.target.value
@@ -243,11 +269,7 @@ function ImplementationPhaseForm({
           </Label>
           <Input
             type="date"
-            value={
-              phase?.endDate
-                ? new Date(phase.endDate).toISOString().split("T")[0]
-                : ""
-            }
+            value={toLocalDateKey(phase?.endDate) ?? ""}
             onChange={(e) =>
               onUpdatePhase(phaseKey, {
                 endDate: e.target.value
@@ -309,11 +331,7 @@ function ImplementationPhaseForm({
                   </Label>
                   <Input
                     type="date"
-                    value={
-                      assign.startDate
-                        ? new Date(assign.startDate).toISOString().split("T")[0]
-                        : ""
-                    }
+                    value={toLocalDateKey(assign.startDate) ?? ""}
                     onChange={(e) =>
                       handleUpdateAdditionalResponsible(index, {
                         startDate: e.target.value
@@ -333,11 +351,7 @@ function ImplementationPhaseForm({
                   </Label>
                   <Input
                     type="date"
-                    value={
-                      assign.endDate
-                        ? new Date(assign.endDate).toISOString().split("T")[0]
-                        : ""
-                    }
+                    value={toLocalDateKey(assign.endDate) ?? ""}
                     onChange={(e) =>
                       handleUpdateAdditionalResponsible(index, {
                         endDate: e.target.value

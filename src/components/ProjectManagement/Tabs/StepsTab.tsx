@@ -85,6 +85,7 @@ import {
   getStageReadiness,
   identifyBottleneck,
 } from "@/lib/predictability-utils";
+import { applyPhase1UpdatesWithAutomation } from "@/utils/implementation-phase1";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -237,6 +238,40 @@ export function StepsTab({
     updates: Partial<ImplementationPhase>,
   ) => {
     const currentImpl = stagesData.implementation;
+    if (phase === "phase1") {
+      const nextImpl = applyPhase1UpdatesWithAutomation({
+        currentStage: currentImpl,
+        phaseUpdates: updates,
+        globalStatus: data.globalStatus ?? project.globalStatus,
+        systemType: data.systemType ?? project.systemType,
+      });
+
+      if (
+        !isModelosTN &&
+        updates.status === "done" &&
+        !nextImpl.phase1?.startDate &&
+        !nextImpl.phase1?.endDate
+      ) {
+        sonnerToast.warning(
+          "Atenção: a Fase 1 foi marcada como finalizada sem datas de início e término definidas.",
+          { duration: 6000 }
+        );
+      }
+
+      if (
+        updates.status === "done" &&
+        (project.secondaryTicketsPendingCount || 0) > 0
+      ) {
+        sonnerToast.warning(
+          `Lembrete: este projeto possui ${project.secondaryTicketsPendingCount} produto(s) secundário(s) ainda pendente(s) de conclusão ou trâmite no 0800. Confira a aba "Produtos Secundários".`,
+          { duration: 7000 }
+        );
+      }
+
+      updateStage("implementation", nextImpl);
+      return;
+    }
+
     const currentPhase = currentImpl[phase] || {};
     const newPhase = { ...currentPhase, ...updates };
 
@@ -504,12 +539,16 @@ export function StepsTab({
             // Phase 1 dates are used as the main dates for the implementation stage
             // These are synced automatically when phase 1 dates are updated
             startDate={
-              stagesData.implementation.phase1?.startDate ||
-              stagesData.implementation.startDate
+              isModelosTN
+                ? stagesData.implementation.phase1?.startDate ||
+                  stagesData.implementation.startDate
+                : stagesData.implementation.phase1?.startDate
             }
             endDate={
-              stagesData.implementation.phase1?.endDate ||
-              stagesData.implementation.endDate
+              isModelosTN
+                ? stagesData.implementation.phase1?.endDate ||
+                  stagesData.implementation.endDate
+                : stagesData.implementation.phase1?.endDate
             }
             observations={stagesData.implementation.observations}
             hideDates={true} // Hide main dates - will be managed by Phase 1 and Phase 2
@@ -540,21 +579,37 @@ export function StepsTab({
               stageReadiness.find((r) => r.stageId === "implementation")?.reason
             }
             onUpdate={(u) => {
-              // Sync phase 1 dates with main stage dates for calendar compatibility
+              // Sync phase 1 dates and status with main stage updates
               const updates: Record<string, unknown> = { ...u };
-              const currentPhase1 = stagesData.implementation.phase1 || {};
-              if (u.startDate !== undefined) {
-                updates.phase1 = {
-                  ...currentPhase1,
-                  startDate: u.startDate,
-                };
+              const currentPhase1 = stagesData.implementation.phase1;
+              if (currentPhase1) {
+                const phase1Updates: Record<string, unknown> = {};
+                if (u.startDate !== undefined) {
+                  phase1Updates.startDate = u.startDate;
+                }
+                if (u.endDate !== undefined) {
+                  phase1Updates.endDate = u.endDate;
+                }
+                if (u.status !== undefined) {
+                  phase1Updates.status = u.status;
+                }
+                if (Object.keys(phase1Updates).length > 0) {
+                  updates.phase1 = {
+                    ...currentPhase1,
+                    ...phase1Updates,
+                  };
+                }
               }
-              if (u.endDate !== undefined) {
-                updates.phase1 = {
-                  ...currentPhase1,
-                  ...((updates.phase1 as Record<string, unknown>) || {}),
-                  endDate: u.endDate,
-                };
+              if (
+                !isModelosTN &&
+                u.status === "done" &&
+                !stagesData.implementation.phase1?.startDate &&
+                !stagesData.implementation.phase1?.endDate
+              ) {
+                sonnerToast.warning(
+                  "Atenção: a implantação foi marcada como finalizada sem datas definidas na Fase 1.",
+                  { duration: 6000 }
+                );
               }
               if (u.status === "done" && (project.secondaryTicketsPendingCount || 0) > 0) {
                 sonnerToast.warning(

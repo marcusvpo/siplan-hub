@@ -28,11 +28,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { useRef, useState, useMemo } from "react";
+import { useRef, useState, useMemo, useContext } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePermissions } from "@/hooks/usePermissions";
+import { AuthContext } from "@/contexts/AuthContextValue";
+import { QueryClientContext } from "@tanstack/react-query";
+import { recordProjectButtonLog } from "@/services/projectLogService";
 
 interface TabProps {
   project: ProjectV2;
@@ -45,6 +48,13 @@ export function FilesTab({ project }: TabProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { canUploadFiles, canDeleteFiles, canEditProjects } = usePermissions();
+  const auth = useContext(AuthContext);
+  const queryClient = useContext(QueryClientContext);
+  const currentUserName =
+    auth?.fullName ||
+    (auth?.user?.user_metadata?.full_name as string | undefined) ||
+    auth?.user?.email ||
+    "Usuário";
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [uploadProgress, setUploadProgress] = useState({
@@ -78,7 +88,7 @@ export function FilesTab({ project }: TabProps) {
         try {
           await uploadFile.mutateAsync({
             file,
-            uploadedBy: "Admin", // TODO: Get actual user from auth context
+            uploadedBy: currentUserName,
           });
           successCount++;
         } catch (error) {
@@ -118,10 +128,26 @@ export function FilesTab({ project }: TabProps) {
     }
   };
 
-  const handleDownload = async (file: ProjectFile) => {
+  const handleDownload = async (file: ProjectFile, mode: "view" | "download" = "download") => {
     try {
       const url = await getDownloadUrl(file.fileUrl);
       window.open(url, "_blank");
+      void recordProjectButtonLog({
+        projectId: project.id,
+        category: "files",
+        tabLabel: "Arquivos",
+        buttonLabel: mode === "view" ? "Visualizar Arquivo" : "Baixar Arquivo",
+        message:
+          mode === "view"
+            ? `Arquivo visualizado: "${file.fileName}"`
+            : `Arquivo baixado: "${file.fileName}"`,
+        extraMetadata: {
+          fileId: file.id,
+          fileName: file.fileName,
+          mode,
+        },
+        queryClient,
+      });
     } catch (error) {
       console.error(error);
       toast({
@@ -239,7 +265,7 @@ export function FilesTab({ project }: TabProps) {
             variant="ghost"
             size="icon"
             title="Visualizar"
-            onClick={() => handleDownload(file)}
+            onClick={() => handleDownload(file, "view")}
           >
             <Eye className="h-4 w-4" />
           </Button>
@@ -247,7 +273,7 @@ export function FilesTab({ project }: TabProps) {
             variant="ghost"
             size="icon"
             title="Baixar"
-            onClick={() => handleDownload(file)}
+            onClick={() => handleDownload(file, "download")}
           >
             <Download className="h-4 w-4" />
           </Button>

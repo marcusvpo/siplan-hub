@@ -45,8 +45,6 @@ const project = {
   },
   isDeleted: false,
   isArchived: false,
-  TituloChamado: "Título longo do chamado que também deve permanecer legível",
-  EtapasProjeto: "Etapa extensa recebida pelo chamado 0800",
 } as unknown as ProjectV2;
 
 describe("ProjectCardV3 no mobile", () => {

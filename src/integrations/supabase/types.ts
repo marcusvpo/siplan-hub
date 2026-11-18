@@ -803,6 +803,47 @@ export type ProjectRow = {
 export type ProjectInsert = Partial<ProjectRow>;
 export type ProjectUpdate = Partial<ProjectRow>;
 
+export type TimelineEventType =
+  | "auto"
+  | "comment"
+  | "field_change"
+  | "status_change"
+  | "file_upload"
+  | "file_delete"
+  | "bulk_edit"
+  | "project_created"
+  | "project_deleted"
+  | "project_view"
+  | "stage_change"
+  | "secondary_product"
+  | "roadmap_change"
+  | "skills_action"
+  | "button_action"
+  | "ai_action"
+  | "sync_action";
+
+export type TimelineEventRow = {
+  id: string;
+  project_id: string;
+  type: TimelineEventType | string;
+  author: string;
+  message: string;
+  timestamp: string;
+  metadata: Json | null;
+};
+
+export type TimelineEventInsert = {
+  id?: string;
+  project_id: string;
+  type: TimelineEventType | string;
+  author: string;
+  message: string;
+  timestamp?: string;
+  metadata?: Json | null;
+};
+
+export type TimelineEventUpdate = Partial<TimelineEventInsert>;
+
 export type AssistantKnowledgeFileRow = {
   id: string;
   article_id: string;
@@ -923,6 +964,7 @@ export type CsCxNpsAccessEventUpdate = Partial<CsCxNpsAccessEventInsert>;
 
 export type Tables<TableName extends string> =
   TableName extends "projects" ? ProjectRow
+    : TableName extends "timeline_events" ? TimelineEventRow
     :
   TableName extends "analyst_agenda_entries" ? AnalystAgendaEntryRow
     : TableName extends "conversion_engines" ? ConversionEngineRow
@@ -956,6 +998,7 @@ export type Tables<TableName extends string> =
 
 export type TablesInsert<TableName extends string> =
   TableName extends "projects" ? ProjectInsert
+    : TableName extends "timeline_events" ? TimelineEventInsert
     :
   TableName extends "analyst_agenda_entries" ? AnalystAgendaEntryInsert
     : TableName extends "conversion_engines" ? ConversionEngineInsert
@@ -989,6 +1032,7 @@ export type TablesInsert<TableName extends string> =
 
 export type TablesUpdate<TableName extends string> =
   TableName extends "projects" ? ProjectUpdate
+    : TableName extends "timeline_events" ? TimelineEventUpdate
     :
   TableName extends "analyst_agenda_entries" ? AnalystAgendaEntryUpdate
     : TableName extends "conversion_engines" ? ConversionEngineUpdate

@@ -78,6 +78,7 @@ export function usePosPanorama(
         .from("projects")
         .select("id, client_name, ticket_number, system_type, post_start_date, post_end_date, post_status")
         .eq("is_deleted", false)
+        .in("post_status", ["in-progress", "done"])
         .not("post_start_date", "is", null);
       if (projErr) throw projErr;
 

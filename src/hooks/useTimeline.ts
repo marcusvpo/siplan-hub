@@ -1,15 +1,30 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  resolveCurrentActor,
+  type ProjectLogMetadata,
+  type TimelineEventType,
+} from "@/services/projectLogService";
 
 export const useTimeline = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, fullName, role } = useAuth();
 
-  // Get the current user's name
   const getCurrentUserName = (): string => {
     if (!user) return "Sistema";
-    return user.user_metadata?.full_name || user.email?.split("@")[0] || "Usuário";
+    const profileName = typeof fullName === "string" ? fullName.trim() : "";
+    const metaFullName =
+      typeof user.user_metadata?.full_name === "string"
+        ? user.user_metadata.full_name.trim()
+        : "";
+    const metaName =
+      typeof user.user_metadata?.name === "string"
+        ? user.user_metadata.name.trim()
+        : "";
+    const email = typeof user.email === "string" ? user.email.trim() : "";
+
+    return profileName || metaFullName || metaName || email || "Usuário";
   };
 
   const addComment = useMutation({
@@ -20,18 +35,34 @@ export const useTimeline = () => {
       projectId: string;
       message: string;
     }) => {
-      const authorName = getCurrentUserName();
-      
+      const actor = await resolveCurrentActor();
+      const authorName =
+        actor.userId || actor.fullName !== "Sistema"
+          ? actor.fullName
+          : getCurrentUserName();
+
+      const metadata: ProjectLogMetadata = {
+        category: "comment",
+        actionType: "comment",
+        tabLabel: "Logs",
+        userId: actor.userId ?? user?.id ?? null,
+        userEmail: actor.email ?? user?.email ?? null,
+        userRole: actor.role ?? role ?? null,
+      };
+
       const { error } = await supabase.from("timeline_events").insert({
         project_id: projectId,
         type: "comment",
         author: authorName,
         message,
+        metadata,
       });
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["timelineEvents", variables.projectId] });
+      queryClient.invalidateQueries({ queryKey: ["projectsList"] });
       queryClient.invalidateQueries({ queryKey: ["projectsV3"] });
     },
   });
@@ -42,27 +73,41 @@ export const useTimeline = () => {
       message,
       metadata,
       authorOverride,
+      type,
     }: {
       projectId: string;
       message: string;
-
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
       authorOverride?: string;
+      type?: TimelineEventType;
     }) => {
-      // Use override if provided, otherwise get current user name
-      const authorName = authorOverride || getCurrentUserName();
-      
+      const actor = await resolveCurrentActor();
+      const resolvedName =
+        actor.userId || actor.fullName !== "Sistema"
+          ? actor.fullName
+          : getCurrentUserName();
+      const authorName = authorOverride || resolvedName;
+
+      const enrichedMetadata: Record<string, unknown> = {
+        ...(metadata || {}),
+        userId: (metadata?.userId as string | null | undefined) ?? actor.userId ?? user?.id ?? null,
+        userEmail: (metadata?.userEmail as string | null | undefined) ?? actor.email ?? user?.email ?? null,
+        userRole: (metadata?.userRole as string | null | undefined) ?? actor.role ?? role ?? null,
+      };
+
       const { error } = await supabase.from("timeline_events").insert({
         project_id: projectId,
-        type: "auto",
+        type: type || "auto",
         author: authorName,
         message,
-        metadata,
+        metadata: enrichedMetadata,
       });
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["timelineEvents", variables.projectId] });
+      queryClient.invalidateQueries({ queryKey: ["projectsList"] });
       queryClient.invalidateQueries({ queryKey: ["projectsV3"] });
     },
   });

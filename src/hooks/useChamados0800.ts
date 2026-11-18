@@ -1,6 +1,7 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeEllevoTicketNumber } from "@/lib/ellevo-ticket";
 import {
   CHAMADOS_CATALOG_CONFIG,
   LEGACY_PRODUCT_FAMILIES,
@@ -323,10 +324,11 @@ const mapChamadoTramite = (tramite: any): ChamadoTramite => ({
 });
 
 /** Historico 1:N de tramites da tela Consulta de Chamados. */
-export function useChamadoTramites(numeroChamado?: string, enabled = true) {
+export function useChamadoTramites(numeroChamado?: string | null, enabled = true) {
+  const ticket = (numeroChamado || "").trim();
   const query = useQuery({
-    queryKey: ["chamadoProcessoVendaTramites", numeroChamado],
-    enabled: enabled && !!numeroChamado,
+    queryKey: ["chamadoProcessoVendaTramites", ticket],
+    enabled: enabled && Boolean(ticket),
     staleTime: 30_000,
     queryFn: async (): Promise<ChamadoTramite[]> => {
       const { data, error } = await supabase
@@ -334,7 +336,7 @@ export function useChamadoTramites(numeroChamado?: string, enabled = true) {
         .select(
           "sequencia_tramite, numero_tramite, data_tramite, responsavel, equipe_responsavel, atividade, descricao"
         )
-        .eq("numero_chamado", numeroChamado!)
+        .eq("numero_chamado", ticket)
         .order("data_tramite", { ascending: false, nullsFirst: false })
         .order("numero_tramite", { ascending: false });
 
@@ -454,6 +456,7 @@ export function useBenchmarkPos(systemType?: string | null, excludeTicket?: stri
         .select("ticket_number, post_start_date, post_end_date, post_status")
         .eq("is_deleted", false)
         .eq("system_type", systemType as string)
+        .in("post_status", ["in-progress", "done"])
         .not("post_start_date", "is", null);
       if (projErr) throw projErr;
 
@@ -683,6 +686,7 @@ export interface ProcessoVendaSyncFilters {
   searchTerms?: string[] | null;
   /** Compatibilidade com chamadas antigas que ainda enviam um unico termo. */
   searchTerm?: string | null;
+  ticketNumbers?: string[] | null;
 }
 
 export interface ChamadosAssignmentOptions {
@@ -830,6 +834,7 @@ export function useSolicitarSyncProcessoVenda(catalog: ChamadosCatalog = "orion"
             // Workers ainda nao atualizados continuam filtrando corretamente
             // quando existe uma unica palavra-chave.
             search_term: searchTerms.length === 1 ? searchTerms[0] : null,
+            ticket_numbers: filters.ticketNumbers ?? [],
           },
         }
       );
@@ -857,6 +862,8 @@ export function useSolicitarSyncProcessoVenda(catalog: ChamadosCatalog = "orion"
             queryClient.invalidateQueries({ queryKey: ["chamadosClientOptions", catalog] }),
             queryClient.invalidateQueries({ queryKey: ["distinctProcessoVendaNaturezas", catalog] }),
             queryClient.invalidateQueries({ queryKey: ["chamadosAssignmentOptions", catalog] }),
+            queryClient.invalidateQueries({ queryKey: ["chamado0800ByNumber"] }),
+            queryClient.invalidateQueries({ queryKey: ["chamadoProcessoVendaTramites"] }),
           ]);
           return {
             ticketNumbers: Array.isArray(row.result_ticket_ids)
@@ -880,6 +887,109 @@ export function useSolicitarSyncProcessoVenda(catalog: ChamadosCatalog = "orion"
   }, [catalog, queryClient]);
 
   return { solicitarSync, syncing };
+}
+
+export interface ProjectChamado0800Result {
+  ticketNumber: string | null;
+  hasValidTicket: boolean;
+  chamado: Chamado0800 | null;
+  tramites: ChamadoTramite[];
+  isLoading: boolean;
+  isChamadoLoading: boolean;
+  isTramitesLoading: boolean;
+  error: unknown;
+  syncing: boolean;
+  syncError: string | null;
+  syncNow: () => Promise<void>;
+}
+
+/**
+ * Hook composto para a aba Chamado 0800 do projeto: lê metadados completos,
+ * SLA oficial e histórico de trâmites dos espelhos do Ellevo, expondo sync
+ * sob demanda por número de chamado e auto-sync silencioso quando vazio.
+ */
+export function useProjectChamado0800(
+  ticketNumber?: string | null,
+  enabled = true
+): ProjectChamado0800Result {
+  const cleanTicket = normalizeEllevoTicketNumber(ticketNumber) ?? "";
+  const hasValidTicket = /^\d{4,}$/.test(cleanTicket);
+  const queryEnabled = Boolean(enabled && hasValidTicket);
+
+  const chamadoQuery = useChamado0800ByNumber(
+    hasValidTicket ? cleanTicket : null,
+    queryEnabled
+  );
+  const tramitesQuery = useChamadoTramites(
+    hasValidTicket ? cleanTicket : undefined,
+    queryEnabled
+  );
+  const { solicitarSync, syncing } = useSolicitarSyncProcessoVenda("orion");
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const autoSyncedTicketsRef = useRef<Set<string>>(new Set());
+  const dataAberturaRef = useRef<string | undefined>(undefined);
+  dataAberturaRef.current = chamadoQuery.data?.dataAbertura;
+
+  useEffect(() => {
+    setSyncError(null);
+  }, [cleanTicket]);
+
+  const syncNow = useCallback(async () => {
+    if (!hasValidTicket) return;
+    setSyncError(null);
+
+    const todayIso = toIsoDay(new Date()) || new Date().toISOString().slice(0, 10);
+    const rawStart = toIsoDay(dataAberturaRef.current) || "2020-01-01";
+    const startDate = rawStart <= todayIso ? rawStart : "2020-01-01";
+
+    try {
+      await solicitarSync(startDate, todayIso, {
+        ticketNumbers: [cleanTicket],
+      });
+    } catch (err) {
+      if (isProcessoVendaSyncSupersededError(err)) return;
+      setSyncError(
+        err instanceof Error
+          ? err.message
+          : "Não foi possível sincronizar o chamado com o Ellevo 0800."
+      );
+    }
+  }, [cleanTicket, hasValidTicket, solicitarSync]);
+
+  useEffect(() => {
+    if (!queryEnabled) return;
+    if (chamadoQuery.isLoading || tramitesQuery.isLoading) return;
+    if (chamadoQuery.isError || tramitesQuery.error) return;
+    if (chamadoQuery.data && tramitesQuery.tramites.length > 0) return;
+    if (autoSyncedTicketsRef.current.has(cleanTicket)) return;
+
+    autoSyncedTicketsRef.current.add(cleanTicket);
+    void syncNow();
+  }, [
+    cleanTicket,
+    queryEnabled,
+    chamadoQuery.isLoading,
+    chamadoQuery.isError,
+    chamadoQuery.data,
+    tramitesQuery.isLoading,
+    tramitesQuery.error,
+    tramitesQuery.tramites.length,
+    syncNow,
+  ]);
+
+  return {
+    ticketNumber: cleanTicket || null,
+    hasValidTicket,
+    chamado: chamadoQuery.data ?? null,
+    tramites: tramitesQuery.tramites,
+    isLoading: queryEnabled && (chamadoQuery.isLoading || tramitesQuery.isLoading),
+    isChamadoLoading: queryEnabled && chamadoQuery.isLoading,
+    isTramitesLoading: queryEnabled && tramitesQuery.isLoading,
+    error: chamadoQuery.error || tramitesQuery.error || null,
+    syncing,
+    syncError,
+    syncNow,
+  };
 }
 
 export interface ChamadosSearchFilters {

@@ -1,6 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProjectFile } from "@/types/ProjectV2";
+import { recordProjectActivityLog, resolveCurrentActor } from "@/services/projectLogService";
+
+function formatFileSizeForLog(bytes?: number | null): string {
+  if (!bytes || bytes <= 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+}
 
 export const useProjectFiles = (projectId: string) => {
   const queryClient = useQueryClient();
@@ -33,6 +42,14 @@ export const useProjectFiles = (projectId: string) => {
 
   const uploadFile = useMutation({
     mutationFn: async ({ file, uploadedBy }: { file: File; uploadedBy: string }) => {
+      const actor = await resolveCurrentActor();
+      const effectiveUploadedBy =
+        uploadedBy && uploadedBy !== "Admin"
+          ? uploadedBy
+          : actor.userId || actor.fullName !== "Sistema"
+            ? actor.fullName
+            : uploadedBy || "Usuário";
+
       // Sanitize filename to avoid "Invalid key" errors with special characters
       const sanitize = (name: string) => {
         return name
@@ -62,7 +79,7 @@ export const useProjectFiles = (projectId: string) => {
           file_path: filePath,
           file_size: file.size,
           mime_type: file.type,
-          uploaded_by: uploadedBy,
+          uploaded_by: effectiveUploadedBy,
         })
         .select()
         .single();
@@ -71,8 +88,36 @@ export const useProjectFiles = (projectId: string) => {
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["projectFiles", projectId] });
+      if (data) {
+        const sizeLabel = formatFileSizeForLog(data.file_size);
+        void recordProjectActivityLog({
+          projectId,
+          type: "file_upload",
+          category: "files",
+          actionType: "file_upload",
+          tabLabel: "Arquivos",
+          fieldLabel: "Arquivo Anexado",
+          newValue: `${data.file_name} (${sizeLabel})`,
+          changes: [
+            {
+              field: "project_files",
+              label: "Novo Arquivo",
+              oldValue: "(nenhum)",
+              newValue: `${data.file_name} (${sizeLabel})`,
+            },
+          ],
+          message: `Arquivo enviado: "${data.file_name}"`,
+          extraMetadata: {
+            fileId: data.id,
+            fileName: data.file_name,
+            fileSize: data.file_size,
+            mimeType: data.mime_type,
+          },
+          queryClient,
+        });
+      }
     },
   });
 
@@ -96,8 +141,33 @@ export const useProjectFiles = (projectId: string) => {
 
       if (dbError) throw dbError;
     },
-    onSuccess: () => {
+    onSuccess: (_data, file) => {
       queryClient.invalidateQueries({ queryKey: ["projectFiles", projectId] });
+      void recordProjectActivityLog({
+        projectId,
+        type: "file_delete",
+        category: "files",
+        actionType: "file_delete",
+        tabLabel: "Arquivos",
+        fieldLabel: "Arquivo Excluído",
+        oldValue: file.fileName,
+        newValue: "(excluído)",
+        changes: [
+          {
+            field: "project_files",
+            label: "Arquivo",
+            oldValue: file.fileName,
+            newValue: "(excluído)",
+          },
+        ],
+        message: `Arquivo excluído: "${file.fileName}"`,
+        extraMetadata: {
+          fileId: file.id,
+          fileName: file.fileName,
+          fileSize: file.fileSize,
+        },
+        queryClient,
+      });
     },
   });
 
@@ -124,8 +194,35 @@ export const useProjectFiles = (projectId: string) => {
 
       if (dbError) throw dbError;
     },
-    onSuccess: () => {
+    onSuccess: (_data, filesToDelete) => {
       queryClient.invalidateQueries({ queryKey: ["projectFiles", projectId] });
+      if (filesToDelete.length > 0) {
+        const namesList = filesToDelete.map((f) => f.fileName).join(", ");
+        void recordProjectActivityLog({
+          projectId,
+          type: "file_delete",
+          category: "files",
+          actionType: "file_delete",
+          tabLabel: "Arquivos",
+          fieldLabel: "Exclusão em Massa",
+          oldValue: namesList,
+          newValue: "(excluídos)",
+          changes: [
+            {
+              field: "project_files",
+              label: `Arquivos Excluídos (${filesToDelete.length})`,
+              oldValue: namesList,
+              newValue: "(excluídos)",
+            },
+          ],
+          message: `${filesToDelete.length} arquivo(s) excluído(s) em massa`,
+          extraMetadata: {
+            count: filesToDelete.length,
+            fileNames: filesToDelete.map((f) => f.fileName),
+          },
+          queryClient,
+        });
+      }
     },
   });
 

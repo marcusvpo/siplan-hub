@@ -12,8 +12,7 @@ import {
   PostStageV2,
   RichContent,
   ContentBlock,
-  AuditEntry,
-  ProjectTramite
+  AuditEntry
 } from "@/types/ProjectV2";
 import { normalizeSpecialty, normalizeSystemType, getSpecialtyForSystem } from "./projectSpecialty";
 import { sanitizeOrionAdminConfig } from "@/lib/secondary-products";
@@ -29,6 +28,21 @@ export function calculateHealthScore(row: Record<string, unknown>): "ok" | "warn
   return "ok";
 }
 
+function parseDbDateValue(raw: unknown): Date | undefined {
+  if (!raw) return undefined;
+  if (raw instanceof Date) return isNaN(raw.getTime()) ? undefined : raw;
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (!trimmed) return undefined;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      return new Date(`${trimmed}T12:00:00.000Z`);
+    }
+    const parsed = new Date(trimmed);
+    return isNaN(parsed.getTime()) ? undefined : parsed;
+  }
+  return undefined;
+}
+
 // Transform DB row to Project V3 interface
 export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
   // Helper to create a basic stage
@@ -37,8 +51,8 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     const stage = {
       status: (row[`${prefix}_status`] as StageStatus) || 'todo',
       responsible: (row[`${prefix}_responsible`] as string) || '',
-      startDate: row[`${prefix}_start_date`] ? new Date(row[`${prefix}_start_date`] as string) : undefined,
-      endDate: row[`${prefix}_end_date`] ? new Date(row[`${prefix}_end_date`] as string) : undefined,
+      startDate: parseDbDateValue(row[`${prefix}_start_date`]),
+      endDate: parseDbDateValue(row[`${prefix}_end_date`]),
       observations: (row[`${prefix}_observations`] as string) || '',
       // Spread other specific fields
       ...Object.keys(row).reduce((acc, key) => {
@@ -103,12 +117,6 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
     legacySystem: row.legacy_system as string | undefined,
     specialty: normalizeSpecialty(row.specialty as string | undefined) || getSpecialtyForSystem(row.system_type as string) || undefined,
     products: (row.products as string[]) || [],
-
-    // Integração 0800
-    TituloChamado: row.TituloChamado as string | undefined,
-    descricaotramite: row.descricaotramite as string | undefined,
-    ResponsavelAtividade: row.ResponsavelAtividade as string | undefined,
-    EtapasProjeto: row.EtapasProjeto as string | undefined,
 
     healthScore: calculateHealthScore(row),
     globalStatus: (row.global_status as ProjectV2['globalStatus']) || "in-progress",
@@ -221,26 +229,54 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
         if (impl && typeof impl === 'object') {
           const rawP1 = (impl as any).phase1;
           if (rawP1 && typeof rawP1 === 'object') {
-            if (rawP1.startDate && !(rawP1.startDate instanceof Date)) rawP1.startDate = new Date(rawP1.startDate);
-            if (rawP1.endDate && !(rawP1.endDate instanceof Date)) rawP1.endDate = new Date(rawP1.endDate);
-            if (Array.isArray(rawP1.additionalResponsibles)) {
-              rawP1.additionalResponsibles = rawP1.additionalResponsibles.map((item) => ({
+            const normalizedP1 = { ...rawP1 };
+            if (normalizedP1.startDate && !(normalizedP1.startDate instanceof Date)) {
+              normalizedP1.startDate = new Date(normalizedP1.startDate);
+            }
+            if (normalizedP1.endDate && !(normalizedP1.endDate instanceof Date)) {
+              normalizedP1.endDate = new Date(normalizedP1.endDate);
+            }
+            if (normalizedP1.confirmedAt !== undefined && normalizedP1.confirmedAt !== null && normalizedP1.confirmedAt !== '') {
+              if (normalizedP1.confirmedAt instanceof Date) {
+                if (isNaN(normalizedP1.confirmedAt.getTime())) {
+                  normalizedP1.confirmedAt = undefined;
+                }
+              } else if (typeof normalizedP1.confirmedAt === 'string') {
+                const parsedConfirmed = new Date(normalizedP1.confirmedAt);
+                normalizedP1.confirmedAt = isNaN(parsedConfirmed.getTime())
+                  ? undefined
+                  : normalizedP1.confirmedAt;
+              } else {
+                const parsedConfirmed = new Date(normalizedP1.confirmedAt);
+                normalizedP1.confirmedAt = isNaN(parsedConfirmed.getTime())
+                  ? undefined
+                  : parsedConfirmed.toISOString();
+              }
+            }
+            if (Array.isArray(normalizedP1.additionalResponsibles)) {
+              normalizedP1.additionalResponsibles = normalizedP1.additionalResponsibles.map((item: any) => ({
                 ...item,
                 startDate: item.startDate && !(item.startDate instanceof Date) ? new Date(item.startDate) : item.startDate,
                 endDate: item.endDate && !(item.endDate instanceof Date) ? new Date(item.endDate) : item.endDate,
               }));
             }
+            (impl as any).phase1 = normalizedP1;
           }
         }
         return impl;
       })(),
       modelosEditor: createStage<ModelosEditorStageV2>('modelos_editor'),
-      post: createStage<PostStageV2>('post'),
+      post: (() => {
+        const postStage = createStage<PostStageV2>('post');
+        if (postStage && (postStage as any).supportEndDate && !((postStage as any).supportEndDate instanceof Date)) {
+          postStage.supportEndDate = parseDbDateValue((postStage as any).supportEndDate);
+        }
+        return postStage;
+      })(),
     },
 
     timeline: [], // Fetch separately or include if joined
     auditLog: auditLog,
-    tramites: (row.project_tramites as ProjectTramite[]) || [],
 
     notes: notes,
 
@@ -448,15 +484,58 @@ function mapConversionStage(conversion: ConversionStageV2 | undefined, oldConver
 
 function mapImplementationStage(implementation: ImplementationStageV2 | undefined, oldImplementation?: ImplementationStageV2): Record<string, unknown> {
   if (!implementation) return {};
-  const { startDate, endDate } = resolveStageDates(implementation.status, oldImplementation?.status, implementation.startDate, implementation.endDate);
+  const { startDate: stageStartDate, endDate: stageEndDate } = resolveStageDates(
+    implementation.status,
+    oldImplementation?.status,
+    implementation.startDate,
+    implementation.endDate
+  );
+
+  const effectivePhase1 = implementation.phase1 !== undefined
+    ? implementation.phase1
+    : oldImplementation?.phase1;
+
+  const hasClearedStartDate =
+    !effectivePhase1?.startDate &&
+    (
+      (Boolean(oldImplementation?.phase1?.startDate) && implementation.phase1 !== undefined && !implementation.phase1.startDate) ||
+      (Boolean(implementation.phase1) && "startDate" in implementation.phase1 && !implementation.phase1.startDate)
+    );
+
+  const startDate = effectivePhase1?.startDate
+    ? formatDateForDB(effectivePhase1.startDate)
+    : hasClearedStartDate
+      ? null
+      : stageStartDate;
+
+  const hasClearedEndDate =
+    !effectivePhase1?.endDate &&
+    (
+      (Boolean(oldImplementation?.phase1?.endDate) && implementation.phase1 !== undefined && !implementation.phase1.endDate) ||
+      (Boolean(implementation.phase1) && "endDate" in implementation.phase1 && !implementation.phase1.endDate)
+    );
+
+  const endDate = effectivePhase1?.endDate
+    ? formatDateForDB(effectivePhase1.endDate)
+    : hasClearedEndDate
+      ? null
+      : stageEndDate;
+
+  const resolvedResponsible =
+    implementation.phase1?.responsible ??
+    implementation.responsible ??
+    oldImplementation?.phase1?.responsible;
 
   const result: Record<string, unknown> = {
     implementation_status: implementation.status,
-    implementation_responsible: implementation.responsible,
     implementation_start_date: startDate,
     implementation_end_date: endDate,
     implementation_observations: implementation.observations,
   };
+
+  if (resolvedResponsible !== undefined) {
+    result.implementation_responsible = resolvedResponsible;
+  }
 
   if (implementation.phase1 !== undefined) {
     result.implementation_phase1 = implementation.phase1;
@@ -515,7 +594,7 @@ function mapPostStage(post: PostStageV2 | undefined, oldPost?: PostStageV2): Rec
     post_end_date: endDate,
     post_observations: post.observations,
     post_support_period_days: post.supportPeriodDays ?? null,
-    post_support_end_date: formatDateForDB(post.supportEndDate),
+    post_support_end_date: formatDateForDB(post.supportEndDate ?? post.endDate),
     post_benefits_delivered: post.benefitsDelivered,
     post_challenges_found: post.challengesFound,
     post_roi_estimated: post.roiEstimated,
@@ -592,16 +671,7 @@ export function transformToDB(project: ProjectUpdate, currentProject?: ProjectV2
   if (project.responsibleAdherence !== undefined) dbRow.adherence_responsible = project.responsibleAdherence;
   if (project.responsibleEnvironment !== undefined) dbRow.environment_responsible = project.responsibleEnvironment;
   if (project.responsibleConversion !== undefined) dbRow.conversion_responsible = project.responsibleConversion;
-
-  // Automated Implementation Responsible (Sync with Phase 1)
-  const phase1Resp = project.stages?.implementation?.phase1?.responsible 
-    ?? currentProject?.stages?.implementation?.phase1?.responsible;
-  if (phase1Resp !== undefined) {
-    dbRow.implementation_responsible = phase1Resp;
-  } else if (project.responsibleImplementation !== undefined) {
-    dbRow.implementation_responsible = project.responsibleImplementation;
-  }
-
+  if (project.responsibleImplementation !== undefined) dbRow.implementation_responsible = project.responsibleImplementation;
   if (project.responsiblePost !== undefined) dbRow.post_responsible = project.responsiblePost;
 
   // Automated Realized End Date
@@ -703,12 +773,6 @@ export function transformToDB(project: ProjectUpdate, currentProject?: ProjectV2
       dbRow.archived_at = new Date().toISOString();
     }
   }
-
-  // Integração 0800
-  if (project.TituloChamado !== undefined) dbRow.TituloChamado = project.TituloChamado;
-  if (project.descricaotramite !== undefined) dbRow.descricaotramite = project.descricaotramite;
-  if (project.ResponsavelAtividade !== undefined) dbRow.ResponsavelAtividade = project.ResponsavelAtividade;
-  if (project.EtapasProjeto !== undefined) dbRow.EtapasProjeto = project.EtapasProjeto;
 
   // Stages flattening
   if (project.stages) {

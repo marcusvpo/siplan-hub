@@ -1,4 +1,6 @@
-import { useMemo, useState } from "react";
+import { useContext, useMemo, useState } from "react";
+import { QueryClientContext } from "@tanstack/react-query";
+import { recordProjectButtonLog } from "@/services/projectLogService";
 import { ProjectV2 } from "@/types/ProjectV2";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -137,6 +139,7 @@ export function PosImplantacaoTab({ project }: PosImplantacaoTabProps) {
   const [filtro, setFiltro] = useState<Filtro>(null);
   const [selecionado, setSelecionado] = useState<Chamado0800 | null>(null);
   const [exporting, setExporting] = useState(false);
+  const queryClient = useContext(QueryClientContext) || undefined;
 
   const stats = useMemo(() => {
     const hoje = hojeIso();
@@ -231,6 +234,17 @@ export function PosImplantacaoTab({ project }: PosImplantacaoTabProps) {
     try {
       await solicitarSync();
       toast.success("Chamados sincronizados com o 0800.");
+      void recordProjectButtonLog({
+        projectId: project.id,
+        category: "pos_analysis",
+        tabLabel: "Análise Pós-Implantação",
+        stageId: "post",
+        stageLabel: "Pós-Implantação",
+        actionType: "sync_action",
+        buttonLabel: "Sincronizar 0800",
+        message: "Sincronização manual dos chamados 0800 executada na Análise Pós-Implantação",
+        queryClient,
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro ao sincronizar com o 0800.");
     }
@@ -259,6 +273,17 @@ export function PosImplantacaoTab({ project }: PosImplantacaoTabProps) {
       };
       await gerarParecer(JSON.stringify(payload));
       toast.success("Gerando o parecer com IA. Isso pode levar alguns instantes.");
+      void recordProjectButtonLog({
+        projectId: project.id,
+        category: "pos_analysis",
+        tabLabel: "Análise Pós-Implantação",
+        stageId: "post",
+        stageLabel: "Pós-Implantação",
+        actionType: "ai_action",
+        buttonLabel: ultimoParecer ? "Atualizar parecer" : "Gerar parecer",
+        message: "Solicitada geração de parecer da IA sobre chamados do Pós-Implantação",
+        queryClient,
+      });
     } catch (err) {
       console.error("Erro ao enfileirar parecer:", err);
       toast.error("Não foi possível iniciar o parecer com IA.");
@@ -390,6 +415,16 @@ export function PosImplantacaoTab({ project }: PosImplantacaoTabProps) {
       }
       pdf.save(`analise-pos-${(project.clientName || "projeto").replace(/[^\w-]+/g, "_")}.pdf`);
       toast.success("PDF gerado.", { id: "pos-analysis-pdf" });
+      void recordProjectButtonLog({
+        projectId: project.id,
+        category: "pos_analysis",
+        tabLabel: "Análise Pós-Implantação",
+        stageId: "post",
+        stageLabel: "Pós-Implantação",
+        buttonLabel: "Exportar PDF",
+        message: "Exportado relatório em PDF da Análise Pós-Implantação",
+        queryClient,
+      });
     } catch (err) {
       console.error("Erro ao gerar PDF:", err);
       toast.error("Falha ao gerar o PDF.", { id: "pos-analysis-pdf" });

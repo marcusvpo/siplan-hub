@@ -55,6 +55,7 @@ export type ConversionComplexity = "low" | "medium" | "high" | "very_high";
 export type GapPriority = "critical" | "high" | "medium" | "low";
 export type ClientSatisfaction = "very_satisfied" | "satisfied" | "neutral" | "dissatisfied";
 
+/** @deprecated Legado 0800 — mantido temporariamente para compatibilidade com ImplantadoresHomologation. */
 export interface ProjectTramite {
   id: string;
   project_id: string;
@@ -70,12 +71,6 @@ export interface ProjectV2 {
   externalId?: string;
   clientName: string;
   ticketNumber: string;
-
-  // Integração 0800
-  TituloChamado?: string;
-  descricaotramite?: string;
-  ResponsavelAtividade?: string;
-  EtapasProjeto?: string;
 
   // Dados do Projeto
   opNumber?: number;
@@ -163,7 +158,6 @@ export interface ProjectV2 {
   // Customização
   customFields?: Record<string, unknown>;
   auditLog?: AuditEntry[];
-  tramites?: ProjectTramite[];
   timeline?: TimelineEventV2[];
 }
 
@@ -494,6 +488,8 @@ export interface ImplementationPhase {
   acceptanceStatus?: string;
   observations?: string;
   isConfirmed?: boolean;
+  confirmedAt?: Date | string | null;
+  confirmedBy?: string | null;
 }
 
 export interface ImplementationStageV2 {

@@ -20,7 +20,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Pencil, X, Maximize2, PlayCircle, CheckCircle2, Calendar, ExternalLink, PackageCheck } from "lucide-react";
 import { format } from "date-fns";
-import { useEffect, useState, useMemo } from "react";
+import { useContext, useEffect, useState } from "react";
+import { QueryClientContext } from "@tanstack/react-query";
 import { useProjectDetails } from "@/hooks/useProjectDetails";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -30,6 +31,7 @@ import { EllevoTicketLink } from "@/components/EllevoTicketLink";
 import { OrionAdminAnimatedButton } from "./OrionAdminAnimatedButton";
 import { SiplanSkillsHeaderButton } from "./SiplanSkillsHeaderButton";
 import { cn } from "@/lib/utils";
+import { recordProjectButtonLog, recordProjectViewLog } from "@/services/projectLogService";
 
 interface ProjectModalProps {
   project: Partial<ProjectV2> | null;
@@ -49,22 +51,49 @@ export function ProjectModal({
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState(initialTab || "general");
   const [targetSecondaryProduct, setTargetSecondaryProduct] = useState<string | null>(null);
+  const queryClient = useContext(QueryClientContext) ?? undefined;
+
   useEffect(() => {
     if (open) {
       setActiveTab(initialTab || "general");
       setIsEditing(false);
       setTargetSecondaryProduct(null);
+      if (initialProject?.id) {
+        void recordProjectViewLog(initialProject.id, "modal", queryClient);
+      }
     }
-  }, [open, initialProject?.id, initialTab]);
+  }, [open, initialProject?.id, initialTab, queryClient]);
 
   const handleProductBadgeClick = (productName: string) => {
     setTargetSecondaryProduct(productName);
     setActiveTab("secondary_products");
+    if (displayProject?.id) {
+      void recordProjectButtonLog({
+        projectId: displayProject.id,
+        category: "secondary_products",
+        tabLabel: "Cabeçalho do Modal",
+        buttonLabel: `Atalho Produto Secundário (${productName})`,
+        message: `Atalho do produto secundário "${productName}" acionado no cabeçalho do modal`,
+        queryClient,
+      });
+    }
   };
 
   const handleOpenOrionAdmin = () => {
     setActiveTab("steps");
     setActiveStepId("environment");
+    if (displayProject?.id) {
+      void recordProjectButtonLog({
+        projectId: displayProject.id,
+        category: "stages",
+        tabLabel: "Cabeçalho do Modal",
+        stageId: "environment",
+        stageLabel: "4. Preparação de Ambiente",
+        buttonLabel: "Orion Admin",
+        message: 'Botão "Orion Admin" acionado no cabeçalho do modal',
+        queryClient,
+      });
+    }
     setTimeout(() => {
       const el = document.getElementById("orion-admin-stage-section");
       if (el) {
@@ -80,6 +109,18 @@ export function ProjectModal({
   const handleOpenImplementationStage = () => {
     setActiveTab("steps");
     setActiveStepId("implementation");
+    if (displayProject?.id) {
+      void recordProjectButtonLog({
+        projectId: displayProject.id,
+        category: "stages",
+        tabLabel: "Cabeçalho do Modal",
+        stageId: "implementation",
+        stageLabel: "5. Implantação & Treinamento",
+        buttonLabel: "Tag de Previsão/Confirmação da Fase 1",
+        message: "Tag de agendamento da Fase 1 clicada no cabeçalho do modal",
+        queryClient,
+      });
+    }
     setTimeout(() => {
       const el = document.querySelector('[data-stage-id="implementation"]');
       if (el) {
@@ -110,8 +151,8 @@ export function ProjectModal({
   const isConfirmed =
     !isModelosTN && !!displayProject?.stages?.implementation?.phase1?.isConfirmed;
   const phase1 = displayProject?.stages?.implementation?.phase1;
-  const startDate = phase1?.startDate || displayProject?.stages?.implementation?.startDate;
-  const endDate = phase1?.endDate || displayProject?.stages?.implementation?.endDate;
+  const startDate = phase1?.startDate;
+  const endDate = phase1?.endDate;
   const hasForecastDates = Boolean(startDate && endDate);
 
   const isForecastScheduled =
@@ -119,12 +160,7 @@ export function ProjectModal({
   const hasTopLeftTag =
     !isModelosTN && (isImplementationInProgress || isConfirmed || isForecastScheduled);
 
-  const isFromAutomacao = Boolean(
-    displayProject?.TituloChamado || 
-    displayProject?.descricaotramite || 
-    displayProject?.ResponsavelAtividade || 
-    displayProject?.EtapasProjeto
-  );
+  const hasChamado0800 = Boolean(displayProject?.ticketNumber?.trim());
 
   const getGlobalStatusBadge = (status?: ProjectV2["globalStatus"]) => {
     switch (status) {
@@ -195,11 +231,6 @@ export function ProjectModal({
         {/* Top Right Badges - Floating over top-right border */}
         <div className="absolute -top-2.5 right-12 z-50 hidden items-center gap-1.5 sm:flex">
           {displayProject?.id && <PosSaudeBadge projectId={displayProject.id} />}
-          {isFromAutomacao && (
-            <Badge className="text-[10px] px-2.5 py-0.5 font-bold shadow-lg border-2 border-background bg-purple-600 hover:bg-purple-700 text-white shadow-purple-500/20">
-              Autom. N8N
-            </Badge>
-          )}
           <Badge
             className={cn(
               "text-[10px] px-2.5 py-0.5 font-bold shadow-lg border-2 border-background",
@@ -226,9 +257,6 @@ export function ProjectModal({
               </Badge>
             )}
             {displayProject?.id && <PosSaudeBadge projectId={displayProject.id} />}
-            {isFromAutomacao && (
-              <Badge className="bg-purple-600 px-2 py-0.5 text-[9px] font-bold text-white hover:bg-purple-700">Autom. N8N</Badge>
-            )}
             <Badge className={cn("px-2 py-0.5 text-[9px] font-bold", globalStatusBadge.className)}>
               {globalStatusBadge.label}
             </Badge>
@@ -319,6 +347,14 @@ export function ProjectModal({
               className="ml-auto h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground sm:ml-0"
               onClick={() => {
                 if (displayProject?.id) {
+                  void recordProjectButtonLog({
+                    projectId: displayProject.id,
+                    category: "view",
+                    tabLabel: "Cabeçalho do Modal",
+                    buttonLabel: "Tela Cheia",
+                    message: 'Botão "Tela Cheia" acionado no modal do projeto',
+                    queryClient,
+                  });
                   navigate(`/projects/${displayProject.id}`);
                   onOpenChange(false);
                 }
@@ -379,7 +415,7 @@ export function ProjectModal({
                     ? ` (${displayProject?.secondaryTicketsCount})`
                     : ""}
                 </option>
-                {isFromAutomacao && <option value="chamado_0800">Chamado 0800</option>}
+                {hasChamado0800 && <option value="chamado_0800">Chamado 0800</option>}
                 <option value="steps">Etapas</option>
                 <option value="files">Arquivos</option>
                 <option value="logs">Logs</option>
@@ -393,6 +429,14 @@ export function ProjectModal({
                 aria-label="Abrir transição do projeto"
                 onClick={() => {
                   if (displayProject?.id) {
+                    void recordProjectButtonLog({
+                      projectId: displayProject.id,
+                      category: "stages",
+                      tabLabel: "Cabeçalho do Modal",
+                      buttonLabel: "Transição",
+                      message: 'Botão "Transição" acionado no modal do projeto',
+                      queryClient,
+                    });
                     navigate(`/implantadores/transicao?project=${displayProject.id}`);
                     onOpenChange(false);
                   }
@@ -406,7 +450,22 @@ export function ProjectModal({
                   size="icon"
                   className="h-9 w-9 shrink-0"
                   aria-label={isEditing ? "Fechar edição" : "Editar projeto"}
-                  onClick={() => setIsEditing(!isEditing)}
+                  onClick={() => {
+                    const nextEditing = !isEditing;
+                    setIsEditing(nextEditing);
+                    if (displayProject?.id) {
+                      void recordProjectButtonLog({
+                        projectId: displayProject.id,
+                        category: "edit",
+                        tabLabel: "Cabeçalho do Modal",
+                        buttonLabel: nextEditing ? "Editar Projeto" : "Fechar Edição",
+                        message: nextEditing
+                          ? "Modo de edição cadastral do projeto aberto"
+                          : "Modo de edição cadastral do projeto fechado",
+                        queryClient,
+                      });
+                    }
+                  }}
                 >
                   {isEditing ? <X className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
                 </Button>
@@ -443,7 +502,7 @@ export function ProjectModal({
                     </span>
                   )}
                 </TabsTrigger>
-                {fullProject && (fullProject.TituloChamado || fullProject.descricaotramite || fullProject.ResponsavelAtividade || fullProject.EtapasProjeto) && (
+                {hasChamado0800 && (
                   <TabsTrigger
                     value="chamado_0800"
                     className="h-full rounded-none border-b-2 border-transparent data-[state=active]:border-rose-500 data-[state=active]:text-rose-600 text-rose-500/80 font-medium data-[state=active]:bg-transparent px-2 flex items-center gap-1.5 transition-all duration-200 hover:text-rose-500 hover:border-rose-500/30"
@@ -485,6 +544,14 @@ export function ProjectModal({
                   type="button"
                   onClick={() => {
                     if (displayProject?.id) {
+                      void recordProjectButtonLog({
+                        projectId: displayProject.id,
+                        category: "stages",
+                        tabLabel: "Cabeçalho do Modal",
+                        buttonLabel: "Transição",
+                        message: 'Botão "Transição" acionado no modal do projeto',
+                        queryClient,
+                      });
                       navigate(`/implantadores/transicao?project=${displayProject.id}`);
                       onOpenChange(false);
                     }
@@ -502,7 +569,20 @@ export function ProjectModal({
                     size="icon"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setIsEditing(!isEditing);
+                      const nextEditing = !isEditing;
+                      setIsEditing(nextEditing);
+                      if (displayProject?.id) {
+                        void recordProjectButtonLog({
+                          projectId: displayProject.id,
+                          category: "edit",
+                          tabLabel: "Cabeçalho do Modal",
+                          buttonLabel: nextEditing ? "Editar Projeto" : "Fechar Edição",
+                          message: nextEditing
+                            ? "Modo de edição cadastral do projeto aberto"
+                            : "Modo de edição cadastral do projeto fechado",
+                          queryClient,
+                        });
+                      }
                     }}
                   >
                     {isEditing ? (
@@ -559,7 +639,7 @@ export function ProjectModal({
                   <TabsContent value="pos_analysis" className="m-0 h-full">
                     <PosImplantacaoTab project={fullProject} />
                   </TabsContent>
-                {fullProject && (fullProject.TituloChamado || fullProject.descricaotramite || fullProject.ResponsavelAtividade || fullProject.EtapasProjeto) && (
+                  {hasChamado0800 && (
                     <TabsContent value="chamado_0800" className="m-0 h-full">
                       <Chamado0800Tab project={fullProject} />
                     </TabsContent>
@@ -610,8 +690,10 @@ export function Phase1HeaderTag({ project, onClick }: Phase1HeaderTagProps) {
     project.responsibleImplementation?.trim() ||
     "";
 
-  const startDateRaw = phase1?.startDate || implStage?.startDate;
-  const endDateRaw = phase1?.endDate || implStage?.endDate;
+  // As datas de previsão/confirmação da Fase 1 devem vir EXCLUSIVAMENTE de phase1.startDate e phase1.endDate.
+  // Se os campos "Início" e "Término" na Fase 1 foram limpos, não exibe tag com datas residuais da etapa pai.
+  const startDateRaw = phase1?.startDate;
+  const endDateRaw = phase1?.endDate;
 
   const formattedStart = formatPhase1Date(startDateRaw);
   const formattedEnd = formatPhase1Date(endDateRaw);

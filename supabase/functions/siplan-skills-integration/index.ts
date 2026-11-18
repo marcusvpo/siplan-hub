@@ -300,6 +300,11 @@ Deno.serve(async (req: Request) => {
 
       // Atualiza skills_username em todos os projetos irmãos do mesmo cartório
       for (const sibling of siblingProjects) {
+        const oldUsername =
+          typeof sibling.custom_fields?.skills_username === "string"
+            ? sibling.custom_fields.skills_username.trim()
+            : "";
+
         const mergedFields = {
           ...(sibling.custom_fields || {}),
           skills_username: updatedUser.username,
@@ -313,11 +318,29 @@ Deno.serve(async (req: Request) => {
           .update({ custom_fields: mergedFields, updated_at: new Date().toISOString() })
           .eq("id", sibling.id);
 
-        await supabaseAdmin.from("project_logs").insert({
+        await supabaseAdmin.from("timeline_events").insert({
           project_id: sibling.id,
-          type: "system",
-          message: `Nome de usuário do Siplan Skills atualizado para: ${updatedUser.username}`,
+          type: "skills_action",
           author: actorName,
+          message: oldUsername
+            ? `Usuário do Siplan Skills alterado de "${oldUsername}" para "${updatedUser.username}"`
+            : `Nome de usuário do Siplan Skills definido como "${updatedUser.username}"`,
+          metadata: {
+            category: "skills",
+            actionType: "skills_action",
+            tabLabel: "Siplan Skills",
+            fieldLabel: "Usuário (Login) Siplan Skills",
+            oldValue: oldUsername || "(não definido)",
+            newValue: updatedUser.username,
+            changes: [
+              {
+                field: "skills_username",
+                label: "Usuário (Login) Siplan Skills",
+                oldValue: oldUsername || "(não definido)",
+                newValue: updatedUser.username,
+              },
+            ],
+          },
         });
       }
 

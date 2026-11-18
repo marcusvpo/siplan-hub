@@ -78,8 +78,8 @@ export function ProjectCardV3({
   const isConfirmed =
     !isModelosTN && !!project.stages?.implementation?.phase1?.isConfirmed;
   const phase1 = project.stages?.implementation?.phase1;
-  const startDate = phase1?.startDate || project.stages?.implementation?.startDate;
-  const endDate = phase1?.endDate || project.stages?.implementation?.endDate;
+  const startDate = phase1?.startDate;
+  const endDate = phase1?.endDate;
   const hasForecastDates = Boolean(startDate && endDate);
 
   const orionStatus = useMemo(() => {
@@ -213,11 +213,6 @@ export function ProjectCardV3({
 
   const stages = [...baseStages, ...orionStages, ...endStages];
 
-  const isFromAutomacao = project.TituloChamado || 
-                          project.descricaotramite || 
-                          project.ResponsavelAtividade || 
-                          project.EtapasProjeto;
-
   return (
     <Card
       className="group relative grid h-auto min-h-[5.5rem] w-full min-w-0 cursor-pointer grid-cols-[auto_minmax(0,1fr)] items-stretch gap-3 overflow-hidden bg-card/50 p-3 pt-4 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-lg md:flex md:flex-row md:items-center md:gap-4 md:overflow-visible md:p-3"
@@ -289,11 +284,6 @@ export function ProjectCardV3({
               <span className="h-1.5 w-1.5 rounded-full bg-white shrink-0 animate-ping" />
             )}
             Orion Admin: {orionStatus.isConfigured ? "Configurado" : "Pendente"}
-          </Badge>
-        )}
-        {isFromAutomacao && (
-          <Badge className="text-[9px] px-2 py-0.5 font-bold shadow-lg border-2 border-background bg-purple-600 hover:bg-purple-700 text-white shadow-purple-500/20">
-            Autom. N8N
           </Badge>
         )}
         <Badge
@@ -394,18 +384,6 @@ export function ProjectCardV3({
                   : ""}
               </span>
             </button>
-          </div>
-        )}
-        {project.TituloChamado && (
-          <div className="w-full min-w-0 break-words text-[11px] font-medium leading-snug text-muted-foreground/90 md:truncate" title={project.TituloChamado}>
-            {project.TituloChamado}
-          </div>
-        )}
-        
-        {project.EtapasProjeto && (
-          <div className="flex w-full min-w-0 items-start gap-1.5 rounded-md border border-border/30 bg-muted/40 px-1.5 py-1 text-[10px] text-muted-foreground/80 md:items-center md:truncate md:py-0.5" title={project.EtapasProjeto}>
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500/80 animate-pulse shrink-0"></div>
-            <span className="min-w-0 break-words md:truncate">0800: <span className="font-medium text-foreground/80">{project.EtapasProjeto}</span></span>
           </div>
         )}
       </div>

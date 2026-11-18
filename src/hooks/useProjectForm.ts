@@ -1,6 +1,7 @@
-import { ProjectV2, StageStatus } from "@/types/ProjectV2";
-import { useState, useCallback } from "react";
+import { ImplementationStageV2, ProjectV2 } from "@/types/ProjectV2";
+import { useCallback } from "react";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { syncPostStageFromImplementation } from "@/utils/implementation-phase1";
 
 interface UseProjectFormReturn {
   data: ProjectV2;
@@ -41,15 +42,29 @@ export function useProjectForm(
       }
     }
 
+    const mergedTargetStage = {
+      ...data.stages[stageKey],
+      ...stageUpdates,
+    };
+
+    const nextStages = {
+      ...data.stages,
+      [stageKey]: mergedTargetStage,
+    };
+
+    if (stageKey === "implementation" && data.systemType !== "Modelos TN") {
+      nextStages.post = syncPostStageFromImplementation({
+        implementationStage: mergedTargetStage as ImplementationStageV2,
+        oldImplementationStage: data.stages.implementation,
+        currentPostStage: data.stages.post,
+        globalStatus: data.globalStatus,
+        systemType: data.systemType,
+      });
+    }
+
     updateData({
       ...data,
-      stages: {
-        ...data.stages,
-        [stageKey]: {
-          ...data.stages[stageKey],
-          ...stageUpdates
-        }
-      }
+      stages: nextStages,
     });
   }, [data, updateData]);
 

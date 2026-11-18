@@ -68,6 +68,12 @@ import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { useProjectsV2 } from "@/hooks/useProjectsV2";
 import { useVacations } from "@/hooks/useVacations";
 import { normalizeSpecialty } from "@/utils/projectSpecialty";
+import {
+  applyPhase1UpdatesWithAutomation,
+  formatConfirmationTimestamp,
+  syncPostStageFromImplementation,
+  toLocalDateKey,
+} from "@/utils/implementation-phase1";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -109,6 +115,7 @@ export function DeploymentDetailsDialog({
   const [startDateStr, setStartDateStr] = useState<string>("");
   const [endDateStr, setEndDateStr] = useState<string>("");
   const [isConfirmed, setIsConfirmed] = useState<boolean>(false);
+  const [confirmedAt, setConfirmedAt] = useState<Date | string | null | undefined>(undefined);
   const [trainingLocation, setTrainingLocation] = useState<string>("");
   const [additionalResponsibles, setAdditionalResponsibles] = useState<Phase1ResponsibleAssignment[]>([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -130,15 +137,10 @@ export function DeploymentDetailsDialog({
           project.responsibleImplementation ||
           ""
       );
-      setStartDateStr(
-        phase1?.startDate
-          ? format(new Date(phase1.startDate), "yyyy-MM-dd")
-          : ""
-      );
-      setEndDateStr(
-        phase1?.endDate ? format(new Date(phase1.endDate), "yyyy-MM-dd") : ""
-      );
+      setStartDateStr(toLocalDateKey(phase1?.startDate) ?? "");
+      setEndDateStr(toLocalDateKey(phase1?.endDate) ?? "");
       setIsConfirmed(!!phase1?.isConfirmed);
+      setConfirmedAt(phase1?.confirmedAt);
       setTrainingLocation(phase1?.trainingLocation || "");
       setAdditionalResponsibles(
         (phase1?.additionalResponsibles || []).map((item) => ({
@@ -259,15 +261,12 @@ export function DeploymentDetailsDialog({
     }) => {
       if (!project) return;
 
-      const newStatus = updates.status !== undefined ? updates.status : status;
       const newResp =
         updates.responsible !== undefined ? updates.responsible : responsible;
       const newStartStr =
         updates.startDateStr !== undefined ? updates.startDateStr : startDateStr;
       const newEndStr =
         updates.endDateStr !== undefined ? updates.endDateStr : endDateStr;
-      const newConfirmed =
-        updates.isConfirmed !== undefined ? updates.isConfirmed : isConfirmed;
       const newLocation =
         updates.trainingLocation !== undefined
           ? updates.trainingLocation
@@ -277,22 +276,6 @@ export function DeploymentDetailsDialog({
           ? updates.additionalResponsibles
           : additionalResponsibles;
 
-      // Local UI update
-      if (updates.status !== undefined) setStatus(newStatus);
-      if (updates.responsible !== undefined) setResponsible(newResp);
-      if (updates.startDateStr !== undefined) setStartDateStr(newStartStr);
-      if (updates.endDateStr !== undefined) setEndDateStr(newEndStr);
-      if (updates.isConfirmed !== undefined) setIsConfirmed(newConfirmed);
-      if (updates.trainingLocation !== undefined)
-        setTrainingLocation(newLocation);
-      if (updates.additionalResponsibles !== undefined)
-        setAdditionalResponsibles(newAdditional);
-
-      const parsedStart = newStartStr
-        ? new Date(newStartStr + "T12:00:00")
-        : undefined;
-      const parsedEnd = newEndStr ? new Date(newEndStr + "T12:00:00") : undefined;
-
       const currentImpl: ImplementationStageV2 = project.stages
         ?.implementation || {
         status: "todo",
@@ -300,27 +283,81 @@ export function DeploymentDetailsDialog({
         phase1: { status: "todo", responsible: "" },
         phase2: { status: "todo", responsible: "" },
       };
-      const currentPhase1 = currentImpl.phase1 || {
-        status: "todo",
-        responsible: "",
+
+      const basePhase1: ImplementationPhase = {
+        ...currentImpl.phase1,
+        status,
+        responsible,
+        startDate: startDateStr ? new Date(startDateStr + "T12:00:00") : undefined,
+        endDate: endDateStr ? new Date(endDateStr + "T12:00:00") : undefined,
+        isConfirmed,
+        confirmedAt,
+        trainingLocation: trainingLocation || undefined,
+        additionalResponsibles,
       };
 
-      const updatedPhase1: ImplementationPhase = {
-        ...currentPhase1,
-        status: newStatus,
-        responsible: newResp,
-        startDate: parsedStart,
-        endDate: parsedEnd,
-        isConfirmed: newConfirmed,
-        trainingLocation: newLocation || undefined,
-        additionalResponsibles: newAdditional,
-      };
-
-      const updatedImplementation = {
+      const baseImpl: ImplementationStageV2 = {
         ...currentImpl,
-        phase1: updatedPhase1,
-        responsible: newResp || currentImpl.responsible,
+        phase1: basePhase1,
       };
+
+      const phaseUpdates: Partial<ImplementationPhase> = {};
+      if (updates.status !== undefined) phaseUpdates.status = updates.status;
+      if (updates.responsible !== undefined) phaseUpdates.responsible = updates.responsible;
+      if (updates.startDateStr !== undefined) {
+        phaseUpdates.startDate = updates.startDateStr
+          ? new Date(updates.startDateStr + "T12:00:00")
+          : undefined;
+      }
+      if (updates.endDateStr !== undefined) {
+        phaseUpdates.endDate = updates.endDateStr
+          ? new Date(updates.endDateStr + "T12:00:00")
+          : undefined;
+      }
+      if (updates.isConfirmed !== undefined) phaseUpdates.isConfirmed = updates.isConfirmed;
+      if (updates.trainingLocation !== undefined) {
+        phaseUpdates.trainingLocation = updates.trainingLocation || undefined;
+      }
+      if (updates.additionalResponsibles !== undefined) {
+        phaseUpdates.additionalResponsibles = updates.additionalResponsibles;
+      }
+
+      const appliedImpl = applyPhase1UpdatesWithAutomation({
+        currentStage: baseImpl,
+        phaseUpdates,
+        globalStatus: project.globalStatus,
+        systemType: project.systemType,
+      });
+
+      const resolvedResponsible =
+        updates.responsible !== undefined
+          ? updates.responsible
+          : appliedImpl.phase1.responsible || currentImpl.responsible || "";
+
+      const updatedImplementation: ImplementationStageV2 = {
+        ...appliedImpl,
+        responsible: resolvedResponsible,
+      };
+
+      const updatedPost = syncPostStageFromImplementation({
+        implementationStage: updatedImplementation,
+        oldImplementationStage: project.stages?.implementation,
+        currentPostStage: project.stages?.post,
+        globalStatus: project.globalStatus,
+        systemType: project.systemType,
+      });
+
+      // Local UI update
+      setStatus(updatedImplementation.phase1.status);
+      setIsConfirmed(Boolean(updatedImplementation.phase1.isConfirmed));
+      setConfirmedAt(updatedImplementation.phase1.confirmedAt);
+      if (updates.responsible !== undefined) setResponsible(newResp);
+      if (updates.startDateStr !== undefined) setStartDateStr(newStartStr);
+      if (updates.endDateStr !== undefined) setEndDateStr(newEndStr);
+      if (updates.trainingLocation !== undefined)
+        setTrainingLocation(newLocation);
+      if (updates.additionalResponsibles !== undefined)
+        setAdditionalResponsibles(newAdditional);
 
       setIsSaving(true);
       try {
@@ -330,6 +367,7 @@ export function DeploymentDetailsDialog({
             stages: {
               ...project.stages,
               implementation: updatedImplementation,
+              post: updatedPost,
             },
           },
         });
@@ -348,6 +386,7 @@ export function DeploymentDetailsDialog({
       startDateStr,
       endDateStr,
       isConfirmed,
+      confirmedAt,
       trainingLocation,
       additionalResponsibles,
       updateProject,
@@ -526,6 +565,10 @@ export function DeploymentDetailsDialog({
 
   if (!project) return null;
 
+  const formattedConfirmedAt = isConfirmed
+    ? formatConfirmationTimestamp(confirmedAt ?? phase1?.confirmedAt)
+    : "";
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -700,52 +743,77 @@ export function DeploymentDetailsDialog({
 
           {/* Bloco de Edição 360º: Fase 1 Treinamento & Acompanhamento */}
           <div className="min-w-0 space-y-3 rounded-xl border border-border bg-muted/20 p-3 shadow-xs sm:p-3.5">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-2">
-              <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <Badge className="bg-primary text-primary-foreground px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                  <Rocket className="h-3 w-3 shrink-0" />
-                  Fase 1
-                </Badge>
-                <h4 className="break-words text-xs font-bold text-foreground">
-                  Treinamento &amp; Acompanhamento
-                </h4>
+            <div className="space-y-2 border-b border-border pb-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <Badge className="bg-primary text-primary-foreground px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                    <Rocket className="h-3 w-3 shrink-0" />
+                    Fase 1
+                  </Badge>
+                  <h4 className="break-words text-xs font-bold text-foreground">
+                    Treinamento &amp; Acompanhamento
+                  </h4>
+                </div>
+
+                {/* Implantação Confirmada? Switch */}
+                <div
+                  onClick={() =>
+                    canEditProjects &&
+                    handleUpdatePhase1({ isConfirmed: !isConfirmed })
+                  }
+                  className={cn(
+                    "flex min-h-10 w-full min-w-0 items-center gap-2 rounded-lg border px-2.5 py-1 transition-all select-none sm:min-h-0 sm:w-auto",
+                    canEditProjects ? "cursor-pointer" : "opacity-60 cursor-not-allowed",
+                    isConfirmed
+                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20"
+                      : "bg-background border-border text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  <Switch
+                    checked={isConfirmed}
+                    onCheckedChange={(checked) =>
+                      handleUpdatePhase1({ isConfirmed: checked })
+                    }
+                    onClick={(e) => e.stopPropagation()}
+                    disabled={!canEditProjects}
+                    className="data-[state=checked]:bg-emerald-600"
+                  />
+                  <span className="flex min-w-0 items-center gap-1 break-words text-xs font-bold">
+                    {isConfirmed ? (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        Implantação Confirmada
+                      </>
+                    ) : (
+                      <>
+                        <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                        Implantação Confirmada?
+                      </>
+                    )}
+                  </span>
+                </div>
               </div>
 
-              {/* Implantação Confirmada? Switch */}
-              <div
-                onClick={() =>
-                  canEditProjects &&
-                  handleUpdatePhase1({ isConfirmed: !isConfirmed })
-                }
-                className={cn(
-                  "flex min-h-10 w-full min-w-0 items-center gap-2 rounded-lg border px-2.5 py-1 transition-all cursor-pointer select-none sm:min-h-0 sm:w-auto",
-                  isConfirmed
-                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20"
-                    : "bg-background border-border text-muted-foreground hover:bg-muted"
-                )}
-              >
-                <Switch
-                  checked={isConfirmed}
-                  onCheckedChange={(checked) =>
-                    handleUpdatePhase1({ isConfirmed: checked })
-                  }
-                  disabled={!canEditProjects}
-                  className="data-[state=checked]:bg-emerald-600"
-                />
-                <span className="flex min-w-0 items-center gap-1 break-words text-xs font-bold">
-                  {isConfirmed ? (
-                    <>
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                      Implantação Confirmada
-                    </>
-                  ) : (
-                    <>
-                      <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-                      Implantação Confirmada?
-                    </>
-                  )}
-                </span>
-              </div>
+              {isConfirmed && (
+                <div
+                  data-testid="deployment-phase1-confirmation-note"
+                  className="flex items-start gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1.5 text-[11px] leading-snug text-emerald-800 dark:text-emerald-200 text-left break-words"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+                  <span className="min-w-0 break-words">
+                    {formattedConfirmedAt ? (
+                      <>
+                        Implantação foi <strong>confirmada</strong> pelo cliente após contato em{" "}
+                        <strong>{formattedConfirmedAt}</strong>!
+                      </>
+                    ) : (
+                      <>
+                        Implantação foi <strong>confirmada</strong> pelo cliente após contato!
+                      </>
+                    )}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Grid de Campos da Fase 1 */}

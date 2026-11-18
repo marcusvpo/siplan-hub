@@ -5,7 +5,15 @@ import type {
   SecondaryTicketHubStatus,
   SecondaryTicketRow,
 } from "@/integrations/supabase/types";
-import { OFFICIAL_SECONDARY_PRODUCTS, normalizeSecondaryMatchText } from "@/lib/secondary-products";
+import {
+  OFFICIAL_SECONDARY_PRODUCTS,
+  SECONDARY_HUB_STATUS_MAP,
+  normalizeSecondaryMatchText,
+} from "@/lib/secondary-products";
+import {
+  recordProjectActivityLog,
+  type ProjectLogChangeItem,
+} from "@/services/projectLogService";
 
 export interface LinkedParentProjectSummary {
   id: string;
@@ -289,18 +297,29 @@ export function useSecondaryTicketMutations() {
     queryClient.invalidateQueries({ queryKey: ["projectsList"] });
     queryClient.invalidateQueries({ queryKey: ["projectDetails"] });
     queryClient.invalidateQueries({ queryKey: ["projectsV3_with_dates"] });
+    queryClient.invalidateQueries({ queryKey: ["timelineEvents"] });
   };
 
   const updateSecondaryTicket = useMutation({
     mutationFn: async (params: {
       id: string;
+      projectId?: string;
       hub_status?: SecondaryTicketHubStatus;
       responsible?: string | null;
       observations?: string | null;
       tramited_to_cs?: boolean;
       updated_by?: string | null;
     }) => {
-      const { id, ...rest } = params;
+      const { id, projectId, ...rest } = params;
+
+      const [{ data: previousRow }, { data: linkedRows }] = await Promise.all([
+        supabase.from("secondary_tickets").select("*").eq("id", id).maybeSingle(),
+        supabase
+          .from("project_secondary_ticket_links")
+          .select("project_id")
+          .eq("secondary_ticket_id", id),
+      ]);
+
       const { data, error } = await supabase
         .from("secondary_tickets")
         .update({
@@ -312,7 +331,108 @@ export function useSecondaryTicketMutations() {
         .single();
 
       if (error) throw error;
-      return data as SecondaryTicketRow;
+
+      const updatedTicket = data as SecondaryTicketRow;
+      const previousTicket = previousRow as SecondaryTicketRow | null;
+      const targetProjectIds = Array.from(
+        new Set([
+          ...(projectId ? [projectId] : []),
+          ...((linkedRows as Array<{ project_id: string }> | null) || []).map(
+            (r) => r.project_id,
+          ),
+        ]),
+      );
+
+      if (previousTicket && targetProjectIds.length > 0) {
+        const changes: ProjectLogChangeItem[] = [];
+        const productTitle = `${updatedTicket.product_name} (#${updatedTicket.ticket_number})`;
+
+        if (
+          rest.hub_status !== undefined &&
+          rest.hub_status !== previousTicket.hub_status
+        ) {
+          const oldLabel =
+            SECONDARY_HUB_STATUS_MAP[previousTicket.hub_status]?.label ||
+            previousTicket.hub_status;
+          const newLabel =
+            SECONDARY_HUB_STATUS_MAP[updatedTicket.hub_status]?.label ||
+            updatedTicket.hub_status;
+          changes.push({
+            field: `secondary_ticket.${id}.hub_status`,
+            label: `${productTitle} — Situação HUB`,
+            oldValue: oldLabel,
+            newValue: newLabel,
+          });
+        }
+
+        if (
+          rest.responsible !== undefined &&
+          (rest.responsible || "").trim() !== (previousTicket.responsible || "").trim()
+        ) {
+          changes.push({
+            field: `secondary_ticket.${id}.responsible`,
+            label: `${productTitle} — Responsável`,
+            oldValue: previousTicket.responsible?.trim() || "(não definido)",
+            newValue: updatedTicket.responsible?.trim() || "(removido)",
+          });
+        }
+
+        if (
+          rest.tramited_to_cs !== undefined &&
+          Boolean(rest.tramited_to_cs) !== Boolean(previousTicket.tramited_to_cs)
+        ) {
+          changes.push({
+            field: `secondary_ticket.${id}.tramited_to_cs`,
+            label: `${productTitle} — Tramitado para CS no 0800`,
+            oldValue: previousTicket.tramited_to_cs ? "Sim" : "Não",
+            newValue: updatedTicket.tramited_to_cs ? "Sim" : "Não",
+          });
+        }
+
+        if (
+          rest.observations !== undefined &&
+          (rest.observations || "").trim() !== (previousTicket.observations || "").trim()
+        ) {
+          changes.push({
+            field: `secondary_ticket.${id}.observations`,
+            label: `${productTitle} — Observações`,
+            oldValue: previousTicket.observations?.trim() || "(vazio)",
+            newValue: updatedTicket.observations?.trim() || "(vazio)",
+          });
+        }
+
+        if (changes.length > 0) {
+          const summaryMsg =
+            changes.length === 1
+              ? `${changes[0].label}: "${changes[0].oldValue}" → "${changes[0].newValue}"`
+              : `Produto secundário ${productTitle} atualizado (${changes.length} campos)`;
+
+          await Promise.all(
+            targetProjectIds.map((pid) =>
+              recordProjectActivityLog({
+                projectId: pid,
+                type: "secondary_product",
+                category: "secondary_products",
+                actionType: "secondary_product",
+                tabLabel: "Produtos Secundários",
+                fieldLabel: productTitle,
+                oldValue: changes[0]?.oldValue,
+                newValue: changes[0]?.newValue,
+                changes,
+                message: summaryMsg,
+                extraMetadata: {
+                  secondaryTicketId: id,
+                  ticketNumber: updatedTicket.ticket_number,
+                  productName: updatedTicket.product_name,
+                },
+                queryClient,
+              }),
+            ),
+          );
+        }
+      }
+
+      return updatedTicket;
     },
     onSuccess: invalidateAll,
   });
@@ -427,6 +547,40 @@ export function useSecondaryTicketMutations() {
         .insert({ scope: "chamados_0800", status: "pending" })
         .then(() => undefined, () => undefined);
 
+      const newValueText = `${params.productName} (#${cleanTicket})`;
+      await Promise.all(
+        [...targetProjectIds].map((pid) =>
+          recordProjectActivityLog({
+            projectId: pid,
+            type: "secondary_product",
+            category: "secondary_products",
+            actionType: "secondary_product",
+            tabLabel: "Produtos Secundários",
+            fieldLabel: "Vínculo de Produto Secundário",
+            oldValue: "(não vinculado)",
+            newValue: newValueText,
+            changes: [
+              {
+                field: "secondary_tickets",
+                label: "Produto Secundário Vinculado",
+                oldValue: "(não vinculado)",
+                newValue: newValueText,
+              },
+            ],
+            message:
+              pid === params.projectId
+                ? `Produto secundário vinculado manualmente: ${newValueText}`
+                : `Produto secundário espelhado automaticamente: ${newValueText}`,
+            extraMetadata: {
+              secondaryTicketId: secondaryId,
+              ticketNumber: cleanTicket,
+              productName: params.productName,
+            },
+            queryClient,
+          }),
+        ),
+      );
+
       return { id: secondaryId, linkedCount: targetProjectIds.size };
     },
     onSuccess: invalidateAll,
@@ -434,6 +588,12 @@ export function useSecondaryTicketMutations() {
 
   const unlinkSecondaryTicket = useMutation({
     mutationFn: async (params: { projectId: string; secondaryTicketId: string; unlinkAllSiblings?: boolean }) => {
+      const { data: ticketInfo } = await supabase
+        .from("secondary_tickets")
+        .select("product_name, ticket_number")
+        .eq("id", params.secondaryTicketId)
+        .maybeSingle();
+
       let query = supabase
         .from("project_secondary_ticket_links")
         .delete()
@@ -445,18 +605,67 @@ export function useSecondaryTicketMutations() {
 
       const { error } = await query;
       if (error) throw error;
+
+      const ticketLabel = ticketInfo
+        ? `${ticketInfo.product_name} (#${ticketInfo.ticket_number})`
+        : params.secondaryTicketId;
+
+      await recordProjectActivityLog({
+        projectId: params.projectId,
+        type: "secondary_product",
+        category: "secondary_products",
+        actionType: "secondary_product",
+        tabLabel: "Produtos Secundários",
+        fieldLabel: "Vínculo de Produto Secundário",
+        oldValue: ticketLabel,
+        newValue: "(desvinculado)",
+        changes: [
+          {
+            field: "secondary_tickets",
+            label: "Produto Secundário Desvinculado",
+            oldValue: ticketLabel,
+            newValue: "(desvinculado)",
+          },
+        ],
+        message: `Vínculo de produto secundário removido: ${ticketLabel}`,
+        extraMetadata: {
+          secondaryTicketId: params.secondaryTicketId,
+          ticketNumber: ticketInfo?.ticket_number,
+          productName: ticketInfo?.product_name,
+        },
+        queryClient,
+      });
     },
     onSuccess: invalidateAll,
   });
 
   const requestSync0800Now = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (params?: { projectId?: string } | void) => {
       const { data, error } = await supabase
         .from("chamados_sync_requests")
         .insert({ scope: "chamados_0800", status: "pending" })
         .select("id")
         .single();
       if (error) throw error;
+
+      const projectId =
+        params && typeof params === "object" && "projectId" in params
+          ? params.projectId
+          : undefined;
+
+      if (projectId) {
+        await recordProjectActivityLog({
+          projectId,
+          type: "sync_action",
+          category: "secondary_products",
+          actionType: "sync_action",
+          tabLabel: "Produtos Secundários",
+          buttonLabel: "Sincronizar 0800",
+          message: "Sincronização manual do espelho 0800 solicitada na aba Produtos Secundários",
+          queryClient,
+        });
+      }
+
       return data as { id: string };
     },
     onSuccess: () => {

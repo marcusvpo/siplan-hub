@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { QueryClientContext } from "@tanstack/react-query";
+import { recordProjectButtonLog } from "@/services/projectLogService";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
@@ -229,6 +231,7 @@ export function PostObservations({
   const [blocks, setBlocks] = useState<Block[]>(initial.blocks);
   const [summary, setSummary] = useState<Block>(initial.summary);
   const lastEmitted = useRef<string | undefined>(observations);
+  const queryClient = useContext(QueryClientContext) || undefined;
 
   // Sincroniza quando o valor vem de fora (carga inicial / troca de projeto) e nao
   // foi este componente quem emitiu - evita sobrescrever o que o usuario digita.
@@ -254,8 +257,38 @@ export function PostObservations({
 
   const updateBlock = (id: string, content: string) =>
     commit(blocks.map((b) => (b.id === id ? { ...b, content } : b)), summary);
-  const addBlock = () => commit([...blocks, makeBlock("")], summary);
-  const removeBlock = (id: string) => commit(blocks.filter((b) => b.id !== id), summary);
+  const addBlock = () => {
+    const nextIndex = blocks.length + 1;
+    commit([...blocks, makeBlock("")], summary);
+    if (projectId) {
+      void recordProjectButtonLog({
+        projectId,
+        category: "stages",
+        tabLabel: "Etapas",
+        stageId: "post",
+        stageLabel: "Pós-Implantação",
+        buttonLabel: "Adicionar bloco",
+        message: `Adicionado Bloco ${nextIndex} de observações no Pós-Implantação`,
+        queryClient,
+      });
+    }
+  };
+  const removeBlock = (id: string) => {
+    const idx = blocks.findIndex((b) => b.id === id);
+    commit(blocks.filter((b) => b.id !== id), summary);
+    if (projectId) {
+      void recordProjectButtonLog({
+        projectId,
+        category: "stages",
+        tabLabel: "Etapas",
+        stageId: "post",
+        stageLabel: "Pós-Implantação",
+        buttonLabel: "Excluir bloco",
+        message: `Excluído Bloco ${idx >= 0 ? idx + 1 : ""} de observações no Pós-Implantação`,
+        queryClient,
+      });
+    }
+  };
   const updateSummary = (content: string) => commit(blocks, { ...summary, content });
 
   // --- IA (melhorar bloco / gerar resumo) ---
@@ -283,9 +316,23 @@ export function PostObservations({
 
   const improveBlock = (b: Block) => {
     if (aiRunning || !canEdit) return;
+    const idx = blocks.findIndex((item) => item.id === b.id);
     aiTargetRef.current = { kind: "block", id: b.id };
     setAiTarget({ kind: "block", id: b.id });
     enqueueJob.mutate({ inputText: b.content || "", requestedBy, jobType: "improve_text" });
+    if (projectId) {
+      void recordProjectButtonLog({
+        projectId,
+        category: "stages",
+        tabLabel: "Etapas",
+        stageId: "post",
+        stageLabel: "Pós-Implantação",
+        actionType: "ai_action",
+        buttonLabel: "Melhorar texto com IA",
+        message: `Solicitada melhoria com IA no Bloco ${idx >= 0 ? idx + 1 : ""} de Pós-Implantação`,
+        queryClient,
+      });
+    }
   };
 
   const hasBlockText = blocks.some((b) => blockTextLen(b.content) >= 3);
@@ -304,6 +351,19 @@ export function PostObservations({
     aiTargetRef.current = { kind: "summary" };
     setAiTarget({ kind: "summary" });
     enqueueJob.mutate({ inputText: combined, requestedBy, jobType: "summary_blocks" });
+    if (projectId) {
+      void recordProjectButtonLog({
+        projectId,
+        category: "stages",
+        tabLabel: "Etapas",
+        stageId: "post",
+        stageLabel: "Pós-Implantação",
+        actionType: "ai_action",
+        buttonLabel: "Gerar resumo com IA",
+        message: "Solicitada geração de Resumo Geral com IA no Pós-Implantação",
+        queryClient,
+      });
+    }
   };
 
   const applyGenerated = () => {
@@ -317,6 +377,22 @@ export function PostObservations({
         blocks.map((b) => (b.id === id ? { ...b, content: lexical, editorKey: b.editorKey + 1 } : b)),
         summary
       );
+    }
+    if (projectId) {
+      void recordProjectButtonLog({
+        projectId,
+        category: "stages",
+        tabLabel: "Etapas",
+        stageId: "post",
+        stageLabel: "Pós-Implantação",
+        actionType: "ai_action",
+        buttonLabel: "Aplicar texto gerado pela IA",
+        message:
+          pending.target.kind === "summary"
+            ? "Resumo Geral gerado pela IA aplicado no Pós-Implantação"
+            : "Texto de bloco gerado pela IA aplicado no Pós-Implantação",
+        queryClient,
+      });
     }
     setPending(null);
   };
@@ -396,6 +472,18 @@ export function PostObservations({
       const dt = new Date().toLocaleDateString("pt-BR").replace(/\//g, "-");
       pdf.save(`Relatorio_Pos-Implantacao_${cli}_${dt}.pdf`);
       toast.success("PDF gerado com sucesso!", { id: "post-report-pdf" });
+      if (projectId) {
+        void recordProjectButtonLog({
+          projectId,
+          category: "stages",
+          tabLabel: "Etapas",
+          stageId: "post",
+          stageLabel: "Pós-Implantação",
+          buttonLabel: "Exportar PDF",
+          message: "Exportado relatório em PDF do Resumo Geral de Pós-Implantação",
+          queryClient,
+        });
+      }
     } catch (err) {
       console.error("Erro ao gerar PDF do resumo:", err);
       toast.error("Erro ao gerar o PDF.", { id: "post-report-pdf" });

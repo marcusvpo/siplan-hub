@@ -110,4 +110,34 @@ describe("Phase1HeaderTag - Cabeçalho do Modal de Projetos", () => {
     );
     expect(container.firstChild).toBeNull();
   });
+
+  it("não exibe tag quando as datas de Fase 1 foram limpas mesmo que a etapa pai tenha datas residuais antigas (caso Franca 01)", () => {
+    const francaProjectWithResidualParentDates = {
+      id: "b8a6ec30-2859-4880-8e6d-b3fb50614705",
+      clientName: "FRANCA - TABELIONATO DE NOTAS E PROTESTO DE LETRAS E TITULOS 01",
+      stages: {
+        implementation: {
+          status: "todo",
+          responsible: "",
+          startDate: new Date("2026-05-18T15:00:00.000Z"),
+          endDate: new Date("2026-05-22T15:00:00.000Z"),
+          phase1: {
+            status: "todo",
+            responsible: "Rodrigo Brites",
+            startDate: undefined,
+            endDate: undefined,
+            isConfirmed: false,
+          },
+          phase2: {
+            status: "todo",
+          },
+        },
+      },
+    } as unknown as ProjectV2;
+
+    const { container } = render(
+      <Phase1HeaderTag project={francaProjectWithResidualParentDates} onClick={vi.fn()} />
+    );
+    expect(container.firstChild).toBeNull();
+  });
 });
