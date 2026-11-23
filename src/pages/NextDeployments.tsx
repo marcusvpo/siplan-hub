@@ -37,9 +37,10 @@ interface DeploymentItem {
 
 export default function NextDeployments() {
   const { projects, isLoading } = useProjectsV2();
-  const [selectedProject, setSelectedProject] = useState<ProjectV2 | null>(
-    null,
-  );
+  const [selectedDeployment, setSelectedDeployment] = useState<{
+    project: ProjectV2;
+    phase: "phase1" | "phase2";
+  } | null>(null);
 
   // View state: weekly timeline vs standard grid
   const [viewMode, setViewMode] = useState<"weekly" | "grid">("weekly");
@@ -524,7 +525,12 @@ export default function NextDeployments() {
                       <DeploymentCard
                         project={deployment.project}
                         phaseType={deployment.phase}
-                        onClick={() => setSelectedProject(deployment.project)}
+                        onClick={() =>
+                          setSelectedDeployment({
+                            project: deployment.project,
+                            phase: deployment.phase,
+                          })
+                        }
                       />
                     </motion.div>
                   ))}
@@ -545,7 +551,12 @@ export default function NextDeployments() {
                 <DeploymentCard
                   project={deployment.project}
                   phaseType={deployment.phase}
-                  onClick={() => setSelectedProject(deployment.project)}
+                  onClick={() =>
+                    setSelectedDeployment({
+                      project: deployment.project,
+                      phase: deployment.phase,
+                    })
+                  }
                 />
               </motion.div>
             ))}
@@ -584,9 +595,10 @@ export default function NextDeployments() {
 
       {/* Details Dialog */}
       <DeploymentDetailsDialog
-        project={selectedProject}
-        open={!!selectedProject}
-        onOpenChange={(open) => !open && setSelectedProject(null)}
+        project={selectedDeployment?.project ?? null}
+        phaseType={selectedDeployment?.phase ?? "phase1"}
+        open={!!selectedDeployment}
+        onOpenChange={(open) => !open && setSelectedDeployment(null)}
       />
     </div>
   );

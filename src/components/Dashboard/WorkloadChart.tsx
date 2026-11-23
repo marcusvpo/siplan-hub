@@ -64,7 +64,12 @@ export const WorkloadChart = ({ projects }: WorkloadChartProps) => {
           config={chartConfig}
           className="h-full w-full"
         >
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer
+            width="100%"
+            height="100%"
+            minWidth={0}
+            initialDimension={{ width: 320, height: 220 }}
+          >
             <BarChart 
               data={data} 
               layout="vertical" 

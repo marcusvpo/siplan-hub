@@ -1328,6 +1328,14 @@ export function CalendarGrid({
                                               >
                                                 {badgeText}
                                               </span>
+                                              {!isVacation && event.implementationPhase === "phase2" && (
+                                                <span
+                                                  className="shrink-0 rounded bg-purple-700/90 text-white px-1 py-0.2 text-[8px] font-black uppercase tracking-wider shadow-2xs"
+                                                  title="Fase 2 (Possível Retorno)"
+                                                >
+                                                  FASE 2
+                                                </span>
+                                              )}
                                               {event.isSupport && (
                                                 <span
                                                   className="shrink-0 rounded bg-white/35 text-white px-1 py-0.2 text-[8px] font-black uppercase tracking-wider shadow-2xs"
@@ -1401,8 +1409,7 @@ export function CalendarGrid({
                                                 >
                                                   {isVacation
                                                     ? "Férias (Admin)"
-                                                    : event.systemType ||
-                                                      "Fase 1"}
+                                                    : `${event.systemType || "Implantação"}${event.implementationPhase === "phase2" ? " • Fase 2" : ""}`}
                                                 </span>
                                               </div>
 
@@ -1464,7 +1471,9 @@ export function CalendarGrid({
                                               </h4>
                                               {!isVacation && (
                                                 <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
-                                                  Status Fase 1:{" "}
+                                                  {event.implementationPhase === "phase2"
+                                                    ? "Status Fase 2 (Retorno): "
+                                                    : "Status Fase 1: "}
                                                   <strong className="text-foreground">
                                                     {getStageStatusLabel(
                                                       event.stageStatus
@@ -1507,7 +1516,9 @@ export function CalendarGrid({
                                                   <div className="text-[9px] font-bold uppercase text-muted-foreground">
                                                     {isVacation
                                                       ? "Período de Férias"
-                                                      : "Período Fase 1"}
+                                                      : event.implementationPhase === "phase2"
+                                                        ? "Período Fase 2"
+                                                        : "Período Fase 1"}
                                                   </div>
                                                   <div className="font-bold text-foreground">
                                                     {format(
@@ -1530,7 +1541,9 @@ export function CalendarGrid({
                                                 <Rocket className="h-3 w-3" />
                                                 {isVacation
                                                   ? "Clique para ver detalhes ou gerenciar em Férias (Admin)"
-                                                  : "Clique para editar Fase 1 (Datas, Responsável e Confirmação)"}
+                                                  : event.implementationPhase === "phase2"
+                                                    ? "Clique para editar Fase 2 (Datas, Responsável e Confirmação)"
+                                                    : "Clique para editar Fase 1 (Datas, Responsável e Confirmação)"}
                                               </span>
                                             </div>
                                           </div>

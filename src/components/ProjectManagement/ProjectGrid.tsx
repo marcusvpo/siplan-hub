@@ -16,6 +16,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AdvancedFilters } from "./AdvancedFilters";
+import {
+  ProjectNotesSearchDialog,
+  NotesSearchSelection,
+} from "./ProjectNotesSearchDialog";
 import { useFilterStore } from "@/stores/filterStore";
 import { cn, normalizeText } from "@/lib/utils";
 import { matchesProjectStageFilter } from "@/lib/project-stage-filters";
@@ -49,6 +53,8 @@ export function ProjectGrid() {
     useState<Partial<ProjectV2> | null>(null);
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
   const [modalInitialTab, setModalInitialTab] = useState<string | undefined>(undefined);
+  const [modalInitialStepId, setModalInitialStepId] = useState<string | undefined>(undefined);
+  const [notesSearchOpen, setNotesSearchOpen] = useState(false);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -106,6 +112,7 @@ export function ProjectGrid() {
       setSearchParams(newParams, { replace: true });
     }
     setModalInitialTab(undefined);
+    setModalInitialStepId(undefined);
     setSelectedProject(null);
   };
 
@@ -279,6 +286,15 @@ export function ProjectGrid() {
     }
   };
 
+  const handleSelectFromNotesSearch = (selection: NotesSearchSelection) => {
+    const foundInList = projects.find((p) => p.id === selection.projectId);
+    setModalInitialTab(selection.targetTab);
+    setModalInitialStepId(selection.targetStepId);
+    setSelectedProject(
+      foundInList || ({ id: selection.projectId } as Partial<ProjectV2>),
+    );
+  };
+
   const handleCompare = () => {
     if (selectedProjectIds.length < 2) return;
     navigate(`/compare?ids=${selectedProjectIds.join(",")}`);
@@ -292,6 +308,7 @@ export function ProjectGrid() {
         systemTypes={uniqueSystemTypes}
         onCompare={handleCompare}
         selectedCount={selectedProjectIds.length}
+        onOpenNotesSearch={() => setNotesSearchOpen(true)}
       />
 
       {/* Content Area */}
@@ -326,6 +343,7 @@ export function ProjectGrid() {
                     project={project as ProjectV2}
                     onClick={() => {
                       setModalInitialTab(undefined);
+                      setModalInitialStepId(undefined);
                       setSelectedProject(project);
                     }}
                     selected={selectedProjectIds.includes(project.id)}
@@ -474,11 +492,19 @@ export function ProjectGrid() {
         </>
       )}
 
+      {/* Free-text Notes Search Dialog */}
+      <ProjectNotesSearchDialog
+        open={notesSearchOpen}
+        onOpenChange={setNotesSearchOpen}
+        onSelectProject={handleSelectFromNotesSearch}
+      />
+
       {/* Modal */}
       <ProjectModal
         project={selectedProject as ProjectV2}
         open={!!selectedProject}
         initialTab={modalInitialTab}
+        initialStepId={modalInitialStepId}
         onOpenChange={(open) => !open && handleCloseModal()}
         onUpdate={(updatedProject) => {
           updateProject.mutate({

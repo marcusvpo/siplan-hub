@@ -10,6 +10,8 @@ import { EditorState, SerializedEditorState } from "lexical"
 import { editorTheme } from "@/components/editor/themes/editor-theme"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import "@/components/editor/editor.css"
+import type { ProjectV2 } from "@/types/ProjectV2"
+import { EditorProjectProvider } from "./editor-project-context"
 
 import { nodes } from "./nodes"
 import { Plugins } from "./plugins"
@@ -31,6 +33,8 @@ export function Editor({
   placeholder,
   editable,
   compact,
+  project,
+  onNavigateToStage,
 }: {
   editorState?: EditorState
   editorSerializedState?: SerializedEditorState
@@ -39,31 +43,35 @@ export function Editor({
   placeholder?: string
   editable?: boolean
   compact?: boolean
+  project?: Partial<ProjectV2>
+  onNavigateToStage?: (stageId: string, route?: string) => void
 }) {
   return (
     <div className="bg-background overflow-hidden rounded-lg border shadow w-full h-full flex flex-col">
-      <LexicalComposer
-        initialConfig={{
-          ...editorConfig,
-          editable,
-          ...(editorState ? { editorState } : {}),
-          ...(editorSerializedState
-            ? { editorState: JSON.stringify(editorSerializedState) }
-            : {}),
-        }}
-      >
-        <TooltipProvider>
-          <Plugins placeholder={placeholder} editable={editable} compact={compact} />
+      <EditorProjectProvider value={{ project, onNavigateToStage }}>
+        <LexicalComposer
+          initialConfig={{
+            ...editorConfig,
+            editable,
+            ...(editorState ? { editorState } : {}),
+            ...(editorSerializedState
+              ? { editorState: JSON.stringify(editorSerializedState) }
+              : {}),
+          }}
+        >
+          <TooltipProvider>
+            <Plugins placeholder={placeholder} editable={editable} compact={compact} />
 
-          <OnChangePlugin
-            ignoreSelectionChange={true}
-            onChange={(editorState) => {
-              onChange?.(editorState)
-              onSerializedChange?.(editorState.toJSON())
-            }}
-          />
-        </TooltipProvider>
-      </LexicalComposer>
+            <OnChangePlugin
+              ignoreSelectionChange={true}
+              onChange={(editorState) => {
+                onChange?.(editorState)
+                onSerializedChange?.(editorState.toJSON())
+              }}
+            />
+          </TooltipProvider>
+        </LexicalComposer>
+      </EditorProjectProvider>
     </div>
   )
 }

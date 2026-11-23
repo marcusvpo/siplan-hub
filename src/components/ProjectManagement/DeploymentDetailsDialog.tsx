@@ -56,6 +56,7 @@ import {
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { SafeDateInput } from "@/components/ui/safe-date-input";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -70,7 +71,9 @@ import { useVacations } from "@/hooks/useVacations";
 import { normalizeSpecialty } from "@/utils/projectSpecialty";
 import {
   applyPhase1UpdatesWithAutomation,
+  applyPhase2UpdatesWithAutomation,
   formatConfirmationTimestamp,
+  isValidCalendarYearDateKey,
   syncPostStageFromImplementation,
   toLocalDateKey,
 } from "@/utils/implementation-phase1";
@@ -88,6 +91,7 @@ interface DeploymentDetailsDialogProps {
   project: ProjectV2 | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  phaseType?: "phase1" | "phase2";
   // Optional overrides for reuse in Calendar
   customTitle?: string;
   customDescription?: string;
@@ -102,9 +106,15 @@ export function DeploymentDetailsDialog({
   project,
   open,
   onOpenChange,
+  phaseType = "phase1",
   customTitle,
   customDescription,
 }: DeploymentDetailsDialogProps) {
+  const isPhase2 = phaseType === "phase2";
+  const phaseBadgeTitle = isPhase2 ? "Fase 2" : "Fase 1";
+  const phaseSubtitle = isPhase2
+    ? "Possível Retorno"
+    : "Treinamento & Acompanhamento";
   const navigate = useNavigate();
   const { updateProject } = useProjectsV2();
   const { vacations = [] } = useVacations();
@@ -126,24 +136,32 @@ export function DeploymentDetailsDialog({
     holidays: WeekdayHoliday[];
   } | null>(null);
 
-  // Sync state when project changes or dialog opens
+  // Sync state when project changes, phase changes, or dialog opens
   useEffect(() => {
     if (project) {
-      const phase1 = project.stages?.implementation?.phase1;
-      setStatus(phase1?.status || "todo");
+      const targetPhase = project.stages?.implementation?.[phaseType];
+      const safeStartKey = toLocalDateKey(targetPhase?.startDate);
+      const safeEndKey = toLocalDateKey(targetPhase?.endDate);
+      setStatus(targetPhase?.status || "todo");
       setResponsible(
-        phase1?.responsible ||
-          project.stages?.implementation?.responsible ||
-          project.responsibleImplementation ||
-          ""
+        isPhase2
+          ? targetPhase?.responsible || ""
+          : targetPhase?.responsible ||
+            project.stages?.implementation?.responsible ||
+            project.responsibleImplementation ||
+            ""
       );
-      setStartDateStr(toLocalDateKey(phase1?.startDate) ?? "");
-      setEndDateStr(toLocalDateKey(phase1?.endDate) ?? "");
-      setIsConfirmed(!!phase1?.isConfirmed);
-      setConfirmedAt(phase1?.confirmedAt);
-      setTrainingLocation(phase1?.trainingLocation || "");
+      setStartDateStr(
+        safeStartKey && isValidCalendarYearDateKey(safeStartKey) ? safeStartKey : ""
+      );
+      setEndDateStr(
+        safeEndKey && isValidCalendarYearDateKey(safeEndKey) ? safeEndKey : ""
+      );
+      setIsConfirmed(!!targetPhase?.isConfirmed);
+      setConfirmedAt(targetPhase?.confirmedAt);
+      setTrainingLocation(targetPhase?.trainingLocation || "");
       setAdditionalResponsibles(
-        (phase1?.additionalResponsibles || []).map((item) => ({
+        (targetPhase?.additionalResponsibles || []).map((item) => ({
           id: item.id || crypto.randomUUID(),
           responsible: item.responsible || "",
           startDate: item.startDate ? new Date(item.startDate) : undefined,
@@ -153,7 +171,7 @@ export function DeploymentDetailsDialog({
       );
       setPendingHolidayConfirmation(null);
     }
-  }, [project, open]);
+  }, [project, phaseType, isPhase2, open]);
 
   // Detector de conflito em tempo real com as férias cadastradas no Admin (titular e apoios)
   const vacationConflicts = useMemo(() => {
@@ -197,12 +215,16 @@ export function DeploymentDetailsDialog({
     // 2. Checa apoios adicionais
     additionalResponsibles.forEach((assign) => {
       if (!assign.responsible) return;
-      const aStart = assign.startDate
-        ? format(new Date(assign.startDate), "yyyy-MM-dd")
-        : startDateStr;
-      const aEnd = assign.endDate
-        ? format(new Date(assign.endDate), "yyyy-MM-dd")
-        : endDateStr;
+      const rawAssignStart = toLocalDateKey(assign.startDate);
+      const aStart =
+        rawAssignStart && isValidCalendarYearDateKey(rawAssignStart)
+          ? rawAssignStart
+          : startDateStr;
+      const rawAssignEnd = toLocalDateKey(assign.endDate);
+      const aEnd =
+        rawAssignEnd && isValidCalendarYearDateKey(rawAssignEnd)
+          ? rawAssignEnd
+          : endDateStr;
       if (!aStart && !aEnd) return;
       const checkStart = aStart || aEnd;
       const checkEnd = aEnd || aStart;
@@ -247,7 +269,7 @@ export function DeploymentDetailsDialog({
     onOpenChange(false);
   };
 
-  const phase1 = project?.stages?.implementation?.phase1;
+  const targetPhase = project?.stages?.implementation?.[phaseType];
 
   const handleUpdatePhase1 = useCallback(
     async (updates: {
@@ -284,8 +306,8 @@ export function DeploymentDetailsDialog({
         phase2: { status: "todo", responsible: "" },
       };
 
-      const basePhase1: ImplementationPhase = {
-        ...currentImpl.phase1,
+      const baseTargetPhase: ImplementationPhase = {
+        ...currentImpl[phaseType],
         status,
         responsible,
         startDate: startDateStr ? new Date(startDateStr + "T12:00:00") : undefined,
@@ -298,7 +320,7 @@ export function DeploymentDetailsDialog({
 
       const baseImpl: ImplementationStageV2 = {
         ...currentImpl,
-        phase1: basePhase1,
+        [phaseType]: baseTargetPhase,
       };
 
       const phaseUpdates: Partial<ImplementationPhase> = {};
@@ -322,35 +344,46 @@ export function DeploymentDetailsDialog({
         phaseUpdates.additionalResponsibles = updates.additionalResponsibles;
       }
 
-      const appliedImpl = applyPhase1UpdatesWithAutomation({
-        currentStage: baseImpl,
-        phaseUpdates,
-        globalStatus: project.globalStatus,
-        systemType: project.systemType,
-      });
+      const appliedImpl = isPhase2
+        ? applyPhase2UpdatesWithAutomation({
+            currentStage: baseImpl,
+            phaseUpdates,
+            globalStatus: project.globalStatus,
+            systemType: project.systemType,
+          })
+        : applyPhase1UpdatesWithAutomation({
+            currentStage: baseImpl,
+            phaseUpdates,
+            globalStatus: project.globalStatus,
+            systemType: project.systemType,
+          });
 
-      const resolvedResponsible =
-        updates.responsible !== undefined
-          ? updates.responsible
-          : appliedImpl.phase1.responsible || currentImpl.responsible || "";
+      const resolvedUpdatedPhase = appliedImpl[phaseType] || baseTargetPhase;
 
-      const updatedImplementation: ImplementationStageV2 = {
-        ...appliedImpl,
-        responsible: resolvedResponsible,
-      };
+      const updatedImplementation: ImplementationStageV2 = isPhase2
+        ? appliedImpl
+        : {
+            ...appliedImpl,
+            responsible:
+              updates.responsible !== undefined
+                ? updates.responsible
+                : appliedImpl.phase1.responsible || currentImpl.responsible || "",
+          };
 
-      const updatedPost = syncPostStageFromImplementation({
-        implementationStage: updatedImplementation,
-        oldImplementationStage: project.stages?.implementation,
-        currentPostStage: project.stages?.post,
-        globalStatus: project.globalStatus,
-        systemType: project.systemType,
-      });
+      const updatedPost = isPhase2
+        ? project.stages?.post
+        : syncPostStageFromImplementation({
+            implementationStage: updatedImplementation,
+            oldImplementationStage: project.stages?.implementation,
+            currentPostStage: project.stages?.post,
+            globalStatus: project.globalStatus,
+            systemType: project.systemType,
+          });
 
       // Local UI update
-      setStatus(updatedImplementation.phase1.status);
-      setIsConfirmed(Boolean(updatedImplementation.phase1.isConfirmed));
-      setConfirmedAt(updatedImplementation.phase1.confirmedAt);
+      setStatus(resolvedUpdatedPhase.status);
+      setIsConfirmed(Boolean(resolvedUpdatedPhase.isConfirmed));
+      setConfirmedAt(resolvedUpdatedPhase.confirmedAt);
       if (updates.responsible !== undefined) setResponsible(newResp);
       if (updates.startDateStr !== undefined) setStartDateStr(newStartStr);
       if (updates.endDateStr !== undefined) setEndDateStr(newEndStr);
@@ -367,20 +400,31 @@ export function DeploymentDetailsDialog({
             stages: {
               ...project.stages,
               implementation: updatedImplementation,
-              post: updatedPost,
+              ...(updatedPost !== undefined ? { post: updatedPost } : {}),
             },
           },
         });
-        toast.success("Fase 1 (Treinamento & Acompanhamento) atualizada!");
+        toast.success(
+          isPhase2
+            ? "Fase 2 (Possível Retorno) atualizada!"
+            : "Fase 1 (Treinamento & Acompanhamento) atualizada!"
+        );
       } catch (err) {
-        console.error("Erro ao atualizar Fase 1:", err);
-        toast.error("Falha ao salvar alterações da Fase 1");
+        console.error(
+          `Erro ao atualizar ${isPhase2 ? "Fase 2" : "Fase 1"}:`,
+          err
+        );
+        toast.error(
+          `Falha ao salvar alterações da ${isPhase2 ? "Fase 2" : "Fase 1"}`
+        );
       } finally {
         setIsSaving(false);
       }
     },
     [
       project,
+      phaseType,
+      isPhase2,
       status,
       responsible,
       startDateStr,
@@ -428,15 +472,17 @@ export function DeploymentDetailsDialog({
   }, []);
 
   const handleCancelHolidayConfirmation = useCallback(() => {
-    const phase1 = project?.stages?.implementation?.phase1;
+    const activePhase = project?.stages?.implementation?.[phaseType];
+    const startKey = toLocalDateKey(activePhase?.startDate);
+    const endKey = toLocalDateKey(activePhase?.endDate);
     setStartDateStr(
-      phase1?.startDate ? format(new Date(phase1.startDate), "yyyy-MM-dd") : ""
+      startKey && isValidCalendarYearDateKey(startKey) ? startKey : ""
     );
     setEndDateStr(
-      phase1?.endDate ? format(new Date(phase1.endDate), "yyyy-MM-dd") : ""
+      endKey && isValidCalendarYearDateKey(endKey) ? endKey : ""
     );
     setPendingHolidayConfirmation(null);
-  }, [project]);
+  }, [project, phaseType]);
 
   const handleCommitDateChange = useCallback(
     (field: "startDateStr" | "endDateStr", rawValue?: string) => {
@@ -445,15 +491,12 @@ export function DeploymentDetailsDialog({
         dateCommitTimeoutRef.current = null;
       }
 
-      const phase1 = project?.stages?.implementation?.phase1;
+      const activePhase = project?.stages?.implementation?.[phaseType];
+      const rawKey = toLocalDateKey(
+        field === "startDateStr" ? activePhase?.startDate : activePhase?.endDate
+      );
       const originalValue =
-        field === "startDateStr"
-          ? phase1?.startDate
-            ? format(new Date(phase1.startDate), "yyyy-MM-dd")
-            : ""
-          : phase1?.endDate
-          ? format(new Date(phase1.endDate), "yyyy-MM-dd")
-          : "";
+        rawKey && isValidCalendarYearDateKey(rawKey) ? rawKey : "";
 
       const candidateValue =
         rawValue !== undefined
@@ -488,7 +531,7 @@ export function DeploymentDetailsDialog({
       // 4. Data completa e válida -> processa alteração
       handleRequestDateChange({ [field]: candidateValue });
     },
-    [project, startDateStr, endDateStr, handleRequestDateChange]
+    [project, phaseType, startDateStr, endDateStr, handleRequestDateChange]
   );
 
   const handleDateInputChange = useCallback(
@@ -566,7 +609,7 @@ export function DeploymentDetailsDialog({
   if (!project) return null;
 
   const formattedConfirmedAt = isConfirmed
-    ? formatConfirmationTimestamp(confirmedAt ?? phase1?.confirmedAt)
+    ? formatConfirmationTimestamp(confirmedAt ?? targetPhase?.confirmedAt)
     : "";
 
   return (
@@ -645,7 +688,7 @@ export function DeploymentDetailsDialog({
             </DialogTitle>
             <DialogDescription className="text-xs">
               {customDescription ||
-                "Detalhes e Ajuste de Cronograma da Implantação (Fase 1)"}
+                `Detalhes e Ajuste de Cronograma da Implantação (${phaseBadgeTitle})`}
             </DialogDescription>
           </DialogHeader>
 
@@ -713,7 +756,7 @@ export function DeploymentDetailsDialog({
                 </span>
               </div>
               <p className="text-[11px] leading-snug text-amber-900/90 dark:text-amber-200/90">
-                O período selecionado da Fase 1 abrange feriado(s) em dia de
+                O período selecionado da {phaseBadgeTitle} abrange feriado(s) em dia de
                 semana (Seg–Sex):
               </p>
               <ul className="space-y-1 text-[11px] font-bold text-amber-950 dark:text-amber-100">
@@ -741,17 +784,24 @@ export function DeploymentDetailsDialog({
             />
           )}
 
-          {/* Bloco de Edição 360º: Fase 1 Treinamento & Acompanhamento */}
+          {/* Bloco de Edição 360º: Fase 1 ou Fase 2 */}
           <div className="min-w-0 space-y-3 rounded-xl border border-border bg-muted/20 p-3 shadow-xs sm:p-3.5">
             <div className="space-y-2 border-b border-border pb-2">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  <Badge className="bg-primary text-primary-foreground px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                  <Badge
+                    className={cn(
+                      "px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1",
+                      isPhase2
+                        ? "bg-purple-600 text-white"
+                        : "bg-primary text-primary-foreground"
+                    )}
+                  >
                     <Rocket className="h-3 w-3 shrink-0" />
-                    Fase 1
+                    {phaseBadgeTitle}
                   </Badge>
                   <h4 className="break-words text-xs font-bold text-foreground">
-                    Treinamento &amp; Acompanhamento
+                    {phaseSubtitle}
                   </h4>
                 </div>
 
@@ -796,7 +846,7 @@ export function DeploymentDetailsDialog({
 
               {isConfirmed && (
                 <div
-                  data-testid="deployment-phase1-confirmation-note"
+                  data-testid={`deployment-${phaseType}-confirmation-note`}
                   className="flex items-start gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1.5 text-[11px] leading-snug text-emerald-800 dark:text-emerald-200 text-left break-words"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
@@ -1005,12 +1055,16 @@ export function DeploymentDetailsDialog({
 
                   <div className="space-y-2">
                     {additionalResponsibles.map((assign, index) => {
-                      const aStartStr = assign.startDate
-                        ? format(new Date(assign.startDate), "yyyy-MM-dd")
-                        : "";
-                      const aEndStr = assign.endDate
-                        ? format(new Date(assign.endDate), "yyyy-MM-dd")
-                        : "";
+                      const rawAStart = toLocalDateKey(assign.startDate);
+                      const aStartStr =
+                        rawAStart && isValidCalendarYearDateKey(rawAStart)
+                          ? rawAStart
+                          : "";
+                      const rawAEnd = toLocalDateKey(assign.endDate);
+                      const aEndStr =
+                        rawAEnd && isValidCalendarYearDateKey(rawAEnd)
+                          ? rawAEnd
+                          : "";
                       const assignHolidays = getWeekdayHolidaysInRange(aStartStr, aEndStr);
 
                       return (
@@ -1041,24 +1095,11 @@ export function DeploymentDetailsDialog({
                               <Label className="text-[9.5px] font-bold text-muted-foreground uppercase">
                                 Início
                               </Label>
-                              <Input
-                                type="date"
-                                defaultValue={aStartStr}
-                                key={`assign-start-${assign.id || index}-${aStartStr}`}
-                                onBlur={(e) => {
-                                  const val = e.target.value;
-                                  if (!val) {
-                                    handleUpdateAdditionalResponsible(index, { startDate: undefined });
-                                    return;
-                                  }
-                                  if (isCompleteValidDate(val)) {
-                                    handleUpdateAdditionalResponsible(index, {
-                                      startDate: new Date(val + "T12:00:00"),
-                                    });
-                                  } else {
-                                    e.target.value = aStartStr;
-                                  }
-                                }}
+                              <SafeDateInput
+                                value={assign.startDate}
+                                onDateChange={(startDate) =>
+                                  handleUpdateAdditionalResponsible(index, { startDate })
+                                }
                                 disabled={!canEditProjects}
                                 className="h-8 text-xs font-medium bg-background border-border"
                               />
@@ -1069,24 +1110,11 @@ export function DeploymentDetailsDialog({
                               <Label className="text-[9.5px] font-bold text-muted-foreground uppercase">
                                 Término
                               </Label>
-                              <Input
-                                type="date"
-                                defaultValue={aEndStr}
-                                key={`assign-end-${assign.id || index}-${aEndStr}`}
-                                onBlur={(e) => {
-                                  const val = e.target.value;
-                                  if (!val) {
-                                    handleUpdateAdditionalResponsible(index, { endDate: undefined });
-                                    return;
-                                  }
-                                  if (isCompleteValidDate(val)) {
-                                    handleUpdateAdditionalResponsible(index, {
-                                      endDate: new Date(val + "T12:00:00"),
-                                    });
-                                  } else {
-                                    e.target.value = aEndStr;
-                                  }
-                                }}
+                              <SafeDateInput
+                                value={assign.endDate}
+                                onDateChange={(endDate) =>
+                                  handleUpdateAdditionalResponsible(index, { endDate })
+                                }
                                 disabled={!canEditProjects}
                                 className="h-8 text-xs font-medium bg-background border-border"
                               />
@@ -1268,7 +1296,7 @@ export function DeploymentDetailsDialog({
                 </div>
               )}
 
-              {phase1?.participantsCount && (
+              {targetPhase?.participantsCount && (
                 <div className="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-card p-1.5">
                   <Users className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                   <div className="min-w-0">
@@ -1276,7 +1304,7 @@ export function DeploymentDetailsDialog({
                       Participantes
                     </p>
                     <p className="text-xs font-bold text-foreground truncate">
-                      {phase1.participantsCount} pessoas
+                      {targetPhase.participantsCount} pessoas
                     </p>
                   </div>
                 </div>
@@ -1324,7 +1352,7 @@ export function DeploymentDetailsDialog({
             <AlertDialogDescription asChild>
               <div className="space-y-2.5 text-left text-xs text-muted-foreground">
                 <p>
-                  O período selecionado para a <strong>Fase 1</strong> do
+                  O período selecionado para a <strong>{phaseBadgeTitle}</strong> do
                   cartório{" "}
                   <strong className="text-foreground">
                     {project.clientName}

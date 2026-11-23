@@ -1,6 +1,7 @@
-type ImproveTextContext = "notes" | "pending_items" | "generic";
+type ImproveTextContext = "notes" | "pending_items" | "general_observations" | "generic";
 
 function contextFromTarget(targetField?: string): ImproveTextContext {
+  if (targetField === "general_observations") return "general_observations";
   if (!targetField?.startsWith("cs_cx_contact:")) return "generic";
   if (targetField.endsWith(":pending_items")) return "pending_items";
   if (targetField.endsWith(":notes")) return "notes";
@@ -8,6 +9,18 @@ function contextFromTarget(targetField?: string): ImproveTextContext {
 }
 
 function contextInstructions(context: ImproveTextContext): string {
+  if (context === "general_observations") {
+    return `
+ESTRUTURA OBRIGATORIA PARA OBSERVACOES GERAIS DE PROJETO (ZERO DATA LOSS):
+- NAO achate o texto em paragrafo corrido. Preserve e organize nas duas secoes: **Pré-Implantação** e **Implantação & Agenda**.
+- Mantenha as etapas em lista com "- " e rotulo em negrito: **Análise de Infra:**, **Análise de Aderência:**, **Conversão:**, **Homologação:**, **Config. Ambiente:** (e **Modelos Editor (Orion TN):** somente se existir no original).
+- Em **Implantação & Agenda**, mantenha os itens: **Implantação:**, **Implantador:** e **Observações:**.
+- Use sempre traço simples "-" e NUNCA travessão "—".
+- Detalhes longos, cobrancas com data ou observacoes especificas de uma etapa devem ficar como sub-itens em *italico* logo abaixo da etapa correspondente.
+- NUNCA apague, resuma demais, invente ou distorca nomes de analistas, contatos do cartorio/TI, terceiros, datas, horarios, modulos ou acordos comerciais.
+- Se houver historico de mudanca de data, preserve a data anterior e a data nova claramente.`;
+  }
+
   if (context === "notes") {
     return `
 ESTRUTURA PARA ANOTACOES DE CONTATO:

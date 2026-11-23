@@ -82,9 +82,6 @@ function createMockProject(overrides: MockProjectOverrides = {}): ProjectV2 {
         },
         phase2: {
           status: "todo",
-          responsible: "Ricardo Vieira",
-          startDate: new Date("2026-03-01T12:00:00"),
-          endDate: new Date("2026-03-05T12:00:00"),
           ...implementation?.phase2,
         },
       },
@@ -281,7 +278,7 @@ describe("project-calendar-events", () => {
   });
 
   describe("buildProjectCalendarEvents", () => {
-    it("extrai exclusivamente da Fase 1 e preenche metadados executivos", () => {
+    it("extrai eventos de Fase 1 e Fase 2 (Retorno) com metadados executivos independentes e ignora datas < 1900", () => {
       const project = createMockProject({
         id: "proj-reg-1",
         clientName: "Cartório de Registro de Itu",
@@ -303,6 +300,7 @@ describe("project-calendar-events", () => {
           phase2: {
             status: "todo",
             responsible: "Ricardo Vieira",
+            isConfirmed: true,
             startDate: new Date("2026-02-10T12:00:00"),
             endDate: new Date("2026-02-12T12:00:00"),
           },
@@ -310,9 +308,10 @@ describe("project-calendar-events", () => {
       });
 
       const events = buildProjectCalendarEvents([project]);
-      expect(events).toHaveLength(1);
+      expect(events).toHaveLength(2);
       expect(events[0]).toMatchObject({
         id: "real-proj-reg-1-p1",
+        implementationPhase: "phase1",
         resourceId: "julio-araujo",
         color: "bg-emerald-600",
         clientName: "Cartório de Registro de Itu",
@@ -329,6 +328,31 @@ describe("project-calendar-events", () => {
         specialty: "Registro de Imóveis",
         observationsList: ["Virada de chave na segunda", "40h presenciais"],
       });
+      expect(events[1]).toMatchObject({
+        id: "real-proj-reg-1-p2",
+        implementationPhase: "phase2",
+        title: "Fase 2 (Retorno): Cartório de Registro de Itu",
+        resourceId: "ricardo-vieira",
+        allResponsibles: ["Ricardo Vieira"],
+        isConfirmed: true,
+        stageStatus: "todo",
+        status: "confirmed",
+      });
+
+      const corruptedYearProject = createMockProject({
+        id: "proj-bad-year",
+        clientName: "Cartório Ano Parcial",
+        implementation: {
+          status: "todo",
+          phase1: {
+            status: "todo",
+            responsible: "Julio Araujo",
+            startDate: new Date("0002-12-14T15:06:28.000Z"),
+            endDate: new Date("0002-12-18T15:06:28.000Z"),
+          },
+        },
+      });
+      expect(buildProjectCalendarEvents([corruptedYearProject])).toHaveLength(0);
     });
 
     it("ignora eventos cujo responsável é exclusivamente Bruno Matos ou Luan Caldeira", () => {

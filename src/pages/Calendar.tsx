@@ -628,20 +628,27 @@ export default function Calendar() {
         </DragOverlay>
       </DndContext>
 
-      {/* Dialog de Edição Direta da Fase 1 (para Projetos da Timeline ou do Backlog) */}
+      {/* Dialog de Edição Direta da Fase 1 ou Fase 2 (para Projetos da Timeline ou do Backlog) */}
       {activeProject ? (
         <DeploymentDetailsDialog
           project={activeProject}
+          phaseType={selectedEvent?.implementationPhase || "phase1"}
           open={isDialogOpen}
           onOpenChange={handleDialogOpenChange}
           customTitle={activeProject.clientName}
-          customDescription="Edição direta da Fase 1 (Treinamento & Acompanhamento) — Alterações refletem imediatamente na Timeline"
+          customDescription={
+            selectedEvent?.implementationPhase === "phase2"
+              ? "Edição direta da Fase 2 (Possível Retorno) — Alterações refletem imediatamente na Timeline"
+              : "Edição direta da Fase 1 (Treinamento & Acompanhamento) — Alterações refletem imediatamente na Timeline"
+          }
           customStartDate={selectedEvent?.start}
           customEndDate={selectedEvent?.end}
           customResponsible={
             CALENDAR_MEMBERS.find((m) => m.id === selectedEvent?.resourceId)
               ?.name ||
-            activeProject.stages?.implementation?.phase1?.responsible
+            (selectedEvent?.implementationPhase === "phase2"
+              ? activeProject.stages?.implementation?.phase2?.responsible
+              : activeProject.stages?.implementation?.phase1?.responsible)
           }
         />
       ) : (

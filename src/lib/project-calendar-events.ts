@@ -460,15 +460,24 @@ function toLocalCalendarDate(
   value: Date | string | null | undefined
 ): Date | null {
   if (!value) return null;
+  let parsed: Date;
   if (value instanceof Date) {
-    return Number.isNaN(value.getTime()) ? null : new Date(value.getTime());
+    if (Number.isNaN(value.getTime())) return null;
+    parsed = new Date(value.getTime());
+  } else {
+    const trimmed = String(value).trim();
+    if (!trimmed) return null;
+    parsed = /^\d{4}-\d{2}-\d{2}$/.test(trimmed)
+      ? new Date(`${trimmed}T12:00:00`)
+      : new Date(trimmed);
+    if (Number.isNaN(parsed.getTime())) return null;
   }
-  const trimmed = String(value).trim();
-  if (!trimmed) return null;
-  const date = /^\d{4}-\d{2}-\d{2}$/.test(trimmed)
-    ? new Date(`${trimmed}T12:00:00`)
-    : new Date(trimmed);
-  return Number.isNaN(date.getTime()) ? null : date;
+
+  const year = parsed.getFullYear();
+  if (year < 1900 || year > 2099) {
+    return null;
+  }
+  return parsed;
 }
 
 function normalizeStageStatus(
@@ -483,13 +492,209 @@ function normalizeStageStatus(
   return "todo";
 }
 
-function resolvePhase1ResponsibleRaw(project: ProjectV2): string {
-  const phase1 = project.stages?.implementation?.phase1;
-  return (
-    phase1?.responsible?.trim() ||
-    project.stages?.implementation?.responsible?.trim() ||
-    ""
+function resolvePhaseResponsibleRaw(
+  project: ProjectV2,
+  phaseKey: "phase1" | "phase2"
+): string {
+  const phase = project.stages?.implementation?.[phaseKey];
+  if (phaseKey === "phase1") {
+    return (
+      phase?.responsible?.trim() ||
+      project.stages?.implementation?.responsible?.trim() ||
+      ""
+    );
+  }
+  return phase?.responsible?.trim() || "";
+}
+
+function appendPhaseCalendarEvents({
+  project,
+  phaseKey,
+  events,
+}: {
+  project: ProjectV2;
+  phaseKey: "phase1" | "phase2";
+  events: CalendarEvent[];
+}) {
+  const phase = project.stages?.implementation?.[phaseKey];
+  if (!phase) return;
+
+  const rawStart = toLocalCalendarDate(phase.startDate);
+  const rawEnd = toLocalCalendarDate(phase.endDate);
+
+  const responsibleRaw = resolvePhaseResponsibleRaw(project, phaseKey);
+  const additionalList = Array.isArray(phase.additionalResponsibles)
+    ? phase.additionalResponsibles
+    : [];
+
+  // Se nem o responsável principal nem nenhum responsável adicional tiver datas válidas, ignorar
+  const hasPrimaryDates = Boolean(rawStart || rawEnd);
+  const hasAnyAdditionalDates = additionalList.some(
+    (a) =>
+      Boolean(toLocalCalendarDate(a.startDate)) ||
+      Boolean(toLocalCalendarDate(a.endDate))
   );
+
+  if (!hasPrimaryDates && !hasAnyAdditionalDates) {
+    return;
+  }
+
+  const resolvedPrimaryMembers =
+    resolveCalendarMembersForResponsible(responsibleRaw);
+  const primaryMembers =
+    resolvedPrimaryMembers.length > 0
+      ? resolvedPrimaryMembers
+      : [UNASSIGNED_CALENDAR_MEMBER];
+
+  // Consolida lista de todos os responsáveis da fase (principal + adicionais)
+  const additionalNames = additionalList
+    .map((a) => a.responsible?.trim())
+    .filter((name): name is string => Boolean(name && !isExcludedTimelineMember(name)));
+  const allResponsibles = Array.from(
+    new Set([
+      ...primaryMembers.map((m) => m.name),
+      ...additionalNames,
+    ])
+  );
+
+  const isShared = allResponsibles.length > 1;
+  // A categoria e cor do card refletem o sistema do projeto (ex: Orion PRO -> 'pro'), independente da quantidade de responsáveis alocados
+  const systemCategory = classifySystemCategory(project.systemType);
+  const stageStatus = normalizeStageStatus(phase.status);
+  const isConfirmed = Boolean(phase.isConfirmed);
+  const eventStatus: CalendarEvent["status"] =
+    stageStatus === "done"
+      ? "completed"
+      : isConfirmed
+        ? "confirmed"
+        : "planned";
+
+  const rawObservations =
+    phaseKey === "phase1"
+      ? phase.observations || project.stages?.implementation?.observations
+      : phase.observations;
+  const { text: cleanNotes, items: observationsList } =
+    extractCleanObservations(rawObservations);
+
+  const soldHours = project.soldHours ?? project.workHours;
+  const idPrefix = phaseKey === "phase1" ? "p1" : "p2";
+  const titlePrefix = phaseKey === "phase1" ? "Implantação" : "Fase 2 (Retorno)";
+
+  // 1. Gera eventos para o Responsável Principal da fase (se tiver datas válidas e não for excluído)
+  if (hasPrimaryDates && !hasOnlyExcludedMembers(responsibleRaw)) {
+    let startDate = rawStart ?? rawEnd!;
+    let endDate = rawEnd ?? rawStart!;
+
+    if (endDate.getTime() < startDate.getTime()) {
+      const temp = startDate;
+      startDate = endDate;
+      endDate = temp;
+    }
+
+    primaryMembers.forEach((member) => {
+      const eventId =
+        primaryMembers.length > 1
+          ? `real-${project.id}-${idPrefix}-${member.id}`
+          : `real-${project.id}-${idPrefix}`;
+
+      events.push({
+        id: eventId,
+        resourceId: member.id,
+        title: `${titlePrefix}: ${project.clientName}`,
+        clientName: project.clientName,
+        start: startDate,
+        end: endDate,
+        type: "implementation",
+        implementationPhase: phaseKey,
+        status: eventStatus,
+        projectId: project.id,
+        responsibleName:
+          resolvedPrimaryMembers.length > 0
+            ? allResponsibles.join(" & ")
+            : member.name,
+        notes: cleanNotes || undefined,
+        color: member.color,
+        ticketNumber: project.ticketNumber,
+        systemType: project.systemType,
+        systemCategory,
+        allResponsibles,
+        isShared,
+        isConfirmed,
+        stageStatus,
+        observationsList,
+        trainingLocation: phase.trainingLocation,
+        soldHours,
+        specialty: project.specialty,
+        isSupport: false,
+        primaryResponsible: responsibleRaw,
+      });
+    });
+  }
+
+  // 2. Gera eventos independentes para cada Responsável Adicional da fase (com suas próprias datas!)
+  additionalList.forEach((assignment, index) => {
+    const assignResp = assignment.responsible?.trim();
+    if (!assignResp || hasOnlyExcludedMembers(assignResp)) return;
+
+    const assignRawStart = toLocalCalendarDate(assignment.startDate);
+    const assignRawEnd = toLocalCalendarDate(assignment.endDate);
+
+    // Se o assignment não tiver datas próprias, usa as datas principais como fallback
+    const effectiveStart = assignRawStart || rawStart;
+    const effectiveEnd = assignRawEnd || rawEnd || effectiveStart;
+
+    if (!effectiveStart || !effectiveEnd) return;
+
+    let assignStartDate = effectiveStart;
+    let assignEndDate = effectiveEnd;
+    if (assignEndDate.getTime() < assignStartDate.getTime()) {
+      const temp = assignStartDate;
+      assignStartDate = assignEndDate;
+      assignEndDate = temp;
+    }
+
+    const resolvedAddMembers = resolveCalendarMembersForResponsible(assignResp);
+    const targetMembers =
+      resolvedAddMembers.length > 0
+        ? resolvedAddMembers
+        : [UNASSIGNED_CALENDAR_MEMBER];
+
+    targetMembers.forEach((member) => {
+      const assignId = assignment.id || `idx-${index}`;
+      const eventId = `real-${project.id}-${idPrefix}-add-${assignId}-${member.id}`;
+
+      events.push({
+        id: eventId,
+        resourceId: member.id,
+        title: `${titlePrefix}: ${project.clientName} (Apoio)`,
+        clientName: project.clientName,
+        start: assignStartDate,
+        end: assignEndDate,
+        type: "implementation",
+        implementationPhase: phaseKey,
+        status: eventStatus,
+        projectId: project.id,
+        responsibleName: member.name,
+        notes: cleanNotes || undefined,
+        color: member.color,
+        ticketNumber: project.ticketNumber,
+        systemType: project.systemType,
+        systemCategory,
+        allResponsibles,
+        isShared: true,
+        isSupport: true,
+        assignmentId: assignment.id,
+        primaryResponsible: responsibleRaw,
+        role: assignment.role || "Apoio",
+        isConfirmed,
+        stageStatus,
+        observationsList,
+        trainingLocation: phase.trainingLocation,
+        soldHours,
+        specialty: project.specialty,
+      });
+    });
+  });
 }
 
 export function buildProjectCalendarEvents(
@@ -499,176 +704,8 @@ export function buildProjectCalendarEvents(
 
   projects.forEach((project) => {
     if (!project || project.isDeleted || isModelosTNProject(project)) return;
-
-    const phase1 = project.stages?.implementation?.phase1;
-    const rawStart = toLocalCalendarDate(phase1?.startDate);
-    const rawEnd = toLocalCalendarDate(phase1?.endDate);
-
-    const responsibleRaw = resolvePhase1ResponsibleRaw(project);
-    const additionalList = Array.isArray(phase1?.additionalResponsibles)
-      ? phase1.additionalResponsibles
-      : [];
-
-    // Se nem o responsável principal nem nenhum responsável adicional tiver datas, ignorar
-    const hasPrimaryDates = Boolean(rawStart || rawEnd);
-    const hasAnyAdditionalDates = additionalList.some(
-      (a) => Boolean(toLocalCalendarDate(a.startDate)) || Boolean(toLocalCalendarDate(a.endDate))
-    );
-
-    if (!hasPrimaryDates && !hasAnyAdditionalDates) {
-      return;
-    }
-
-    const resolvedPrimaryMembers =
-      resolveCalendarMembersForResponsible(responsibleRaw);
-    const primaryMembers =
-      resolvedPrimaryMembers.length > 0
-        ? resolvedPrimaryMembers
-        : [UNASSIGNED_CALENDAR_MEMBER];
-
-    // Consolida lista de todos os responsáveis (principal + adicionais)
-    const additionalNames = additionalList
-      .map((a) => a.responsible?.trim())
-      .filter((name): name is string => Boolean(name && !isExcludedTimelineMember(name)));
-    const allResponsibles = Array.from(
-      new Set([
-        ...primaryMembers.map((m) => m.name),
-        ...additionalNames,
-      ])
-    );
-
-    const isShared = allResponsibles.length > 1;
-    // A categoria e cor do card refletem o sistema do projeto (ex: Orion PRO -> 'pro'), independente da quantidade de responsáveis alocados
-    const systemCategory = classifySystemCategory(project.systemType);
-    const stageStatus = normalizeStageStatus(phase1?.status);
-    const isConfirmed = Boolean(phase1?.isConfirmed);
-    const eventStatus: CalendarEvent["status"] =
-      stageStatus === "done"
-        ? "completed"
-        : isConfirmed
-          ? "confirmed"
-          : "planned";
-
-    const rawObservations =
-      phase1?.observations || project.stages?.implementation?.observations;
-    const { text: cleanNotes, items: observationsList } =
-      extractCleanObservations(rawObservations);
-
-    const soldHours = project.soldHours ?? project.workHours;
-
-    // 1. Gera eventos para o Responsável Principal (se tiver datas válidas e não for excluído)
-    if (hasPrimaryDates && !hasOnlyExcludedMembers(responsibleRaw)) {
-      let startDate = rawStart ?? rawEnd!;
-      let endDate = rawEnd ?? rawStart!;
-
-      if (endDate.getTime() < startDate.getTime()) {
-        const temp = startDate;
-        startDate = endDate;
-        endDate = temp;
-      }
-
-      primaryMembers.forEach((member) => {
-        const eventId =
-          primaryMembers.length > 1
-            ? `real-${project.id}-p1-${member.id}`
-            : `real-${project.id}-p1`;
-
-        events.push({
-          id: eventId,
-          resourceId: member.id,
-          title: `Implantação: ${project.clientName}`,
-          clientName: project.clientName,
-          start: startDate,
-          end: endDate,
-          type: "implementation",
-          status: eventStatus,
-          projectId: project.id,
-          responsibleName:
-            resolvedPrimaryMembers.length > 0
-              ? allResponsibles.join(" & ")
-              : member.name,
-          notes: cleanNotes || undefined,
-          color: member.color,
-          ticketNumber: project.ticketNumber,
-          systemType: project.systemType,
-          systemCategory,
-          allResponsibles,
-          isShared,
-          isConfirmed,
-          stageStatus,
-          observationsList,
-          trainingLocation: phase1?.trainingLocation,
-          soldHours,
-          specialty: project.specialty,
-          isSupport: false,
-          primaryResponsible: responsibleRaw,
-        });
-      });
-    }
-
-    // 2. Gera eventos independentes para cada Responsável Adicional (com suas próprias datas!)
-    additionalList.forEach((assignment, index) => {
-      const assignResp = assignment.responsible?.trim();
-      if (!assignResp || hasOnlyExcludedMembers(assignResp)) return;
-
-      const assignRawStart = toLocalCalendarDate(assignment.startDate);
-      const assignRawEnd = toLocalCalendarDate(assignment.endDate);
-
-      // Se o assignment não tiver datas próprias, usa as datas principais como fallback
-      const effectiveStart = assignRawStart || rawStart;
-      const effectiveEnd = assignRawEnd || rawEnd || effectiveStart;
-
-      if (!effectiveStart || !effectiveEnd) return;
-
-      let assignStartDate = effectiveStart;
-      let assignEndDate = effectiveEnd;
-      if (assignEndDate.getTime() < assignStartDate.getTime()) {
-        const temp = assignStartDate;
-        assignStartDate = assignEndDate;
-        assignEndDate = temp;
-      }
-
-      const resolvedAddMembers = resolveCalendarMembersForResponsible(assignResp);
-      const targetMembers =
-        resolvedAddMembers.length > 0
-          ? resolvedAddMembers
-          : [UNASSIGNED_CALENDAR_MEMBER];
-
-      targetMembers.forEach((member) => {
-        const assignId = assignment.id || `idx-${index}`;
-        const eventId = `real-${project.id}-p1-add-${assignId}-${member.id}`;
-
-        events.push({
-          id: eventId,
-          resourceId: member.id,
-          title: `Implantação: ${project.clientName} (Apoio)`,
-          clientName: project.clientName,
-          start: assignStartDate,
-          end: assignEndDate,
-          type: "implementation",
-          status: eventStatus,
-          projectId: project.id,
-          responsibleName: member.name,
-          notes: cleanNotes || undefined,
-          color: member.color,
-          ticketNumber: project.ticketNumber,
-          systemType: project.systemType,
-          systemCategory,
-          allResponsibles,
-          isShared: true,
-          isSupport: true,
-          assignmentId: assignment.id,
-          primaryResponsible: responsibleRaw,
-          role: assignment.role || "Apoio",
-          isConfirmed,
-          stageStatus,
-          observationsList,
-          trainingLocation: phase1?.trainingLocation,
-          soldHours,
-          specialty: project.specialty,
-        });
-      });
-    });
+    appendPhaseCalendarEvents({ project, phaseKey: "phase1", events });
+    appendPhaseCalendarEvents({ project, phaseKey: "phase2", events });
   });
 
   return events;
@@ -707,7 +744,7 @@ export function extractUnscheduledPhase1Projects(
       return;
     }
 
-    const responsibleRaw = resolvePhase1ResponsibleRaw(project);
+    const responsibleRaw = resolvePhaseResponsibleRaw(project, "phase1");
     if (hasOnlyExcludedMembers(responsibleRaw)) {
       return;
     }
@@ -767,32 +804,35 @@ export function deriveTimelineMembers(
 
   for (const project of projects) {
     if (!project || project.isDeleted || isModelosTNProject(project)) continue;
-    const responsibleRaw = resolvePhase1ResponsibleRaw(project);
-    if (responsibleRaw && !hasOnlyExcludedMembers(responsibleRaw)) {
-      const resolved = resolveCalendarMembersForResponsible(responsibleRaw);
-      for (const member of resolved) {
-        if (
-          !isExcludedTimelineMember(member.id) &&
-          !isExcludedTimelineMember(member.name) &&
-          !memberMap.has(member.id)
-        ) {
-          memberMap.set(member.id, member);
+
+    for (const phaseKey of ["phase1", "phase2"] as const) {
+      const responsibleRaw = resolvePhaseResponsibleRaw(project, phaseKey);
+      if (responsibleRaw && !hasOnlyExcludedMembers(responsibleRaw)) {
+        const resolved = resolveCalendarMembersForResponsible(responsibleRaw);
+        for (const member of resolved) {
+          if (
+            !isExcludedTimelineMember(member.id) &&
+            !isExcludedTimelineMember(member.name) &&
+            !memberMap.has(member.id)
+          ) {
+            memberMap.set(member.id, member);
+          }
         }
       }
-    }
 
-    const additional = project.stages?.implementation?.phase1?.additionalResponsibles;
-    if (Array.isArray(additional)) {
-      for (const assign of additional) {
-        if (!assign.responsible) continue;
-        const resolvedAdd = resolveCalendarMembersForResponsible(assign.responsible);
-        for (const m of resolvedAdd) {
-          if (
-            !isExcludedTimelineMember(m.id) &&
-            !isExcludedTimelineMember(m.name) &&
-            !memberMap.has(m.id)
-          ) {
-            memberMap.set(m.id, m);
+      const additional = project.stages?.implementation?.[phaseKey]?.additionalResponsibles;
+      if (Array.isArray(additional)) {
+        for (const assign of additional) {
+          if (!assign.responsible) continue;
+          const resolvedAdd = resolveCalendarMembersForResponsible(assign.responsible);
+          for (const m of resolvedAdd) {
+            if (
+              !isExcludedTimelineMember(m.id) &&
+              !isExcludedTimelineMember(m.name) &&
+              !memberMap.has(m.id)
+            ) {
+              memberMap.set(m.id, m);
+            }
           }
         }
       }

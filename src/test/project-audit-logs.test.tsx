@@ -438,7 +438,16 @@ describe("Auditoria e Logs do Projeto", () => {
             phase2: {
               ...oldProj.stages.implementation.phase2,
               status: "in-progress",
+              isConfirmed: true,
               responsible: "Ricardo Vieira",
+              additionalResponsibles: [
+                {
+                  id: "add-p2-1",
+                  responsible: "Rodrigo Brites",
+                  startDate: new Date("2026-11-23T12:00:00Z"),
+                  endDate: new Date("2026-11-24T12:00:00Z"),
+                },
+              ],
               observations: makeLexicalJson(["Retorno agendado"]),
             },
           },
@@ -520,6 +529,10 @@ describe("Auditoria e Logs do Projeto", () => {
         "Julio Araujo",
       );
       expect(byField.get("stages.implementation.phase2.status")?.newValue).toBe("Em Andamento");
+      expect(byField.get("stages.implementation.phase2.isConfirmed")?.newValue).toBe("Confirmada");
+      expect(byField.get("stages.implementation.phase2.additionalResponsibles")?.newValue).toContain(
+        "Rodrigo Brites",
+      );
 
       // Pós-Implantação (blocos + resumo separados)
       expect(byField.get("stages.post.supportEndDate")?.newValue).toBe("05/12/2026");

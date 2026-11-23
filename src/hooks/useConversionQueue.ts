@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { activityLogger } from "@/services/activityLogger";
+import { syncProjectObservationsInDb } from "@/utils/project-observations-sync";
+import { format } from "date-fns";
 import { toast } from "sonner";
 import { resolveConversionQueueStatus } from "@/utils/conversion-queue-status";
 
@@ -338,6 +340,19 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
           { assignedTo: userName, queueId },
         );
 
+        // Espelha automaticamente em Observações Gerais ao assumir conversão
+        const today = format(new Date(), "dd/MM");
+        void syncProjectObservationsInDb({
+          projectId,
+          actorName: userName,
+          explicitEvents: [
+            {
+              stageKey: "conversion",
+              text: `${today} - Conversão assumida por ${userName} na fila (/conversion/atividades).`,
+            },
+          ],
+        });
+
         await fetchQueue();
         return true;
       } catch (err) {
@@ -414,6 +429,34 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
           .eq("id", queueId);
 
         if (error) throw error;
+
+        if (status === "done") {
+          const item = queue.find((q) => q.id === queueId);
+          if (item?.projectId) {
+            const nowIso = new Date().toISOString();
+            await supabase
+              .from("projects")
+              .update({
+                conversion_status: "done",
+                conversion_finished_at: nowIso,
+                updated_at: nowIso,
+              })
+              .eq("id", item.projectId);
+
+            const today = format(new Date(), "dd/MM");
+            void syncProjectObservationsInDb({
+              projectId: item.projectId,
+              actorName: item.assignedToName || "Equipe de Conversão",
+              explicitEvents: [
+                {
+                  stageKey: "conversion",
+                  text: `${today} - Conversão finalizada${item.assignedToName ? ` por ${item.assignedToName}` : ""} (/conversion/atividades).`,
+                },
+              ],
+            });
+          }
+        }
+
         await fetchQueue();
         return true;
       } catch (err) {
@@ -421,7 +464,7 @@ export function useConversionQueue(options: UseConversionQueueOptions = {}) {
         return false;
       }
     },
-    [fetchQueue]
+    [fetchQueue, queue]
   );
 
   // Update priority

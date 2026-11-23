@@ -867,6 +867,14 @@ describe("project-transformers", () => {
           startDate: "2026-11-16T15:00:00.000Z",
           endDate: "2026-11-20T15:00:00.000Z",
         },
+        implementation_phase2: {
+          status: "in-progress",
+          responsible: "Ricardo Vieira",
+          isConfirmed: true,
+          confirmedAt,
+          startDate: "2026-11-24",
+          endDate: "2026-11-26",
+        },
       };
 
       const domain = transformToProjectV3(dbRow);
@@ -874,11 +882,16 @@ describe("project-transformers", () => {
       expect((domain as any).tramites).toBeUndefined();
       expect(domain.stages.implementation.phase1.isConfirmed).toBe(true);
       expect(domain.stages.implementation.phase1.confirmedAt).toBe(confirmedAt);
+      expect(domain.stages.implementation.phase2.isConfirmed).toBe(true);
+      expect(domain.stages.implementation.phase2.confirmedAt).toBe(confirmedAt);
+      expect(domain.stages.implementation.phase2.startDate).toBeInstanceOf(Date);
+      expect(domain.stages.implementation.phase2.endDate).toBeInstanceOf(Date);
 
       const backToDb = transformToDB(domain);
       expect(backToDb.TituloChamado).toBeUndefined();
       expect(backToDb.implementation_responsible).toBe("Rodrigo Mizuno");
       expect((backToDb.implementation_phase1 as any).confirmedAt).toBe(confirmedAt);
+      expect((backToDb.implementation_phase2 as any).confirmedAt).toBe(confirmedAt);
     });
   });
 });

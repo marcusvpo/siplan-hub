@@ -66,14 +66,17 @@ export function useImproveTextJobs(
       inputText: string;
       requestedBy?: string;
       jobType?: string;
+      targetField?: string;
     }) => {
       const jobType = input.jobType || "improve_text";
+      const targetField =
+        input.targetField || (jobType === "summary_blocks" ? "summary" : "observations");
       const { data, error } = await supabase
         .from("dtc_ai_jobs")
         .insert({
           project_id: projectId,
           job_type: jobType,
-          target_field: jobType === "summary_blocks" ? "summary" : "observations",
+          target_field: targetField,
           input_text: input.inputText,
           requested_by: input.requestedBy,
         })

@@ -81,7 +81,10 @@ export function buildMyDayImplementationEvents(
     )
     .map((event) => ({
       id: `implementation-${event.id}`,
-      title: IMPLEMENTATION_EVENT_LABELS[event.type] ?? event.title,
+      title:
+        event.implementationPhase === "phase2"
+          ? "Implantação (Fase 2)"
+          : (IMPLEMENTATION_EVENT_LABELS[event.type] ?? event.title),
       startsAt: event.start,
       endsAt: event.end,
       status: event.status ?? "confirmed",

@@ -85,7 +85,10 @@ import {
   getStageReadiness,
   identifyBottleneck,
 } from "@/lib/predictability-utils";
-import { applyPhase1UpdatesWithAutomation } from "@/utils/implementation-phase1";
+import {
+  applyPhase1UpdatesWithAutomation,
+  applyPhase2UpdatesWithAutomation,
+} from "@/utils/implementation-phase1";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -272,15 +275,14 @@ export function StepsTab({
       return;
     }
 
-    const currentPhase = currentImpl[phase] || {};
-    const newPhase = { ...currentPhase, ...updates };
+    const nextImpl = applyPhase2UpdatesWithAutomation({
+      currentStage: currentImpl,
+      phaseUpdates: updates,
+      globalStatus: data.globalStatus ?? project.globalStatus,
+      systemType: data.systemType ?? project.systemType,
+    });
 
-    const newImpl: Record<string, unknown> = {
-      ...currentImpl,
-      [phase]: newPhase,
-    };
-
-    updateStage("implementation", newImpl);
+    updateStage("implementation", nextImpl);
   };
 
 

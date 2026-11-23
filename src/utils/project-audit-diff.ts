@@ -1711,6 +1711,37 @@ export function computeProjectAuditChanges(
       });
     }
 
+    if (Boolean(oldP2.isConfirmed) !== Boolean(newP2.isConfirmed)) {
+      pushSingleField({
+        category: "stages",
+        tabLabel: "Etapas",
+        stageId: "implementation",
+        stageLabel: implStageLabel,
+        field: "stages.implementation.phase2.isConfirmed",
+        label: "Retorno Confirmado (Fase 2)",
+        oldValue: oldP2.isConfirmed ? "Confirmada" : "Não Confirmada",
+        newValue: newP2.isConfirmed ? "Confirmada" : "Não Confirmada",
+        message: newP2.isConfirmed
+          ? "Implantação marcada como Confirmada (Fase 2)"
+          : "Confirmação da Implantação removida (Fase 2)",
+      });
+    }
+
+    const oldP2ConfAt = normStr(oldP2.confirmedAt);
+    const newP2ConfAt = normStr(newP2.confirmedAt);
+    if (oldP2ConfAt !== newP2ConfAt) {
+      pushSingleField({
+        category: "stages",
+        tabLabel: "Etapas",
+        stageId: "implementation",
+        stageLabel: implStageLabel,
+        field: "stages.implementation.phase2.confirmedAt",
+        label: "Data de Confirmação (Fase 2)",
+        oldValue: oldP2ConfAt ? formatDateTimeBr(oldP2ConfAt) : EMPTY_VALUE_DISPLAY,
+        newValue: newP2ConfAt ? formatDateTimeBr(newP2ConfAt) : EMPTY_VALUE_DISPLAY,
+      });
+    }
+
     compareStageScalar(
       "implementation",
       "phase2.responsible",
@@ -1733,6 +1764,30 @@ export function computeProjectAuditChanges(
       dateIsoDay(oldP2.endDate),
       dateIsoDay(newP2.endDate),
       (v) => formatDayBr(String(v || "")),
+    );
+
+    const oldP2AddStr = summarizeAdditionalResponsibles(oldP2.additionalResponsibles);
+    const newP2AddStr = summarizeAdditionalResponsibles(newP2.additionalResponsibles);
+    if (oldP2AddStr !== newP2AddStr) {
+      pushSingleField({
+        category: "stages",
+        tabLabel: "Etapas",
+        stageId: "implementation",
+        stageLabel: implStageLabel,
+        field: "stages.implementation.phase2.additionalResponsibles",
+        label: "Implantadores Adicionais (Fase 2)",
+        oldValue: oldP2AddStr,
+        newValue: newP2AddStr,
+        message: "Implantadores Adicionais da Fase 2 atualizados",
+      });
+    }
+
+    compareStageScalar(
+      "implementation",
+      "phase2.trainingLocation",
+      "Local do Treinamento (Fase 2)",
+      oldP2.trainingLocation,
+      newP2.trainingLocation,
     );
     compareStageScalar(
       "implementation",

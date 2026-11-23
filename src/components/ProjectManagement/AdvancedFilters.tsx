@@ -59,6 +59,7 @@ import {
   Folder,
   ChevronDown,
   Rocket,
+  FileSearch,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -76,6 +77,7 @@ interface AdvancedFiltersProps {
   systemTypes: string[];
   onCompare?: () => void;
   selectedCount?: number;
+  onOpenNotesSearch?: () => void;
 }
 
 export function AdvancedFilters({
@@ -83,6 +85,7 @@ export function AdvancedFilters({
   systemTypes,
   onCompare,
   selectedCount = 0,
+  onOpenNotesSearch,
 }: AdvancedFiltersProps) {
   const {
     searchQuery,
@@ -267,6 +270,21 @@ export function AdvancedFilters({
 
         {/* Right: Controls */}
         <div className="flex w-full flex-wrap items-center gap-1.5 sm:w-auto">
+          {/* Free-text Notes Search Trigger (left of Ordenar) */}
+          {onOpenNotesSearch && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onOpenNotesSearch}
+              data-testid="open-notes-search-button"
+              title="Pesquisar em observações e textos livres de todos os projetos"
+              className="h-10 min-w-0 flex-1 gap-1 border-primary/30 bg-primary/5 px-1.5 text-[10px] font-medium text-primary hover:bg-primary/10 hover:text-primary sm:h-9 sm:flex-none sm:gap-1.5 sm:px-3 sm:text-xs"
+            >
+              <FileSearch className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Pesquisar notas</span>
+            </Button>
+          )}
+
           {/* Sort Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

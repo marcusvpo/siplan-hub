@@ -3,6 +3,7 @@ import { ListItemNode, ListNode } from "@lexical/list"
 import { CodeHighlightNode, CodeNode } from "@lexical/code"
 import { AutoLinkNode, LinkNode } from "@lexical/link"
 import { Klass, LexicalNode, LexicalNodeReplacement } from "lexical"
+import { MentionNode } from "./nodes/mention-node"
 
 export const nodes: ReadonlyArray<Klass<LexicalNode> | LexicalNodeReplacement> = [
   HeadingNode,
@@ -13,4 +14,5 @@ export const nodes: ReadonlyArray<Klass<LexicalNode> | LexicalNodeReplacement> =
   CodeHighlightNode,
   AutoLinkNode,
   LinkNode,
+  MentionNode,
 ]

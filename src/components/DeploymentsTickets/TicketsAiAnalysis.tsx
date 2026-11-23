@@ -101,6 +101,22 @@ export function TicketsAiAnalysis({
 }: TicketsAiAnalysisProps) {
   const [preparingAi, setPreparingAi] = useState(false);
   const [selectedChamado, setSelectedChamado] = useState<ChamadoReportRow | null>(null);
+  const [isDesktopViewport, setIsDesktopViewport] = useState(() =>
+    typeof window === "undefined" || typeof window.matchMedia !== "function"
+      ? true
+      : window.matchMedia("(min-width: 640px)").matches
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return;
+    }
+    const media = window.matchMedia("(min-width: 640px)");
+    const onChange = () => setIsDesktopViewport(media.matches);
+    onChange();
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, []);
   const { user } = useAuth();
   const { online: workerOnline } = useModelWorkerStatus();
   const { generate, active: activeJob, latest, latestError } = useTicketsAiAnalysis(
@@ -245,14 +261,21 @@ export function TicketsAiAnalysis({
         <Card className="min-w-0 overflow-hidden">
           <CardHeader className="px-3 py-2"><CardTitle className="text-xs">Distribuição por status</CardTitle></CardHeader>
           <CardContent className="hidden h-[240px] px-2 pb-2 pt-0 sm:block">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={analytics.byStatus} dataKey="total" nameKey="name" innerRadius={48} outerRadius={78} paddingAngle={2}>
-                  {analytics.byStatus.map((item, index) => <Cell key={item.name} fill={STATUS_COLORS[index % STATUS_COLORS.length]} />)}
-                </Pie>
-                <Tooltip contentStyle={tooltipStyle} formatter={(value) => [`${value} chamado(s)`, "Total"]} />
-              </PieChart>
-            </ResponsiveContainer>
+            {isDesktopViewport && (
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+                minWidth={0}
+                initialDimension={{ width: 320, height: 220 }}
+              >
+                <PieChart>
+                  <Pie data={analytics.byStatus} dataKey="total" nameKey="name" innerRadius={48} outerRadius={78} paddingAngle={2}>
+                    {analytics.byStatus.map((item, index) => <Cell key={item.name} fill={STATUS_COLORS[index % STATUS_COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip contentStyle={tooltipStyle} formatter={(value) => [`${value} chamado(s)`, "Total"]} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
             <div className="-mt-7 flex flex-wrap justify-center gap-x-3 gap-y-1">
               {analytics.byStatus.map((item, index) => (
                 <span key={item.name} className="flex items-center gap-1 text-[10px] text-muted-foreground">
@@ -276,15 +299,22 @@ export function TicketsAiAnalysis({
         <Card className="min-w-0 overflow-hidden">
           <CardHeader className="px-3 py-2"><CardTitle className="text-xs">Principais naturezas</CardTitle></CardHeader>
           <CardContent className="hidden h-[240px] px-2 pb-2 pt-0 sm:block">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analytics.byNature.slice(0, 8)} layout="vertical" margin={{ top: 4, right: 30, bottom: 0, left: 4 }}>
-                <CartesianGrid horizontal={false} stroke="hsl(var(--border))" />
-                <XAxis type="number" hide allowDecimals={false} />
-                <YAxis type="category" dataKey="name" width={155} tickLine={false} axisLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
-                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "hsl(var(--muted))", opacity: 0.35 }} />
-                <Bar dataKey="total" fill={CHART_COLOR} barSize={14} radius={[0, 4, 4, 0]}><LabelList dataKey="total" position="right" className="fill-foreground text-[10px]" /></Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {isDesktopViewport && (
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+                minWidth={0}
+                initialDimension={{ width: 320, height: 220 }}
+              >
+                <BarChart data={analytics.byNature.slice(0, 8)} layout="vertical" margin={{ top: 4, right: 30, bottom: 0, left: 4 }}>
+                  <CartesianGrid horizontal={false} stroke="hsl(var(--border))" />
+                  <XAxis type="number" hide allowDecimals={false} />
+                  <YAxis type="category" dataKey="name" width={155} tickLine={false} axisLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />
+                  <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "hsl(var(--muted))", opacity: 0.35 }} />
+                  <Bar dataKey="total" fill={CHART_COLOR} barSize={14} radius={[0, 4, 4, 0]}><LabelList dataKey="total" position="right" className="fill-foreground text-[10px]" /></Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
           <CardContent className="space-y-1 px-3 pb-3 pt-0 sm:hidden">
             {analytics.byNature.slice(0, 8).map((item, index) => (
@@ -300,15 +330,22 @@ export function TicketsAiAnalysis({
         <Card className="min-w-0 overflow-hidden">
           <CardHeader className="px-3 py-2"><CardTitle className="text-xs">Clientes com maior volume</CardTitle></CardHeader>
           <CardContent className="hidden h-[240px] px-2 pb-2 pt-0 sm:block">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analytics.byClient.slice(0, 8)} layout="vertical" margin={{ top: 4, right: 30, bottom: 0, left: 4 }}>
-                <CartesianGrid horizontal={false} stroke="hsl(var(--border))" />
-                <XAxis type="number" hide allowDecimals={false} />
-                <YAxis type="category" dataKey="name" width={190} tickLine={false} axisLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }} tickFormatter={(value: string) => value.length > 28 ? `${value.slice(0, 28)}...` : value} />
-                <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "hsl(var(--muted))", opacity: 0.35 }} />
-                <Bar dataKey="total" fill="#6366f1" barSize={14} radius={[0, 4, 4, 0]}><LabelList dataKey="total" position="right" className="fill-foreground text-[10px]" /></Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {isDesktopViewport && (
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+                minWidth={0}
+                initialDimension={{ width: 320, height: 220 }}
+              >
+                <BarChart data={analytics.byClient.slice(0, 8)} layout="vertical" margin={{ top: 4, right: 30, bottom: 0, left: 4 }}>
+                  <CartesianGrid horizontal={false} stroke="hsl(var(--border))" />
+                  <XAxis type="number" hide allowDecimals={false} />
+                  <YAxis type="category" dataKey="name" width={190} tickLine={false} axisLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }} tickFormatter={(value: string) => value.length > 28 ? `${value.slice(0, 28)}...` : value} />
+                  <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "hsl(var(--muted))", opacity: 0.35 }} />
+                  <Bar dataKey="total" fill="#6366f1" barSize={14} radius={[0, 4, 4, 0]}><LabelList dataKey="total" position="right" className="fill-foreground text-[10px]" /></Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
           <CardContent className="space-y-1 px-3 pb-3 pt-0 sm:hidden">
             {analytics.byClient.slice(0, 8).map((item, index) => (
@@ -325,7 +362,12 @@ export function TicketsAiAnalysis({
           <CardHeader className="px-3 py-2"><CardTitle className="text-xs">Evolução mensal: abertos x concluídos</CardTitle></CardHeader>
           <CardContent className="h-[240px] px-2 pb-2 pt-0">
             {analytics.monthlyFlow.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer
+                width="100%"
+                height="100%"
+                minWidth={0}
+                initialDimension={{ width: 320, height: 220 }}
+              >
                 <BarChart data={analytics.monthlyFlow} margin={{ top: 18, right: 8, bottom: 0, left: 8 }}>
                   <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
                   <XAxis dataKey="month" tickLine={false} axisLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} />

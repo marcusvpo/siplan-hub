@@ -25,10 +25,12 @@ import {
   List,
   ListOrdered,
   Palette,
+  RotateCcw,
   Heading1,
   Heading2,
   Heading3
 } from "lucide-react"
+import { STAGE_TRAFFIC_LIGHT_COLORS } from "@/utils/default-project-observations"
 import { useCallback, useEffect, useState } from "react"
 import { Toggle } from "@/components/ui/toggle"
 import { Button } from "@/components/ui/button"
@@ -148,7 +150,12 @@ export function ToolbarPlugin({ compact = false }: { compact?: boolean }) {
 
   const handleColorChange = (value: string) => {
     setFontColor(value)
-    applyStyle({ "color": value })
+    applyStyle({ color: value })
+  }
+
+  const handleResetColor = () => {
+    setFontColor("")
+    applyStyle({ color: "" })
   }
 
   const toolbarButtonClass = cn("h-8 w-8 p-0", compact && "sm:h-7 sm:w-7")
@@ -273,7 +280,7 @@ export function ToolbarPlugin({ compact = false }: { compact?: boolean }) {
       <Popover>
         <PopoverTrigger asChild>
           <Button type="button" variant="ghost" size="sm" className={toolbarButtonClass} title="Cor do texto" aria-label="Cor do texto">
-            <Palette className="h-4 w-4" style={{ color: fontColor }} />
+            <Palette className="h-4 w-4" style={fontColor ? { color: fontColor } : undefined} />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-40 p-2">
@@ -290,13 +297,60 @@ export function ToolbarPlugin({ compact = false }: { compact?: boolean }) {
             ))}
              <button
                 type="button"
-                className="w-6 h-6 rounded-full border border-muted hover:scale-110 transition-transform bg-black"
-                onClick={() => handleColorChange("#000000")}
-                title="Padrão"
-              />
+                className="w-6 h-6 rounded-full border border-muted hover:scale-110 transition-transform flex items-center justify-center text-[10px] text-muted-foreground"
+                onClick={handleResetColor}
+                title="Padrão do tema"
+              >
+                ↺
+              </button>
           </div>
         </PopoverContent>
       </Popover>
+
+      {/* Semáforo rápido de cores das Etapas do HUB */}
+      <div
+        className={cn(
+          "inline-flex items-center gap-1 rounded-full border border-border/70 bg-muted/40 px-1.5 py-0.5",
+          compact && "gap-0.5 px-1",
+        )}
+        role="group"
+        aria-label="Semáforo de status das etapas"
+      >
+        {STAGE_TRAFFIC_LIGHT_COLORS.map((item) => (
+          <button
+            key={item.status}
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault()
+              handleColorChange(item.hex)
+            }}
+            onClick={(e) => e.preventDefault()}
+            className={cn(
+              "rounded-full border border-white/30 transition-transform hover:scale-125 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              compact ? "h-3.5 w-3.5" : "h-4 w-4",
+            )}
+            style={{ backgroundColor: item.hex }}
+            title={`${item.label} (${item.hex})`}
+            aria-label={`Aplicar cor ${item.label}`}
+          />
+        ))}
+        <button
+          type="button"
+          onMouseDown={(e) => {
+            e.preventDefault()
+            handleResetColor()
+          }}
+          onClick={(e) => e.preventDefault()}
+          className={cn(
+            "inline-flex items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
+            compact ? "h-4 w-4" : "h-5 w-5",
+          )}
+          title="Resetar cor do texto (voltar ao padrão do tema)"
+          aria-label="Resetar cor do texto"
+        >
+          <RotateCcw className="h-3 w-3" />
+        </button>
+      </div>
 
       <div className={separatorClass} />
 

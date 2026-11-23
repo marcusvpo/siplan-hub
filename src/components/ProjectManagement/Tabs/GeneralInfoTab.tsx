@@ -1,3 +1,5 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ProjectV2, ContentBlock } from "@/types/ProjectV2";
 import { useProjectForm } from "@/hooks/useProjectForm";
 import { Badge } from "@/components/ui/badge";
@@ -18,8 +20,18 @@ import {
 import { cn } from "@/lib/utils";
 import { ProjectHeaderForm } from "@/components/ProjectManagement/Forms/ProjectHeaderForm";
 import { ObservationsWithAI } from "@/components/ProjectManagement/Forms/ObservationsWithAI";
+import { StageNotesAccordion } from "@/components/ProjectManagement/Forms/StageNotesAccordion";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import {
+  createDefaultObservationsState,
+  isLexicalContentEmpty,
+  prependDefaultObservationsToLexical,
+  syncProjectStagesIntoObservations,
+} from "@/utils/default-project-observations";
+import { computeObservationsDrift } from "@/utils/project-observations-sync";
 
 interface TabProps {
   project: ProjectV2;
@@ -38,6 +50,7 @@ export function GeneralInfoTab({
   const { data, updateField, saveState } = useProjectForm(project, onUpdate);
   const { canEditProjects } = usePermissions();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const currentUserName =
     user?.user_metadata?.full_name || user?.email || "Usuário";
 
@@ -103,12 +116,51 @@ export function GeneralInfoTab({
   // Conteudo bruto (string Lexical) guardado no primeiro bloco de notes.
   const notesContent = data.notes?.blocks?.[0]?.content || "";
 
-  const updateEditorContent = (content: string) => {
+  const [editorRefreshKey, setEditorRefreshKey] = useState(0);
+  const [driftDismissed, setDriftDismissed] = useState(false);
+  const [concurrencyConflict, setConcurrencyConflict] = useState<{
+    editedBy: string;
+    editedAt: string;
+    remoteNotes: ProjectV2["notes"];
+    pendingContent: string;
+  } | null>(null);
+
+  const observationsDrift = useMemo(
+    () => computeObservationsDrift(notesContent, data),
+    [notesContent, data],
+  );
+
+  const handleNavigateToMentionStage = (stageId: string, route?: string) => {
+    if (route) {
+      navigate(route);
+      return;
+    }
+    onStageClick?.(stageId);
+  };
+
+  const initializedProjectRef = useRef<string | null>(null);
+  const loadedNotesAtRef = useRef<number>(
+    project.notes?.lastEditedAt ? new Date(project.notes.lastEditedAt).getTime() : 0,
+  );
+  const lastConflictCheckRef = useRef<number>(0);
+
+  // Atualiza baseline de timestamp quando troca de projeto
+  useEffect(() => {
+    loadedNotesAtRef.current = project.notes?.lastEditedAt
+      ? new Date(project.notes.lastEditedAt).getTime()
+      : 0;
+    setConcurrencyConflict(null);
+    setDriftDismissed(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project.id]);
+
+  const applyNotesUpdate = (content: string, forceTimestamp?: Date) => {
+    const now = forceTimestamp || new Date();
     const blocks: ContentBlock[] = [
       {
         id: crypto.randomUUID(),
         type: "paragraph",
-        content: content,
+        content,
         checked: false,
       },
     ];
@@ -117,12 +169,136 @@ export function GeneralInfoTab({
       ...data.notes,
       id: data.notes?.id || crypto.randomUUID(),
       projectId: data.id,
-      blocks: blocks,
-      lastEditedBy: "User",
-      lastEditedAt: new Date(),
+      blocks,
+      lastEditedBy: currentUserName,
+      lastEditedAt: now,
     };
 
+    loadedNotesAtRef.current = now.getTime();
     updateField("notes", newNotes);
+  };
+
+  // Auto-inicializa projetos ativos/pausados que abrirem com Observações Gerais vazio
+  useEffect(() => {
+    if (!canEditProjects) return;
+    if (initializedProjectRef.current === data.id) return;
+    const isActiveOrPaused =
+      data.globalStatus === "in-progress" || data.globalStatus === "blocked";
+    if (!isActiveOrPaused) return;
+
+    initializedProjectRef.current = data.id;
+    if (isLexicalContentEmpty(notesContent)) {
+      const initialContent = createDefaultObservationsState(data);
+      applyNotesUpdate(initialContent);
+      setEditorRefreshKey((k) => k + 1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.id, data.globalStatus, canEditProjects]);
+
+  const updateEditorContent = (content: string) => {
+    // Se já há um conflito aberto, apenas mantém o rascunho pendente até o usuário decidir
+    if (concurrencyConflict) {
+      setConcurrencyConflict((prev) =>
+        prev ? { ...prev, pendingContent: content } : null,
+      );
+      return;
+    }
+
+    // Proteção leve contra sobrescrita concorrente (verifica no máximo a cada 8s)
+    const nowMs = Date.now();
+    const shouldCheckRemote =
+      Boolean(data.id) && nowMs - lastConflictCheckRef.current > 8000;
+
+    if (shouldCheckRemote) {
+      lastConflictCheckRef.current = nowMs;
+      void (async () => {
+        try {
+          const { data: remoteRow } = await supabase
+            .from("projects")
+            .select("notes, updated_at")
+            .eq("id", data.id)
+            .maybeSingle();
+
+          const remoteNotes = remoteRow?.notes as ProjectV2["notes"] | null | undefined;
+          const remoteTime = remoteNotes?.lastEditedAt
+            ? new Date(remoteNotes.lastEditedAt).getTime()
+            : 0;
+          const remoteAuthor = remoteNotes?.lastEditedBy?.trim();
+
+          if (
+            remoteTime > loadedNotesAtRef.current + 2000 &&
+            remoteAuthor &&
+            remoteAuthor !== "User" &&
+            remoteAuthor !== currentUserName
+          ) {
+            setConcurrencyConflict({
+              editedBy: remoteAuthor,
+              editedAt: new Date(remoteTime).toLocaleTimeString("pt-BR", {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+              remoteNotes: remoteNotes || undefined,
+              pendingContent: content,
+            });
+            return;
+          }
+        } catch {
+          // Best-effort: em erro de rede, não bloqueia edição local
+        }
+        applyNotesUpdate(content);
+      })();
+      return;
+    }
+
+    applyNotesUpdate(content);
+  };
+
+  const handleReloadRemoteNotes = () => {
+    if (!concurrencyConflict?.remoteNotes) {
+      setConcurrencyConflict(null);
+      return;
+    }
+    const remote = concurrencyConflict.remoteNotes;
+    loadedNotesAtRef.current = remote.lastEditedAt
+      ? new Date(remote.lastEditedAt).getTime()
+      : Date.now();
+    updateField("notes", remote);
+    setConcurrencyConflict(null);
+    setEditorRefreshKey((k) => k + 1);
+    toast.success("Versão mais recente das Observações Gerais recarregada.");
+  };
+
+  const handleForceSaveNotes = () => {
+    if (!concurrencyConflict) return;
+    const pending = concurrencyConflict.pendingContent;
+    setConcurrencyConflict(null);
+    applyNotesUpdate(pending);
+    toast.success("Suas alterações foram mantidas e salvas.");
+  };
+
+  const handleInsertDefaultTemplate = (mode: "prepend" | "replace") => {
+    const nextContent =
+      mode === "prepend"
+        ? prependDefaultObservationsToLexical(notesContent, data)
+        : createDefaultObservationsState(data);
+    applyNotesUpdate(nextContent);
+    setEditorRefreshKey((k) => k + 1);
+    toast.success(
+      mode === "prepend"
+        ? "Modelo padrão inserido no topo preservando o texto anterior."
+        : "Modelo padrão aplicado em Observações Gerais.",
+    );
+  };
+
+  const handleSyncStages = () => {
+    const { content, updatedCount } = syncProjectStagesIntoObservations(notesContent, data);
+    applyNotesUpdate(content);
+    setEditorRefreshKey((k) => k + 1);
+    toast.success(
+      updatedCount > 0
+        ? `Sincronização concluída (${updatedCount} ${updatedCount === 1 ? "linha atualizada" : "linhas atualizadas"}) preservando suas anotações.`
+        : "Observações Gerais sincronizadas com as etapas do projeto.",
+    );
   };
 
   const secondaryCount = project.secondaryTicketsCount || 0;
@@ -315,8 +491,83 @@ export function GeneralInfoTab({
         }}
       />
 
-      {/* 3. Observações Gerais (Rich Editor + Melhorar texto com IA) */}
-      <div className="pt-2">
+      {/* 3. Observações Gerais (Rich Editor + Semáforo + Sincronização com Etapas + IA) */}
+      <div className="space-y-3 pt-2">
+        {/* Banner Inteligente: Detecção Automática de Desatualização das Etapas */}
+        {canEditProjects && observationsDrift.hasDrift && !driftDismissed && (
+          <div className="flex flex-col gap-2 rounded-lg border border-blue-500/35 bg-blue-500/10 p-3 text-xs text-blue-900 dark:text-blue-200 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-2">
+              <RefreshCw className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400" />
+              <span>
+                <strong>
+                  {observationsDrift.driftedStages.length}{" "}
+                  {observationsDrift.driftedStages.length === 1
+                    ? "etapa foi atualizada"
+                    : "etapas foram atualizadas"}
+                </strong>{" "}
+                desde a última edição (
+                {observationsDrift.driftedStages.map((d) => d.label).join(", ")}). Deseja
+                sincronizar as linhas preservando suas anotações manuais?
+              </span>
+            </div>
+            <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => {
+                  handleSyncStages();
+                  setDriftDismissed(true);
+                }}
+                className="h-7 bg-blue-600 text-xs text-white hover:bg-blue-700"
+              >
+                Atualizar linhas
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => setDriftDismissed(true)}
+                className="h-7 text-xs"
+              >
+                Ignorar
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {concurrencyConflict && (
+          <div className="flex flex-col gap-2 rounded-lg border border-amber-500/45 bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+              <span>
+                <strong>Edição concorrente detectada:</strong>{" "}
+                <strong>{concurrencyConflict.editedBy}</strong> atualizou este campo às{" "}
+                {concurrencyConflict.editedAt}. Escolha como prosseguir para não sobrescrever
+                alterações:
+              </span>
+            </div>
+            <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleReloadRemoteNotes}
+                className="h-7 text-xs"
+              >
+                Recarregar versão atual
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleForceSaveNotes}
+                className="h-7 text-xs"
+              >
+                Manter e forçar salvamento
+              </Button>
+            </div>
+          </div>
+        )}
+
         <ObservationsWithAI
           title="Observações Gerais"
           placeholder="Digite suas observações gerais aqui..."
@@ -325,7 +576,19 @@ export function GeneralInfoTab({
           canEdit={canEditProjects}
           projectId={data.id}
           requestedBy={currentUserName}
+          isGeneralObservations
+          enableVoice
+          lastEditedBy={data.notes?.lastEditedBy}
+          lastEditedAt={data.notes?.lastEditedAt}
+          onInsertDefaultTemplate={handleInsertDefaultTemplate}
+          onSyncStages={handleSyncStages}
+          externalRefreshKey={editorRefreshKey}
+          project={data}
+          onNavigateToStage={handleNavigateToMentionStage}
         />
+
+        {/* 4. Ponte Passiva: Notas das Etapas (somente leitura, recolhido por padrão) */}
+        <StageNotesAccordion project={data} onOpenStage={onStageClick} />
       </div>
     </div>
   );

@@ -28,6 +28,44 @@ export function calculateHealthScore(row: Record<string, unknown>): "ok" | "warn
   return "ok";
 }
 
+function normalizeImplementationPhaseFromDb(rawPhase: unknown): ImplementationStageV2['phase1'] | undefined {
+  if (!rawPhase || typeof rawPhase !== 'object') return undefined;
+  const normalized = { ...(rawPhase as Record<string, any>) };
+
+  normalized.startDate = parseDbDateValue(normalized.startDate);
+  normalized.endDate = parseDbDateValue(normalized.endDate);
+
+  if (normalized.confirmedAt !== undefined && normalized.confirmedAt !== null && normalized.confirmedAt !== '') {
+    if (normalized.confirmedAt instanceof Date) {
+      if (isNaN(normalized.confirmedAt.getTime())) {
+        normalized.confirmedAt = undefined;
+      }
+    } else if (typeof normalized.confirmedAt === 'string') {
+      const parsedConfirmed = new Date(normalized.confirmedAt);
+      normalized.confirmedAt = isNaN(parsedConfirmed.getTime())
+        ? undefined
+        : normalized.confirmedAt;
+    } else {
+      const parsedConfirmed = new Date(normalized.confirmedAt);
+      normalized.confirmedAt = isNaN(parsedConfirmed.getTime())
+        ? undefined
+        : parsedConfirmed.toISOString();
+    }
+  } else if (normalized.confirmedAt === '' || normalized.confirmedAt === null) {
+    normalized.confirmedAt = undefined;
+  }
+
+  if (Array.isArray(normalized.additionalResponsibles)) {
+    normalized.additionalResponsibles = normalized.additionalResponsibles.map((item: any) => ({
+      ...item,
+      startDate: parseDbDateValue(item?.startDate),
+      endDate: parseDbDateValue(item?.endDate),
+    }));
+  }
+
+  return normalized as ImplementationStageV2['phase1'];
+}
+
 function parseDbDateValue(raw: unknown): Date | undefined {
   if (!raw) return undefined;
   if (raw instanceof Date) return isNaN(raw.getTime()) ? undefined : raw;
@@ -227,40 +265,13 @@ export function transformToProjectV3(row: Record<string, unknown>): ProjectV2 {
       implementation: (() => {
         const impl = createStage<ImplementationStageV2>('implementation');
         if (impl && typeof impl === 'object') {
-          const rawP1 = (impl as any).phase1;
-          if (rawP1 && typeof rawP1 === 'object') {
-            const normalizedP1 = { ...rawP1 };
-            if (normalizedP1.startDate && !(normalizedP1.startDate instanceof Date)) {
-              normalizedP1.startDate = new Date(normalizedP1.startDate);
-            }
-            if (normalizedP1.endDate && !(normalizedP1.endDate instanceof Date)) {
-              normalizedP1.endDate = new Date(normalizedP1.endDate);
-            }
-            if (normalizedP1.confirmedAt !== undefined && normalizedP1.confirmedAt !== null && normalizedP1.confirmedAt !== '') {
-              if (normalizedP1.confirmedAt instanceof Date) {
-                if (isNaN(normalizedP1.confirmedAt.getTime())) {
-                  normalizedP1.confirmedAt = undefined;
-                }
-              } else if (typeof normalizedP1.confirmedAt === 'string') {
-                const parsedConfirmed = new Date(normalizedP1.confirmedAt);
-                normalizedP1.confirmedAt = isNaN(parsedConfirmed.getTime())
-                  ? undefined
-                  : normalizedP1.confirmedAt;
-              } else {
-                const parsedConfirmed = new Date(normalizedP1.confirmedAt);
-                normalizedP1.confirmedAt = isNaN(parsedConfirmed.getTime())
-                  ? undefined
-                  : parsedConfirmed.toISOString();
-              }
-            }
-            if (Array.isArray(normalizedP1.additionalResponsibles)) {
-              normalizedP1.additionalResponsibles = normalizedP1.additionalResponsibles.map((item: any) => ({
-                ...item,
-                startDate: item.startDate && !(item.startDate instanceof Date) ? new Date(item.startDate) : item.startDate,
-                endDate: item.endDate && !(item.endDate instanceof Date) ? new Date(item.endDate) : item.endDate,
-              }));
-            }
+          const normalizedP1 = normalizeImplementationPhaseFromDb((impl as any).phase1);
+          if (normalizedP1) {
             (impl as any).phase1 = normalizedP1;
+          }
+          const normalizedP2 = normalizeImplementationPhaseFromDb((impl as any).phase2);
+          if (normalizedP2) {
+            (impl as any).phase2 = normalizedP2;
           }
         }
         return impl;

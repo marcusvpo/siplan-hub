@@ -4,14 +4,19 @@ import type { ImplementationStageV2, ProjectV2 } from "@/types/ProjectV2";
 import {
   addBusinessDaysKey,
   applyPhase1UpdatesWithAutomation,
+  applyPhase2UpdatesWithAutomation,
   calculatePostImplantationSchedule,
   formatConfirmationTimestamp,
   getNextBusinessDayKey,
+  isValidCalendarYearDateKey,
   shouldAutoFinishPhase1,
+  shouldAutoFinishPhase2,
   shouldAutoStartPhase1,
+  shouldAutoStartPhase2,
   syncPostStageFromImplementation,
   toLocalDateKey,
 } from "@/utils/implementation-phase1";
+import { SafeDateInput } from "@/components/ui/safe-date-input";
 import { transformToDB } from "@/utils/project-transformers";
 import { ImplementationStageForm } from "@/components/ProjectManagement/Forms/StageForms/ImplementationStageForm";
 import { DeploymentDetailsDialog } from "@/components/ProjectManagement/DeploymentDetailsDialog";
@@ -271,11 +276,17 @@ describe("Automação da Fase 1 de Implantação, Confirmação e Limpeza de Dat
         />
       );
 
-      const switchBtn = screen.getByRole("switch");
-      fireEvent.click(switchBtn);
+      const switchBtnPhase1 = screen.getByRole("switch", { name: /Fase 1/i });
+      fireEvent.click(switchBtnPhase1);
 
       expect(onUpdatePhase).toHaveBeenCalledTimes(1);
       expect(onUpdatePhase).toHaveBeenCalledWith("phase1", { isConfirmed: true });
+
+      const switchBtnPhase2 = screen.getByRole("switch", { name: /Fase 2/i });
+      fireEvent.click(switchBtnPhase2);
+
+      expect(onUpdatePhase).toHaveBeenCalledTimes(2);
+      expect(onUpdatePhase).toHaveBeenLastCalledWith("phase2", { isConfirmed: true });
     });
 
     it("limpar os inputs de data Início e Término envia undefined corretamente", () => {
@@ -577,6 +588,154 @@ describe("Automação da Fase 1 de Implantação, Confirmação e Limpeza de Dat
       expect(clearedPost.startDate).toBeUndefined();
       expect(clearedPost.endDate).toBeUndefined();
       expect(clearedPost.supportEndDate).toBeUndefined();
+    });
+  });
+
+  describe("Proteção contra ano parcial no input de data (SafeDateInput) e Paridade da Fase 2", () => {
+    it("formata anos abaixo de 1000 com padding de 4 dígitos evitando erro '2-12-14' e bloqueia automação para anos < 1900", () => {
+      expect(toLocalDateKey("0002-12-14T15:06:28.000Z")).toBe("0002-12-14");
+      expect(isValidCalendarYearDateKey("0002-12-14")).toBe(false);
+      expect(isValidCalendarYearDateKey("2026-12-14")).toBe(true);
+
+      expect(
+        shouldAutoStartPhase1({
+          isConfirmed: true,
+          status: "todo",
+          startDate: new Date("0002-12-14T15:06:28.000Z"),
+          endDate: new Date("0002-12-18T15:06:28.000Z"),
+          globalStatus: "in-progress",
+          now: new Date("2026-11-18T12:00:00"),
+        })
+      ).toBe(false);
+
+      expect(
+        shouldAutoFinishPhase1({
+          isConfirmed: true,
+          status: "todo",
+          stageStatus: "todo",
+          startDate: new Date("0002-12-14T15:06:28.000Z"),
+          endDate: new Date("0002-12-18T15:06:28.000Z"),
+          globalStatus: "in-progress",
+          systemType: "Orion REG",
+          now: new Date("2026-11-18T12:00:00"),
+        })
+      ).toBe(false);
+    });
+
+    it("SafeDateInput mantém rascunho '0002-12-14' durante digitação sem emitir update e comita apenas quando ano completo >= 1900", () => {
+      const onDateChange = vi.fn();
+      const { container } = render(
+        <SafeDateInput value={undefined} onDateChange={onDateChange} />
+      );
+      const input = container.querySelector('input[type="date"]') as HTMLInputElement;
+
+      fireEvent.focus(input);
+      fireEvent.change(input, { target: { value: "0002-12-14" } });
+      expect(input.value).toBe("0002-12-14");
+      expect(onDateChange).not.toHaveBeenCalled();
+
+      fireEvent.change(input, { target: { value: "2026-12-14" } });
+      expect(input.value).toBe("2026-12-14");
+      expect(onDateChange).toHaveBeenCalledTimes(1);
+      expect(toLocalDateKey(onDateChange.mock.calls[0][0])).toBe("2026-12-14");
+
+      // Ao desfocar com valor parcial incompleto, restaura o último valor externo válido
+      fireEvent.change(input, { target: { value: "0020-12-14" } });
+      fireEvent.blur(input);
+      expect(input.value).toBe("");
+    });
+
+    it("aplica confirmação e automações na Fase 2 sem alterar Fase 1, Etapa 5 pai ou Pós-Implantação", () => {
+      const baseStage: ImplementationStageV2 = {
+        status: "done",
+        responsible: "Julio Araujo",
+        startDate: new Date("2026-11-02T12:00:00"),
+        endDate: new Date("2026-11-06T12:00:00"),
+        phase1: {
+          status: "done",
+          responsible: "Julio Araujo",
+          isConfirmed: true,
+          confirmedAt: "2026-10-20T10:00:00.000Z",
+          startDate: new Date("2026-11-02T12:00:00"),
+          endDate: new Date("2026-11-06T12:00:00"),
+        },
+        phase2: {
+          status: "todo",
+          responsible: "Ricardo Vieira",
+          startDate: new Date("2026-11-18T12:00:00"),
+          endDate: new Date("2026-11-20T12:00:00"),
+        },
+      };
+
+      expect(
+        shouldAutoStartPhase2({
+          isConfirmed: true,
+          status: "todo",
+          startDate: baseStage.phase2.startDate,
+          endDate: baseStage.phase2.endDate,
+          globalStatus: "in-progress",
+          now: new Date("2026-11-18T09:00:00"),
+        })
+      ).toBe(true);
+
+      const confirmedResult = applyPhase2UpdatesWithAutomation({
+        currentStage: baseStage,
+        phaseUpdates: { isConfirmed: true },
+        globalStatus: "in-progress",
+        systemType: "Orion PRO",
+        now: new Date("2026-11-18T14:30:00.000Z"),
+      });
+
+      expect(confirmedResult.phase2.isConfirmed).toBe(true);
+      expect(confirmedResult.phase2.confirmedAt).toBe("2026-11-18T14:30:00.000Z");
+      expect(confirmedResult.phase2.status).toBe("in-progress");
+      // Fase 1 e etapa pai permanecem preservadas
+      expect(confirmedResult.status).toBe("done");
+      expect(confirmedResult.responsible).toBe("Julio Araujo");
+      expect(confirmedResult.phase1.status).toBe("done");
+
+      expect(
+        shouldAutoFinishPhase2({
+          isConfirmed: true,
+          status: "in-progress",
+          startDate: baseStage.phase2.startDate,
+          endDate: baseStage.phase2.endDate,
+          globalStatus: "in-progress",
+          systemType: "Orion PRO",
+          now: new Date("2026-11-20T09:00:00"),
+        })
+      ).toBe(true);
+    });
+
+    it("renderiza interruptor de confirmação, nota de data/hora e + Implantador também na Fase 2", () => {
+      const onUpdatePhase = vi.fn();
+      const confirmedAt = "2026-11-18T15:00:00.000Z";
+      const expectedFormatted = formatConfirmationTimestamp(confirmedAt);
+      const stage: ImplementationStageV2 = {
+        status: "done",
+        responsible: "Julio Araujo",
+        phase1: { status: "done", responsible: "Julio Araujo" },
+        phase2: {
+          status: "todo",
+          responsible: "Ricardo Vieira",
+          isConfirmed: true,
+          confirmedAt,
+        },
+      };
+
+      render(
+        <ImplementationStageForm
+          stage={stage}
+          canEditProjects={true}
+          onUpdatePhase={onUpdatePhase}
+        />
+      );
+
+      const notePhase2 = screen.getByTestId("phase2-confirmation-note");
+      expect(notePhase2.textContent).toContain(
+        `Implantação foi confirmada pelo cliente após contato em ${expectedFormatted}!`
+      );
+      expect(screen.getAllByText("+ Implantador")).toHaveLength(2);
     });
   });
 });

@@ -39,6 +39,7 @@ interface ProjectModalProps {
   onOpenChange: (open: boolean) => void;
   onUpdate: (project: ProjectV2) => void;
   initialTab?: string;
+  initialStepId?: string;
 }
 
 export function ProjectModal({
@@ -47,22 +48,25 @@ export function ProjectModal({
   onOpenChange,
   onUpdate,
   initialTab,
+  initialStepId,
 }: ProjectModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState(initialTab || "general");
+  const [activeStepId, setActiveStepId] = useState<string | undefined>(initialStepId);
   const [targetSecondaryProduct, setTargetSecondaryProduct] = useState<string | null>(null);
   const queryClient = useContext(QueryClientContext) ?? undefined;
 
   useEffect(() => {
     if (open) {
       setActiveTab(initialTab || "general");
+      setActiveStepId(initialStepId);
       setIsEditing(false);
       setTargetSecondaryProduct(null);
       if (initialProject?.id) {
         void recordProjectViewLog(initialProject.id, "modal", queryClient);
       }
     }
-  }, [open, initialProject?.id, initialTab, queryClient]);
+  }, [open, initialProject?.id, initialTab, initialStepId, queryClient]);
 
   const handleProductBadgeClick = (productName: string) => {
     setTargetSecondaryProduct(productName);
@@ -133,7 +137,6 @@ export function ProjectModal({
     }, 280);
   };
 
-  const [activeStepId, setActiveStepId] = useState<string | undefined>(undefined);
   const { canEditProjects } = usePermissions();
   const navigate = useNavigate();
 
@@ -336,6 +339,10 @@ export function ProjectModal({
                   onClick={handleOpenOrionAdmin}
                 />
                 <Phase1HeaderTag
+                  project={displayProject}
+                  onClick={handleOpenImplementationStage}
+                />
+                <Phase2HeaderTag
                   project={displayProject}
                   onClick={handleOpenImplementationStage}
                 />
@@ -666,16 +673,60 @@ export function formatPhase1Date(dateVal?: Date | string | null): string {
       const datePart = dateVal.split("T")[0];
       const parts = datePart.split("-");
       if (parts.length === 3) {
-        const [, month, day] = parts;
+        const [yearRaw, month, day] = parts;
+        const yearNum = Number(yearRaw);
+        if (!Number.isInteger(yearNum) || yearNum < 1900 || yearNum > 2099) {
+          return "";
+        }
         return `${day.padStart(2, "0")}/${month.padStart(2, "0")}`;
       }
     }
     const d = new Date(dateVal);
     if (isNaN(d.getTime())) return "";
+    const yearNum = d.getFullYear();
+    if (yearNum < 1900 || yearNum > 2099) return "";
     return format(d, "dd/MM");
   } catch {
     return "";
   }
+}
+
+function PhaseTagButton({
+  label,
+  isConfirmed,
+  variant = "phase1",
+  onClick,
+}: {
+  label: string;
+  isConfirmed: boolean;
+  variant?: "phase1" | "phase2";
+  onClick: () => void;
+}) {
+  const colorClasses = isConfirmed
+    ? "bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+    : variant === "phase2"
+      ? "bg-purple-500/15 hover:bg-purple-500/25 text-purple-800 dark:text-purple-300 border-purple-500/30"
+      : "bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 dark:text-amber-300 border-amber-500/30";
+  const dotColor = isConfirmed
+    ? "bg-emerald-500"
+    : variant === "phase2"
+      ? "bg-purple-500"
+      : "bg-amber-500";
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold shadow-2xs transition-all duration-150 cursor-pointer hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0 max-w-full sm:max-w-md",
+        colorClasses
+      )}
+      title="Clique para abrir a etapa 5. Implantação & Treinamento"
+    >
+      <span className={cn("h-2 w-2 rounded-full shrink-0", dotColor)} />
+      <span className="truncate">{label}</span>
+    </button>
+  );
 }
 
 export function Phase1HeaderTag({ project, onClick }: Phase1HeaderTagProps) {
@@ -692,11 +743,8 @@ export function Phase1HeaderTag({ project, onClick }: Phase1HeaderTagProps) {
 
   // As datas de previsão/confirmação da Fase 1 devem vir EXCLUSIVAMENTE de phase1.startDate e phase1.endDate.
   // Se os campos "Início" e "Término" na Fase 1 foram limpos, não exibe tag com datas residuais da etapa pai.
-  const startDateRaw = phase1?.startDate;
-  const endDateRaw = phase1?.endDate;
-
-  const formattedStart = formatPhase1Date(startDateRaw);
-  const formattedEnd = formatPhase1Date(endDateRaw);
+  const formattedStart = formatPhase1Date(phase1?.startDate);
+  const formattedEnd = formatPhase1Date(phase1?.endDate);
 
   // Se o projeto não tiver essas informações preenchidas na etapa, não deve aparecer nada
   if (!responsible || !formattedStart || !formattedEnd) {
@@ -705,29 +753,40 @@ export function Phase1HeaderTag({ project, onClick }: Phase1HeaderTagProps) {
 
   const isConfirmed = Boolean(phase1?.isConfirmed);
   const statusLabel = isConfirmed ? "confirmada" : "prevista";
-
-  // Padrão solicitado: "Implantação [status (confirmada ou prevista)] de [data de início] a [data de término] - [responsável]"
   const label = `Implantação ${statusLabel} de ${formattedStart} a ${formattedEnd} - ${responsible}`;
 
   return (
-    <button
-      type="button"
+    <PhaseTagButton
+      label={label}
+      isConfirmed={isConfirmed}
+      variant="phase1"
       onClick={onClick}
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold shadow-2xs transition-all duration-150 cursor-pointer hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0 max-w-full sm:max-w-md",
-        isConfirmed
-          ? "bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
-          : "bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 dark:text-amber-300 border-amber-500/30"
-      )}
-      title="Clique para abrir a etapa 5. Implantação & Treinamento"
-    >
-      <span
-        className={cn(
-          "h-2 w-2 rounded-full shrink-0",
-          isConfirmed ? "bg-emerald-500" : "bg-amber-500"
-        )}
-      />
-      <span className="truncate">{label}</span>
-    </button>
+    />
+  );
+}
+
+export function Phase2HeaderTag({ project, onClick }: Phase1HeaderTagProps) {
+  if (!project) return null;
+
+  const phase2 = project.stages?.implementation?.phase2;
+  const responsible = phase2?.responsible?.trim() || "";
+  const formattedStart = formatPhase1Date(phase2?.startDate);
+  const formattedEnd = formatPhase1Date(phase2?.endDate);
+
+  if (!responsible || !formattedStart || !formattedEnd) {
+    return null;
+  }
+
+  const isConfirmed = Boolean(phase2?.isConfirmed);
+  const statusLabel = isConfirmed ? "confirmado" : "previsto";
+  const label = `Retorno ${statusLabel} de ${formattedStart} a ${formattedEnd} - ${responsible}`;
+
+  return (
+    <PhaseTagButton
+      label={label}
+      isConfirmed={isConfirmed}
+      variant="phase2"
+      onClick={onClick}
+    />
   );
 }

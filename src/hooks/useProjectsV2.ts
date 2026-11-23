@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import { ProjectV2, ProjectUpdate } from "@/types/ProjectV2";
+import { createDefaultObservationsState, isLexicalContentEmpty } from "@/utils/default-project-observations";
+import { buildSyncedNotesForProjectUpdate } from "@/utils/project-observations-sync";
 import { useTimeline } from "./useTimeline";
 import {
   transformToProjectV3,
@@ -140,10 +142,28 @@ export const useProjectsV2 = () => {
           ? actor.fullName
           : getCurrentUserName();
 
-      const updatesWithUser = {
+      const updatesWithUser: ProjectUpdate = {
         ...updates,
         lastUpdatedBy: actorName,
       };
+
+      // Espelhamento automático das Etapas (Infra, Aderência, Conversão, Ambiente e Fase 1)
+      // para Observações Gerais quando o update altera `stages` sem edição manual simultânea de `notes`.
+      if (currentProject && updates.stages && updates.notes === undefined) {
+        const previewMerged = mergeProjectForAudit(
+          currentProject,
+          updates,
+          updates.globalStatus || currentProject.globalStatus,
+        );
+        const syncedNotes = buildSyncedNotesForProjectUpdate({
+          previousProject: currentProject,
+          nextProject: previewMerged,
+          actorName,
+        });
+        if (syncedNotes) {
+          updatesWithUser.notes = syncedNotes;
+        }
+      }
 
       const dbUpdates = transformToDB(updatesWithUser, currentProject);
 
@@ -256,12 +276,31 @@ export const useProjectsV2 = () => {
           ? actor.fullName
           : getCurrentUserName();
 
-      const projectWithUser = {
+      const projectWithUser: Partial<ProjectV2> = {
         ...project,
         lastUpdatedBy: actorName,
         startDateActual: new Date(),
         globalStatus: "in-progress" as const,
       };
+
+      const existingNotesContent = projectWithUser.notes?.blocks?.[0]?.content;
+      if (isLexicalContentEmpty(existingNotesContent)) {
+        const defaultContent = createDefaultObservationsState(projectWithUser);
+        projectWithUser.notes = {
+          id: projectWithUser.notes?.id || crypto.randomUUID(),
+          projectId: projectWithUser.id || "",
+          blocks: [
+            {
+              id: crypto.randomUUID(),
+              type: "paragraph",
+              content: defaultContent,
+              checked: false,
+            },
+          ],
+          lastEditedBy: actorName,
+          lastEditedAt: new Date(),
+        };
+      }
 
       const dbProject = transformToDB(projectWithUser) as TablesInsert<"projects">;
 

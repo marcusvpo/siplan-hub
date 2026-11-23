@@ -52,6 +52,7 @@ export interface CalendarEvent {
   allResponsibles?: string[];
   isShared?: boolean;
   isConfirmed?: boolean;
+  implementationPhase?: "phase1" | "phase2";
   stageStatus?: "todo" | "in-progress" | "done" | "blocked";
   observationsList?: string[];
   trainingLocation?: string;

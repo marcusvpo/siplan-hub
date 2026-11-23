@@ -11,6 +11,7 @@ import {
   richTextToPlainText,
 } from "@/lib/lexical";
 import { cn } from "@/lib/utils";
+import type { ProjectV2 } from "@/types/ProjectV2";
 
 const SUPPORTED_LEXICAL_NODE_TYPES = new Set([
   "autolink",
@@ -21,6 +22,7 @@ const SUPPORTED_LEXICAL_NODE_TYPES = new Set([
   "link",
   "list",
   "listitem",
+  "mention",
   "paragraph",
   "quote",
   "root",
@@ -67,16 +69,41 @@ interface RichTextEditorProps {
   requestedBy?: string;
   className?: string;
   compact?: boolean;
+  /** Contexto opcional do projeto para menções inteligentes (@analista e #etapa). */
+  project?: Partial<ProjectV2>;
+  onNavigateToStage?: (stageId: string, route?: string) => void;
+  /** Oculta os botões flutuantes internos (voz/expandir) quando o pai os renderiza no cabeçalho. */
+  hideFloatingControls?: boolean;
+  /** Controle externo opcional do modal de Modo Foco (Tela Cheia). */
+  expanded?: boolean;
+  onExpandedChange?: (open: boolean) => void;
 }
 
-export function RichTextEditor({ content, onChange, editable = true, placeholder, enableVoice, projectId, requestedBy, className, compact = false }: RichTextEditorProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+export function RichTextEditor({
+  content,
+  onChange,
+  editable = true,
+  placeholder,
+  enableVoice,
+  projectId,
+  requestedBy,
+  className,
+  compact = false,
+  project,
+  onNavigateToStage,
+  hideFloatingControls = false,
+  expanded,
+  onExpandedChange,
+}: RichTextEditorProps) {
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const isExpanded = expanded !== undefined ? expanded : internalExpanded;
   // O componente Editor (Lexical) só lê o conteúdo no mount; ao aplicar texto por
   // voz forçamos um remount bumpando esta key para o novo conteúdo aparecer.
   const [editorKey, setEditorKey] = useState(0);
 
   const handleExpandedChange = (open: boolean) => {
-    setIsExpanded(open);
+    if (onExpandedChange) onExpandedChange(open);
+    else setInternalExpanded(open);
 
     if (!open) {
       // O editor do modo foco é uma instância separada. Ao fechá-lo, remonta a
@@ -85,7 +112,7 @@ export function RichTextEditor({ content, onChange, editable = true, placeholder
     }
   };
 
-  const showVoice = !!(enableVoice && editable && projectId);
+  const showVoice = !!(enableVoice && editable && projectId && !hideFloatingControls);
   const applyVoiceText = (text: string, mode: "append" | "replace") => {
     const next = mode === "append" ? appendPlainTextToLexicalJson(content, text) : plainTextToLexicalJson(text);
     onChange(next);
@@ -129,8 +156,8 @@ export function RichTextEditor({ content, onChange, editable = true, placeholder
         className,
       )}
     >
-      {/* Toolbar do canto: voz (sempre visível) + modo foco (no hover) */}
-      {(showVoice || editable) && (
+      {/* Toolbar do canto: voz + modo foco (omitida quando controlada no cabeçalho do pai) */}
+      {!hideFloatingControls && (showVoice || editable) && (
         <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
           {showVoice && <VoiceDictationButton projectId={projectId} requestedBy={requestedBy} onApply={applyVoiceText} />}
           {editable && (
@@ -138,7 +165,7 @@ export function RichTextEditor({ content, onChange, editable = true, placeholder
               type="button"
               variant="ghost"
               size="icon"
-              onClick={() => setIsExpanded(true)}
+              onClick={() => handleExpandedChange(true)}
               title="Modo Foco (Tela Cheia)"
               aria-label="Abrir editor em tela cheia"
               className="opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
@@ -150,7 +177,7 @@ export function RichTextEditor({ content, onChange, editable = true, placeholder
       )}
 
       <div className={showVoice ? "p-1 pt-11" : compact ? "p-0.5" : "p-1"}>
-        <Editor key={editorKey} editorSerializedState={initialConfig} onSerializedChange={(value) => onChange(JSON.stringify(value))} placeholder={placeholder} editable={editable} compact={compact} />
+        <Editor key={editorKey} editorSerializedState={initialConfig} onSerializedChange={(value) => onChange(JSON.stringify(value))} placeholder={placeholder} editable={editable} compact={compact} project={project} onNavigateToStage={onNavigateToStage} />
       </div>
 
       {/* Expanded Dialog */}
@@ -180,6 +207,8 @@ export function RichTextEditor({ content, onChange, editable = true, placeholder
               placeholder={placeholder}
               editable={editable}
               compact={compact}
+              project={project}
+              onNavigateToStage={onNavigateToStage}
             />
           </div>
         </DialogContent>

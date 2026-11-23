@@ -52,21 +52,63 @@
 .editor-list-ol {
   list-style-type: decimal;
   margin-left: 1.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .editor-list-ul {
   list-style-type: disc;
   margin-left: 1.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .editor-listitem {
   margin-bottom: 0.25rem;
 }
 
+/* Wrapper de listas aninhadas (sub-bullets e sub-checklists como Homologação):
+   NUNCA deve exibir checkbox fantasma nem usar flex */
 .editor-nested-listitem {
+  list-style-type: none !important;
+  display: block !important;
+  padding-left: 1.5rem !important;
+  margin-left: 0 !important;
+  margin-bottom: 0.25rem;
+  cursor: text !important;
+}
+
+.editor-nested-listitem::before,
+.editor-nested-listitem::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Sub-bullets de detalhamento/cobrança abaixo de etapas (itálico cinza com bolinha) */
+.editor-nested-listitem > ul.editor-list-ul:not(:has(> .editor-listitem-unchecked)):not(:has(> .editor-listitem-checked)) {
+  list-style-type: disc;
+  margin-left: 1.15rem;
+  margin-top: 0.15rem;
+  margin-bottom: 0.35rem;
+  color: #6b7280;
+  font-style: italic;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.editor-nested-listitem > ul.editor-list-ul:not(:has(> .editor-listitem-unchecked)):not(:has(> .editor-listitem-checked)) > li {
+  color: #6b7280;
+  font-style: italic;
+  margin-bottom: 0.2rem;
+}
+
+/* Sub-checklist aninhada (ex: Homologação abaixo de Conversão) com guia sutil à esquerda */
+.editor-nested-listitem > ul:has(> .editor-listitem-unchecked),
+.editor-nested-listitem > ul:has(> .editor-listitem-checked) {
   list-style-type: none;
+  margin-left: 0.15rem;
+  margin-top: 0.2rem;
+  margin-bottom: 0.35rem;
+  padding-left: 0.75rem;
+  border-left: 1.5px dashed hsl(var(--border));
 }
 
 .editor-text-bold {
@@ -110,19 +152,19 @@
   color: hsl(var(--primary) / 0.8);
 }
 
-/* Checklist Styles */
-/* Checklist Styles */
+/* Checklist Styles — layout block + checkbox absoluta para manter cursor/clique exatos
+   e evitar espaçamento artificial entre nós inline */
 .editor-listitem-unchecked,
 .editor-listitem-checked {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  margin-bottom: 0.25rem;
-  list-style-type: none;
+  display: block;
   position: relative;
+  padding-left: 1.65rem;
   margin-left: 0;
+  margin-bottom: 0.35rem;
+  list-style-type: none;
   outline: none;
-  cursor: pointer;
+  cursor: text;
+  line-height: 1.6;
 }
 
 /* Hide the native checkbox if it exists */
@@ -132,7 +174,9 @@
 }
 
 /* Container UL for checklist */
-ul.editor-list-ul[class*="checklist"] {
+ul.editor-list-ul[class*="checklist"],
+ul.editor-list-ul:has(> .editor-listitem-unchecked),
+ul.editor-list-ul:has(> .editor-listitem-checked) {
   list-style-type: none;
   margin-left: 0;
   padding-left: 0;
@@ -142,19 +186,16 @@ ul.editor-list-ul[class*="checklist"] {
 .editor-listitem-unchecked::before,
 .editor-listitem-checked::before {
   content: "";
+  position: absolute;
+  left: 0;
+  top: 0.25rem;
   width: 1rem;
   height: 1rem;
-  flex-shrink: 0;
-  border-width: 1px;
+  border-width: 1.5px;
   border-style: solid;
   border-color: hsl(var(--primary));
   border-radius: 0.25rem;
-  margin-top: 0.25rem;
-  margin-right: 0.5rem;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transition-property: color, background-color, border-color;
   transition-duration: 150ms;
   background-color: transparent;
@@ -170,7 +211,7 @@ ul.editor-list-ul[class*="checklist"] {
   background-color: hsl(var(--primary));
   border-color: hsl(var(--primary));
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
-  background-size: 12px;
+  background-size: 11px;
   background-position: center;
   background-repeat: no-repeat;
 }
@@ -187,4 +228,28 @@ ul.editor-list-ul[class*="checklist"] {
 }
 .editor-text-justify {
   text-align: justify;
+}
+
+/* Filtro interativo de leitura por cor do semáforo (rodapé do editor) */
+[data-color-filter] .editor-listitem-unchecked,
+[data-color-filter] .editor-listitem-checked,
+[data-color-filter] .editor-listitem {
+  opacity: 0.25;
+  transition: opacity 150ms ease;
+}
+
+[data-color-filter] .editor-nested-listitem {
+  opacity: 1 !important;
+}
+
+[data-color-filter="#10B981"] li:has(span[style*="#10B981" i]),
+[data-color-filter="#10B981"] li:has(span[style*="rgb(16, 185, 129)"]),
+[data-color-filter="#10B981"] .editor-listitem-checked,
+[data-color-filter="#3B82F6"] li:has(span[style*="#3B82F6" i]),
+[data-color-filter="#3B82F6"] li:has(span[style*="rgb(59, 130, 246)"]),
+[data-color-filter="#F59E0B"] li:has(span[style*="#F59E0B" i]),
+[data-color-filter="#F59E0B"] li:has(span[style*="rgb(245, 158, 11)"]),
+[data-color-filter="#F97316"] li:has(span[style*="#F97316" i]),
+[data-color-filter="#F97316"] li:has(span[style*="rgb(249, 115, 22)"]) {
+  opacity: 1 !important;
 }

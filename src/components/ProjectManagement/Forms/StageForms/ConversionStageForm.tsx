@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ConversionStageV2, StageStatus } from "@/types/ProjectV2";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { SafeDateInput } from "@/components/ui/safe-date-input";
 import { ConversionQueueItem } from "@/hooks/useConversionQueue";
 import {
   Select,
@@ -279,21 +279,10 @@ export function ConversionStageForm({
           <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
           Agendado Para (Homolog.)
         </Label>
-        <Input
-          type="date"
-          value={
-            stage.homologationFinishedAt
-              ? new Date(stage.homologationFinishedAt)
-                .toISOString()
-                .split("T")[0]
-              : ""
-          }
-          onChange={(e) =>
-            onUpdate({
-              homologationFinishedAt: e.target.value
-                ? new Date(e.target.value + "T12:00:00")
-                : undefined,
-            })
+        <SafeDateInput
+          value={stage.homologationFinishedAt}
+          onDateChange={(homologationFinishedAt) =>
+            onUpdate({ homologationFinishedAt })
           }
           className="h-9 border border-input bg-background text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
         />

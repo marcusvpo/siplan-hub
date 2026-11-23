@@ -8,6 +8,8 @@ import { TRANSFORMERS } from "@lexical/markdown"
 
 import { EditorContentEditable } from "@/components/editor/ui/content-editable"
 import { ToolbarPlugin } from "./plugins/toolbar-plugin"
+import { SubBulletEnterPlugin } from "./plugins/sub-bullet-enter-plugin"
+import { MentionAutocompletePlugin } from "./plugins/mention-autocomplete-plugin"
 
 export function Plugins({
   placeholder,
@@ -31,6 +33,8 @@ export function Plugins({
         <HistoryPlugin />
         <ListPlugin />
         <CheckListPlugin />
+        {editable && <SubBulletEnterPlugin />}
+        {editable && <MentionAutocompletePlugin />}
         <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
       </div>
     </div>

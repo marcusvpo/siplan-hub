@@ -62,10 +62,25 @@ export function toLocalDateKey(
 }
 
 function formatLocalDateParts(date: Date): string {
-  const year = date.getFullYear();
+  const year = String(date.getFullYear()).padStart(4, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+/**
+ * Valida se a data possui ano civil plausível para agendamento/automação (`minYear..maxYear`).
+ * Impede que anos parciais digitados no input (ex.: `0002-12-14`) disparem automações.
+ */
+export function isValidCalendarYearDateKey(
+  value: Date | string | null | undefined,
+  minYear = 1900,
+  maxYear = 2099
+): boolean {
+  const key = toLocalDateKey(value);
+  if (!key) return false;
+  const year = Number(key.slice(0, 4));
+  return Number.isInteger(year) && year >= minYear && year <= maxYear;
 }
 
 function parseDateKeyToLocalNoon(dateKey: string): Date | null {
@@ -208,7 +223,12 @@ export function shouldAutoStartPhase1({
 
   const startDay = toLocalDateKey(startDate);
   const todayDay = toLocalDateKey(now);
-  if (!startDay || !todayDay) {
+  if (
+    !startDay ||
+    !todayDay ||
+    !isValidCalendarYearDateKey(startDay) ||
+    !isValidCalendarYearDateKey(todayDay)
+  ) {
     return false;
   }
 
@@ -218,7 +238,10 @@ export function shouldAutoStartPhase1({
 
   if (endDate) {
     const endDay = toLocalDateKey(endDate);
-    if (endDay && endDay <= todayDay) {
+    if (!endDay || !isValidCalendarYearDateKey(endDay)) {
+      return false;
+    }
+    if (endDay <= todayDay) {
       return false;
     }
   }
@@ -281,11 +304,41 @@ export function shouldAutoFinishPhase1({
   const startDay = toLocalDateKey(startDate);
   const endDay = toLocalDateKey(endDate);
   const todayDay = toLocalDateKey(now);
-  if (!startDay || !endDay || !todayDay) {
+  if (
+    !startDay ||
+    !endDay ||
+    !todayDay ||
+    !isValidCalendarYearDateKey(startDay) ||
+    !isValidCalendarYearDateKey(endDay) ||
+    !isValidCalendarYearDateKey(todayDay)
+  ) {
     return false;
   }
 
   return endDay <= todayDay;
+}
+
+/**
+ * Verifica se a Fase 2 ("Possível Retorno") deve iniciar automaticamente (`in-progress`)
+ * quando confirmada e dentro da janela vigente (`startDate <= hoje < endDate`).
+ */
+export function shouldAutoStartPhase2(
+  params: ShouldAutoStartPhase1Params
+): boolean {
+  return shouldAutoStartPhase1(params);
+}
+
+/**
+ * Verifica se a Fase 2 ("Possível Retorno") deve ser finalizada automaticamente (`done`)
+ * quando o período agendado e confirmado atinge ou ultrapassa a data de término (`endDate <= hoje`).
+ */
+export function shouldAutoFinishPhase2(
+  params: Omit<ShouldAutoFinishPhase1Params, "stageStatus">
+): boolean {
+  return shouldAutoFinishPhase1({
+    ...params,
+    stageStatus: params.status,
+  });
 }
 
 /**
@@ -310,6 +363,85 @@ export interface ApplyPhase1UpdatesParams {
   now?: Date;
 }
 
+interface ResolvePhaseUpdatesResult {
+  nextPhase: ImplementationPhase;
+  autoTransitionedTo?: "in-progress" | "done";
+}
+
+function resolvePhaseUpdatesWithAutomation({
+  currentPhase,
+  phaseUpdates,
+  currentParentStageStatus,
+  globalStatus,
+  systemType,
+  now,
+}: {
+  currentPhase?: Partial<ImplementationPhase> | null;
+  phaseUpdates: Partial<ImplementationPhase>;
+  currentParentStageStatus?: StageStatus;
+  globalStatus?: GlobalStatus | string | null;
+  systemType?: string | null;
+  now: Date;
+}): ResolvePhaseUpdatesResult {
+  const basePhase: ImplementationPhase = {
+    status: "todo",
+    ...(currentPhase || {}),
+  };
+
+  const nextPhase: ImplementationPhase = {
+    ...basePhase,
+    ...phaseUpdates,
+  };
+
+  if (phaseUpdates.isConfirmed === true) {
+    const wasConfirmed = Boolean(basePhase.isConfirmed);
+    if (phaseUpdates.confirmedAt !== undefined) {
+      nextPhase.confirmedAt = phaseUpdates.confirmedAt;
+    } else if (!wasConfirmed || !basePhase.confirmedAt) {
+      nextPhase.confirmedAt = now.toISOString();
+    } else {
+      nextPhase.confirmedAt = basePhase.confirmedAt;
+    }
+  } else if (phaseUpdates.isConfirmed === false) {
+    nextPhase.confirmedAt = undefined;
+  }
+
+  let autoTransitionedTo: "in-progress" | "done" | undefined;
+
+  if (phaseUpdates.status === undefined) {
+    const effectiveStageStatus = currentParentStageStatus ?? nextPhase.status;
+    if (
+      shouldAutoFinishPhase1({
+        isConfirmed: nextPhase.isConfirmed,
+        startDate: nextPhase.startDate,
+        endDate: nextPhase.endDate,
+        status: nextPhase.status,
+        stageStatus: effectiveStageStatus,
+        globalStatus,
+        systemType,
+        now,
+      })
+    ) {
+      nextPhase.status = "done";
+      autoTransitionedTo = "done";
+    } else if (
+      shouldAutoStartPhase1({
+        isConfirmed: nextPhase.isConfirmed,
+        startDate: nextPhase.startDate,
+        endDate: nextPhase.endDate,
+        status: nextPhase.status,
+        globalStatus,
+        now,
+      })
+    ) {
+      nextPhase.status = "in-progress";
+      autoTransitionedTo = "in-progress";
+    }
+  }
+
+  return { nextPhase, autoTransitionedTo };
+}
+
 /**
  * Aplica atualizações parciais na Fase 1 de Implantação garantindo:
  * - Registro/limpeza de `confirmedAt` ao alternar `isConfirmed`
@@ -324,59 +456,21 @@ export function applyPhase1UpdatesWithAutomation({
   systemType,
   now = new Date(),
 }: ApplyPhase1UpdatesParams): ImplementationStageV2 {
-  const currentPhase1: ImplementationPhase = {
-    status: "todo",
-    ...(currentStage?.phase1 || {}),
-  };
-
-  const nextPhase1: ImplementationPhase = {
-    ...currentPhase1,
-    ...phaseUpdates,
-  };
-
-  if (phaseUpdates.isConfirmed === true) {
-    const wasConfirmed = Boolean(currentPhase1.isConfirmed);
-    if (phaseUpdates.confirmedAt !== undefined) {
-      nextPhase1.confirmedAt = phaseUpdates.confirmedAt;
-    } else if (!wasConfirmed || !currentPhase1.confirmedAt) {
-      nextPhase1.confirmedAt = now.toISOString();
-    } else {
-      nextPhase1.confirmedAt = currentPhase1.confirmedAt;
-    }
-  } else if (phaseUpdates.isConfirmed === false) {
-    nextPhase1.confirmedAt = undefined;
-  }
-
-  let stageStatus: StageStatus = currentStage?.status || "todo";
-
-  if (phaseUpdates.status !== undefined) {
-    stageStatus = phaseUpdates.status;
-  } else if (
-    shouldAutoFinishPhase1({
-      isConfirmed: nextPhase1.isConfirmed,
-      startDate: nextPhase1.startDate,
-      endDate: nextPhase1.endDate,
-      status: nextPhase1.status,
-      stageStatus,
+  const { nextPhase: nextPhase1, autoTransitionedTo } =
+    resolvePhaseUpdatesWithAutomation({
+      currentPhase: currentStage?.phase1,
+      phaseUpdates,
+      currentParentStageStatus: currentStage?.status || "todo",
       globalStatus,
       systemType,
       now,
-    })
-  ) {
-    nextPhase1.status = "done";
-    stageStatus = "done";
-  } else if (
-    shouldAutoStartPhase1({
-      isConfirmed: nextPhase1.isConfirmed,
-      startDate: nextPhase1.startDate,
-      endDate: nextPhase1.endDate,
-      status: nextPhase1.status,
-      globalStatus,
-      now,
-    })
-  ) {
-    nextPhase1.status = "in-progress";
-    stageStatus = "in-progress";
+    });
+
+  let stageStatus: StageStatus = currentStage?.status || "todo";
+  if (phaseUpdates.status !== undefined) {
+    stageStatus = phaseUpdates.status;
+  } else if (autoTransitionedTo) {
+    stageStatus = autoTransitionedTo;
   }
 
   const nextResponsible =
@@ -392,6 +486,33 @@ export function applyPhase1UpdatesWithAutomation({
     endDate: nextPhase1.endDate,
     phase1: nextPhase1,
     phase2: currentStage?.phase2 || { status: "todo" },
+  };
+}
+
+/**
+ * Aplica atualizações parciais na Fase 2 ("Possível Retorno") com paridade de confirmação e automação de datas,
+ * preservando integralmente os campos do estágio pai (`status`, `responsible`, `startDate`, `endDate`) e a Fase 1.
+ */
+export function applyPhase2UpdatesWithAutomation({
+  currentStage,
+  phaseUpdates,
+  globalStatus,
+  systemType,
+  now = new Date(),
+}: ApplyPhase1UpdatesParams): ImplementationStageV2 {
+  const { nextPhase: nextPhase2 } = resolvePhaseUpdatesWithAutomation({
+    currentPhase: currentStage?.phase2,
+    phaseUpdates,
+    globalStatus,
+    systemType,
+    now,
+  });
+
+  return {
+    ...currentStage,
+    status: currentStage?.status || "todo",
+    phase1: currentStage?.phase1 || { status: "todo" },
+    phase2: nextPhase2,
   };
 }
 
@@ -464,15 +585,21 @@ export function syncPostStageFromImplementation({
 
   const nextPost: PostStageV2 = { ...basePost };
   const todayKey = toLocalDateKey(now);
-  const newEndKey =
+  const rawNewEndKey =
     toLocalDateKey(implementationStage?.phase1?.endDate) ||
     toLocalDateKey(implementationStage?.endDate);
-  const oldEndKey =
+  const newEndKey = isValidCalendarYearDateKey(rawNewEndKey)
+    ? rawNewEndKey
+    : null;
+  const rawOldEndKey =
     toLocalDateKey(oldImplementationStage?.phase1?.endDate) ||
     toLocalDateKey(oldImplementationStage?.endDate);
+  const oldEndKey = isValidCalendarYearDateKey(rawOldEndKey)
+    ? rawOldEndKey
+    : null;
 
   const phase1EndChanged = Boolean(newEndKey && newEndKey !== oldEndKey);
-  const refEndKey = newEndKey || todayKey;
+  const refEndKey = newEndKey || (isValidCalendarYearDateKey(todayKey) ? todayKey : null);
 
   if (refEndKey) {
     const schedule = calculatePostImplantationSchedule(refEndKey);

@@ -162,6 +162,12 @@ function MobileEventCard({
             </Badge>
           )}
 
+          {!isVacation && event.implementationPhase === "phase2" && (
+            <Badge className="bg-purple-600 text-white text-[9px] font-extrabold uppercase px-2 py-0.5">
+              Fase 2 • Retorno
+            </Badge>
+          )}
+
           {event.hasVacationConflict && (
             <span className="inline-flex items-center gap-1 rounded bg-amber-500 px-1.5 py-0.5 text-[9px] font-extrabold uppercase text-white">
               <AlertTriangle className="h-2.5 w-2.5" />

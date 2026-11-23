@@ -70,7 +70,7 @@ export const useProjectsList = (
           environment_status, environment_start_date, environment_end_date, environment_responsible, environment_dispatched_at, environment_dispatch_done, environment_dispatched_by,
           conversion_status, conversion_start_date, conversion_end_date, conversion_sent_at, conversion_finished_at, conversion_responsible, conversion_dispatched_at, conversion_dispatch_done, conversion_dispatched_by,
           modelos_editor_status, modelos_editor_start_date, modelos_editor_end_date, modelos_editor_responsible,
-          implementation_status, implementation_start_date, implementation_end_date, implementation_responsible, implementation_phase1,
+          implementation_status, implementation_start_date, implementation_end_date, implementation_responsible, implementation_phase1, implementation_phase2,
           post_status, post_start_date, post_end_date, post_responsible,
           secondary_tickets_count, secondary_tickets_pending_count, secondary_products_names,
           custom_fields
@@ -152,18 +152,33 @@ interface ProjectRow {
 
 import { differenceInDays } from "date-fns";
 
-function parsePhase1FromDb(rawPhase: unknown): ImplementationStageV2['phase1'] | undefined {
+function parsePhaseDateFromDb(raw: unknown): Date | undefined {
+  if (!raw) return undefined;
+  if (raw instanceof Date) return isNaN(raw.getTime()) ? undefined : raw;
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (!trimmed) return undefined;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      return new Date(`${trimmed}T12:00:00.000Z`);
+    }
+    const parsed = new Date(trimmed);
+    return isNaN(parsed.getTime()) ? undefined : parsed;
+  }
+  return undefined;
+}
+
+function parsePhaseFromDb(rawPhase: unknown): ImplementationStageV2['phase1'] | undefined {
   if (!rawPhase || typeof rawPhase !== 'object') return undefined;
   const p = rawPhase as any;
   return {
     ...p,
-    startDate: p.startDate ? new Date(p.startDate) : undefined,
-    endDate: p.endDate ? new Date(p.endDate) : undefined,
+    startDate: parsePhaseDateFromDb(p.startDate),
+    endDate: parsePhaseDateFromDb(p.endDate),
     additionalResponsibles: Array.isArray(p.additionalResponsibles)
       ? p.additionalResponsibles.map((a: any) => ({
           ...a,
-          startDate: a.startDate ? new Date(a.startDate) : undefined,
-          endDate: a.endDate ? new Date(a.endDate) : undefined,
+          startDate: parsePhaseDateFromDb(a?.startDate),
+          endDate: parsePhaseDateFromDb(a?.endDate),
         }))
       : [],
   };
@@ -180,7 +195,8 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
         healthScore = "warning";
     }
 
-    const phase1 = parsePhase1FromDb(row.implementation_phase1);
+    const phase1 = parsePhaseFromDb(row.implementation_phase1);
+    const phase2 = parsePhaseFromDb(row.implementation_phase2);
     const hasPhase1Date = Boolean(phase1?.startDate || phase1?.endDate);
     const isEnvironmentEligible = row.environment_status === 'in-progress' || row.environment_status === 'done' || hasPhase1Date;
 
@@ -310,7 +326,8 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
                 startDate: row.implementation_start_date ? new Date(row.implementation_start_date as string) : undefined,
                 endDate: row.implementation_end_date ? new Date(row.implementation_end_date as string) : undefined,
                 responsible: row.implementation_responsible as string | undefined,
-                phase1
+                phase1,
+                phase2,
             } as ImplementationStageV2,
             post: { 
                 status: row.post_status || 'todo',

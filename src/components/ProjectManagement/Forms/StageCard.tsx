@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { SafeDateInput } from "@/components/ui/safe-date-input";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { ObservationsWithAI } from "@/components/ProjectManagement/Forms/ObservationsWithAI";
 import { StageDispatchBadge } from "@/components/ProjectManagement/StageDispatchBadge";
@@ -389,20 +389,9 @@ export function StageCard({
                   ? "Enviado em"
                   : "Início"}
               </Label>
-              <Input
-                type="date"
-                value={
-                  startDate
-                    ? new Date(startDate).toISOString().split("T")[0]
-                    : ""
-                }
-                onChange={(e) =>
-                  onUpdate({
-                    startDate: e.target.value
-                      ? new Date(e.target.value + "T12:00:00")
-                      : undefined,
-                  })
-                }
+              <SafeDateInput
+                value={startDate}
+                onDateChange={(date) => onUpdate({ startDate: date })}
                 disabled={!canEditProjects}
                 className="h-9 border border-input bg-background text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
               />
@@ -420,18 +409,9 @@ export function StageCard({
                     ? "Finalizado Em"
                     : "Término"}
               </Label>
-              <Input
-                type="date"
-                value={
-                  endDate ? new Date(endDate).toISOString().split("T")[0] : ""
-                }
-                onChange={(e) =>
-                  onUpdate({
-                    endDate: e.target.value
-                      ? new Date(e.target.value + "T12:00:00")
-                      : undefined,
-                  })
-                }
+              <SafeDateInput
+                value={endDate}
+                onDateChange={(date) => onUpdate({ endDate: date })}
                 disabled={!canEditProjects}
                 className="h-9 border border-input bg-background text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
               />

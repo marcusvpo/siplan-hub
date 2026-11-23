@@ -1,6 +1,6 @@
 import { ImplementationStageV2, ImplementationPhase, StageStatus, Phase1ResponsibleAssignment } from "@/types/ProjectV2";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { SafeDateInput } from "@/components/ui/safe-date-input";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -16,7 +16,7 @@ import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { convertBlocksToTiptap } from "@/lib/editor-utils";
 import { cn } from "@/lib/utils";
-import { formatConfirmationTimestamp, toLocalDateKey } from "@/utils/implementation-phase1";
+import { formatConfirmationTimestamp } from "@/utils/implementation-phase1";
 
 interface ImplementationStageFormProps {
   stage: ImplementationStageV2;
@@ -92,10 +92,9 @@ function ImplementationPhaseForm({
   };
 
   const statusColor = phase?.status || "todo";
-  const formattedConfirmedAt =
-    phaseKey === "phase1" && phase?.isConfirmed
-      ? formatConfirmationTimestamp(phase.confirmedAt)
-      : "";
+  const formattedConfirmedAt = phase?.isConfirmed
+    ? formatConfirmationTimestamp(phase.confirmedAt)
+    : "";
 
   return (
     <div className={cn("relative overflow-hidden rounded-xl border p-4 shadow-sm", borderColor, bgGradient)}>
@@ -115,44 +114,43 @@ function ImplementationPhaseForm({
             </span>
           </h4>
 
-          {phaseKey === "phase1" && (
-            <div
-              onClick={() => canEditProjects && onUpdatePhase("phase1", { isConfirmed: !phase?.isConfirmed })}
-              className={cn(
-                "flex min-h-10 sm:min-h-0 items-center gap-2.5 px-3 py-1.5 rounded-lg border transition-all select-none",
-                canEditProjects ? "cursor-pointer" : "opacity-60 cursor-not-allowed",
-                phase?.isConfirmed
-                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20"
-                  : "bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200/70"
+          <div
+            onClick={() => canEditProjects && onUpdatePhase(phaseKey, { isConfirmed: !phase?.isConfirmed })}
+            className={cn(
+              "flex min-h-10 sm:min-h-0 items-center gap-2.5 px-3 py-1.5 rounded-lg border transition-all select-none",
+              canEditProjects ? "cursor-pointer" : "opacity-60 cursor-not-allowed",
+              phase?.isConfirmed
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20"
+                : "bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200/70"
+            )}
+          >
+            <Switch
+              checked={!!phase?.isConfirmed}
+              onCheckedChange={(checked) => onUpdatePhase(phaseKey, { isConfirmed: checked })}
+              onClick={(e) => e.stopPropagation()}
+              disabled={!canEditProjects}
+              aria-label={`Implantação Confirmada - ${label}`}
+              className="data-[state=checked]:bg-emerald-600"
+            />
+            <span className="text-xs font-bold flex items-center gap-1">
+              {phase?.isConfirmed ? (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  Implantação Confirmada
+                </>
+              ) : (
+                <>
+                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                  Implantação Confirmada?
+                </>
               )}
-            >
-              <Switch
-                checked={!!phase?.isConfirmed}
-                onCheckedChange={(checked) => onUpdatePhase("phase1", { isConfirmed: checked })}
-                onClick={(e) => e.stopPropagation()}
-                disabled={!canEditProjects}
-                className="data-[state=checked]:bg-emerald-600"
-              />
-              <span className="text-xs font-bold flex items-center gap-1">
-                {phase?.isConfirmed ? (
-                  <>
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    Implantação Confirmada
-                  </>
-                ) : (
-                  <>
-                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                    Implantação Confirmada?
-                  </>
-                )}
-              </span>
-            </div>
-          )}
+            </span>
+          </div>
         </div>
 
-        {phaseKey === "phase1" && phase?.isConfirmed && (
+        {phase?.isConfirmed && (
           <div
-            data-testid="phase1-confirmation-note"
+            data-testid={`${phaseKey}-confirmation-note`}
             className="flex items-start gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs leading-snug text-emerald-800 dark:text-emerald-200 text-left break-words"
           >
             <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
@@ -223,7 +221,7 @@ function ImplementationPhaseForm({
               <Rocket className="h-3 w-3 text-muted-foreground" />
               Responsável {phaseKey === "phase1" ? "Principal" : ""}
             </Label>
-            {phaseKey === "phase1" && canEditProjects && (
+            {canEditProjects && (
               <button
                 type="button"
                 onClick={handleAddAdditionalResponsible}
@@ -248,16 +246,9 @@ function ImplementationPhaseForm({
             <CheckCircle2 className="h-3 w-3 text-muted-foreground" />
             Início
           </Label>
-          <Input
-            type="date"
-            value={toLocalDateKey(phase?.startDate) ?? ""}
-            onChange={(e) =>
-              onUpdatePhase(phaseKey, {
-                startDate: e.target.value
-                  ? new Date(e.target.value + "T12:00:00")
-                  : undefined,
-              })
-            }
+          <SafeDateInput
+            value={phase?.startDate}
+            onDateChange={(startDate) => onUpdatePhase(phaseKey, { startDate })}
             disabled={!canEditProjects}
             className="h-9 border border-input bg-background text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
           />
@@ -267,16 +258,9 @@ function ImplementationPhaseForm({
             <Power className="h-3 w-3 text-muted-foreground" />
             Término
           </Label>
-          <Input
-            type="date"
-            value={toLocalDateKey(phase?.endDate) ?? ""}
-            onChange={(e) =>
-              onUpdatePhase(phaseKey, {
-                endDate: e.target.value
-                  ? new Date(e.target.value + "T12:00:00")
-                  : undefined,
-              })
-            }
+          <SafeDateInput
+            value={phase?.endDate}
+            onDateChange={(endDate) => onUpdatePhase(phaseKey, { endDate })}
             disabled={!canEditProjects}
             className="h-9 border border-input bg-background text-foreground hover:bg-neutral-50/50 dark:hover:bg-neutral-900/50 focus-visible:ring-1 focus-visible:ring-ring font-medium text-xs"
           />
@@ -284,7 +268,7 @@ function ImplementationPhaseForm({
       </div>
 
       {/* Implantadores Adicionais / Co-responsáveis com datas próprias */}
-      {phaseKey === "phase1" && additionalResponsibles.length > 0 && (
+      {additionalResponsibles.length > 0 && (
         <div className="mb-3.5 space-y-2.5 rounded-xl border border-dashed border-primary/30 bg-primary/5 p-3 text-left">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-extrabold uppercase tracking-wider text-primary flex items-center gap-1.5">
@@ -329,15 +313,10 @@ function ImplementationPhaseForm({
                   <Label className="text-[9.5px] font-bold text-muted-foreground uppercase">
                     Início
                   </Label>
-                  <Input
-                    type="date"
-                    value={toLocalDateKey(assign.startDate) ?? ""}
-                    onChange={(e) =>
-                      handleUpdateAdditionalResponsible(index, {
-                        startDate: e.target.value
-                          ? new Date(e.target.value + "T12:00:00")
-                          : undefined,
-                      })
+                  <SafeDateInput
+                    value={assign.startDate}
+                    onDateChange={(startDate) =>
+                      handleUpdateAdditionalResponsible(index, { startDate })
                     }
                     disabled={!canEditProjects}
                     className="h-8 text-xs font-medium bg-background"
@@ -349,15 +328,10 @@ function ImplementationPhaseForm({
                   <Label className="text-[9.5px] font-bold text-muted-foreground uppercase">
                     Término
                   </Label>
-                  <Input
-                    type="date"
-                    value={toLocalDateKey(assign.endDate) ?? ""}
-                    onChange={(e) =>
-                      handleUpdateAdditionalResponsible(index, {
-                        endDate: e.target.value
-                          ? new Date(e.target.value + "T12:00:00")
-                          : undefined,
-                      })
+                  <SafeDateInput
+                    value={assign.endDate}
+                    onDateChange={(endDate) =>
+                      handleUpdateAdditionalResponsible(index, { endDate })
                     }
                     disabled={!canEditProjects}
                     className="h-8 text-xs font-medium bg-background"

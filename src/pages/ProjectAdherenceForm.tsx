@@ -33,6 +33,8 @@ import {
 
 import { getImpactedItems } from "@/utils/adherence-helpers";
 import { richTextToPlainText } from "@/lib/lexical";
+import { syncProjectObservationsInDb } from "@/utils/project-observations-sync";
+import { format } from "date-fns";
 import {
   buildAdherenceTechnicalOpinionInput,
   isAdherenceImpactDescriptionTitle,
@@ -503,20 +505,41 @@ export default function ProjectAdherenceForm() {
         status: statusToSubmit,
       });
 
-      // Replicar o conteúdo de "Justificativa / Parecer Técnico" para "Observações & Detalhes"
-      // na etapa 2 (Análise de Aderência) do projeto
-      if (finalizedData.finalNotes?.trim()) {
-        try {
-          await supabase
-            .from("projects")
-            .update({
-              adherence_observations: finalizedData.finalNotes,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", projectId);
-        } catch (syncError) {
-          console.error("Falha ao replicar parecer técnico para observações do projeto:", syncError);
-        }
+      // Replicar o conteúdo de "Justificativa / Parecer Técnico" e o veredito final
+      // para a etapa 2 (Análise de Aderência) e espelhar em Observações Gerais
+      try {
+        const adherenceStatusMap: Record<
+          "approved" | "approved_with_restrictions" | "rejected",
+          "done" | "waiting_adjustment" | "blocked"
+        > = {
+          approved: "done",
+          approved_with_restrictions: "waiting_adjustment",
+          rejected: "blocked",
+        };
+        const projectPatch: Record<string, unknown> = {
+          adherence_status: adherenceStatusMap[statusToSubmit],
+          adherence_analysis_complete: true,
+          adherence_end_date: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          ...(finalizedData.finalNotes?.trim()
+            ? { adherence_observations: finalizedData.finalNotes }
+            : {}),
+        };
+        await supabase.from("projects").update(projectPatch).eq("id", projectId);
+
+        const today = format(new Date(), "dd/MM");
+        await syncProjectObservationsInDb({
+          projectId,
+          actorName: "Análise de Aderência",
+          explicitEvents: [
+            {
+              stageKey: "adherence",
+              text: `${today} - Formulário de Aderência finalizado com parecer "${verdict}".`,
+            },
+          ],
+        });
+      } catch (syncError) {
+        console.error("Falha ao replicar parecer técnico para observações do projeto:", syncError);
       }
 
       lastSavedDataRef.current = serializeFormData(finalizedData);

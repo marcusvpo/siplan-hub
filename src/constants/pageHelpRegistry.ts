@@ -757,6 +757,7 @@ export const pageHelpData: PageHelpInfo[] = [
       "Tela operacional central da Implantação. Permite filtrar todos os cartórios cadastrados, monitorar Health Score, criar novos projetos e atualizar os formulários dos estágios V2.",
     keyFeatures: [
       "Filtros avançados por etapa, status da etapa, Health Score, sistema e analista",
+      "Pesquisa avançada em observações e textos livres (botão 'Pesquisar notas' ao lado de 'Ordenar') com preview destacado da seção exata e abertura direta na etapa",
       "Barra de pesquisa rápida com busca por serventia e CNS",
       "Modal de detalhes com abas organizadas por Estágios, Notas e Histórico",
       "Criação e sincronização automática de cartório, usuário padronizado e conteúdos no Siplan Skills com 1 clique",

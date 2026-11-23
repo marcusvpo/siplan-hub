@@ -271,6 +271,9 @@ export function hasRichTextContent(
 }
 
 function lexicalNodeToPlainText(node: LexicalNode): string {
+  if (node?.type === "mention" && typeof node?.label === "string") {
+    return `${node.mentionKind === "analyst" ? "@" : "#"}${node.label}`;
+  }
   if (typeof node?.text === "string") return node.text;
   if (node?.type === "linebreak") return "\n";
 

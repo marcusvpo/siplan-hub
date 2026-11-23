@@ -13,119 +13,148 @@ interface ProjectHeaderFormProps {
 }
 
 export function ProjectHeaderForm({ project, onProjectUpdated }: ProjectHeaderFormProps) {
+  const isModelosTN = project.systemType === "Modelos TN";
+  const statusLabel =
+    project.globalStatus === "in-progress"
+      ? "Em Andamento"
+      : project.globalStatus === "done"
+        ? "Concluído"
+        : project.globalStatus === "blocked"
+          ? "Pausado"
+          : "A Fazer";
+
   return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2">
-         <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center text-primary">
-            <FileText className="h-3.5 w-3.5" />
-         </div>
-         <h3 className="text-sm font-bold text-foreground tracking-tight">Dados do Projeto</h3>
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-1.5">
+        <div className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-primary">
+          <FileText className="h-3 w-3" />
+        </div>
+        <h3 className="text-xs font-bold tracking-tight text-foreground">Dados do Projeto</h3>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-         {/* Coluna 1: Campos de Input (5 cols) */}
-         <div className="lg:col-span-5 space-y-2">
-            <div className="grid grid-cols-2 gap-2">
-               {/* Sistema */}
-               <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-2.5 space-y-1 group">
-                  <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Sistema</p>
-                  <div className="flex items-center gap-2">
-                     <p className="font-bold text-sm">{project.systemType}</p>
-                     <Badge variant="secondary" className="text-[9px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20 h-4 px-1">new</Badge>
-                  </div>
-               </div>
-               {/* Chamado */}
-               <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-2.5 space-y-1 group">
-                  <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Chamado</p>
-                  <EllevoTicketLink
-                    ticketNumber={project.ticketNumber}
-                    className="font-mono text-base font-bold text-foreground/80"
-                  />
-               </div>
+      <div className="grid grid-cols-1 gap-2 lg:grid-cols-12 lg:items-stretch">
+        {/* Campos principais em faixa compacta (8 cols no desktop) */}
+        <div
+          className={cn(
+            "grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:col-span-8",
+            isModelosTN ? "lg:grid-cols-4" : "lg:grid-cols-5",
+          )}
+        >
+          {/* Sistema */}
+          <div className="group flex min-w-0 flex-col justify-center rounded-lg border bg-card px-2.5 py-1.5 shadow-xs transition-colors hover:bg-accent/50">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground transition-colors group-hover:text-primary">
+              Sistema
+            </p>
+            <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
+              <p className="truncate text-xs font-bold text-foreground">{project.systemType}</p>
+              <Badge
+                variant="secondary"
+                className="h-3.5 shrink-0 border-emerald-500/20 bg-emerald-500/10 px-1 text-[8px] text-emerald-600 dark:text-emerald-400"
+              >
+                new
+              </Badge>
             </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-2">
-               {/* Líder */}
-               <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-2.5 space-y-1 group">
-                  <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Líder</p>
-                  <div className="flex items-center gap-2.5">
-                     <div className="h-7 w-7 rounded-full bg-gradient-to-br from-neutral-200 to-neutral-300 flex items-center justify-center overflow-hidden shadow-inner">
-                        <User className="h-3.5 w-3.5 text-neutral-600" />
-                     </div>
-                     <p className="font-bold text-sm truncate">{project.projectLeader}</p>
-                  </div>
-               </div>
-               {/* Horas */}
-               <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-2.5 space-y-1 group">
-                  <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">
-                    {project.systemType === "Modelos TN" ? "Horas de Trabalho" : "Horas"}
-                  </p>
-                  <p className="font-bold text-sm">
-                    {project.systemType === "Modelos TN" ? (project.workHours || 0) : (project.soldHours || 0)}
-                    <span className="text-xs text-muted-foreground font-normal ml-1">h</span>
-                  </p>
-               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-               {/* Legado */}
-               {project.systemType !== "Modelos TN" && (
-                 <div className="bg-card hover:bg-accent/50 transition-colors rounded-xl border shadow-sm p-2.5 space-y-1 group col-span-2">
-                    <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-wider group-hover:text-primary transition-colors">Legado</p>
-                    <p className="font-bold text-sm">{project.legacySystem || '-'}</p>
-                 </div>
-               )}
-            </div>
-
-            {/* Auto-detecção comercial do 0800: Logo abaixo do campo Legado */}
-            <ProjectCommercial0800Bridge
-              project={project}
-              onProjectUpdated={onProjectUpdated}
+          {/* Chamado */}
+          <div className="group flex min-w-0 flex-col justify-center rounded-lg border bg-card px-2.5 py-1.5 shadow-xs transition-colors hover:bg-accent/50">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground transition-colors group-hover:text-primary">
+              Chamado
+            </p>
+            <EllevoTicketLink
+              ticketNumber={project.ticketNumber}
+              className="mt-0.5 truncate font-mono text-xs font-bold text-foreground/85"
             />
-         </div>
+          </div>
 
-         {/* Coluna 2: Status Card (4 cols) */}
-         <div className="lg:col-span-4">
-            <div className="h-full bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl shadow-lg shadow-blue-900/20 p-3 flex flex-col items-center justify-center text-white relative overflow-hidden group">
-               <div className="absolute top-0 right-0 p-24 bg-white/10 rounded-full blur-3xl -mr-12 -mt-12 pointer-events-none group-hover:bg-white/20 transition-colors duration-500" />
-               
-               <div className="h-7 w-7 bg-white/10 rounded-lg flex items-center justify-center mb-1.5 backdrop-blur-md shadow-inner">
-                  <Clock className="h-4 w-4 text-blue-100" />
-               </div>
-               
-               <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-blue-100 mb-0.5">Status Atual</p>
-               <h2 className="text-base font-black uppercase tracking-tight mb-1.5 text-center leading-tight">
-                  {project.globalStatus === 'in-progress' ? 'Em Andamento' : 
-                   project.globalStatus === 'done' ? 'Concluído' : 
-                   project.globalStatus === 'blocked' ? 'Bloqueado' : 'A Fazer'}
-               </h2>
-
-               <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm border border-white/30 shadow-lg">
-                  <Check className="h-3 w-3 text-white" />
-               </div>
+          {/* Líder */}
+          <div className="group flex min-w-0 flex-col justify-center rounded-lg border bg-card px-2.5 py-1.5 shadow-xs transition-colors hover:bg-accent/50">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground transition-colors group-hover:text-primary">
+              Líder
+            </p>
+            <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
+              <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                <User className="h-2.5 w-2.5" />
+              </div>
+              <p className="truncate text-xs font-bold text-foreground" title={project.projectLeader}>
+                {project.projectLeader}
+              </p>
             </div>
-         </div>
+          </div>
 
-         {/* Coluna 3: Updates (3 cols) */}
-         <div className="lg:col-span-3">
-            {/* Last Update */}
-            <div className="h-full bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl shadow-lg shadow-rose-900/20 p-3 flex flex-col items-center justify-center text-white relative overflow-hidden group">
-               <div className="absolute top-0 left-0 p-24 bg-white/10 rounded-full blur-3xl -ml-12 -mt-12 pointer-events-none group-hover:bg-white/20 transition-colors duration-500" />
-               
-               <div className="h-7 w-7 bg-white/10 rounded-lg flex items-center justify-center mb-1.5 backdrop-blur-md shadow-inner">
-                  <Clock className="h-4 w-4 text-rose-100" />
-               </div>
+          {/* Horas */}
+          <div className="group flex min-w-0 flex-col justify-center rounded-lg border bg-card px-2.5 py-1.5 shadow-xs transition-colors hover:bg-accent/50">
+            <p className="truncate text-[9px] font-bold uppercase tracking-wider text-muted-foreground transition-colors group-hover:text-primary">
+              {isModelosTN ? "Horas Trab." : "Horas"}
+            </p>
+            <p className="mt-0.5 text-xs font-bold text-foreground">
+              {isModelosTN ? project.workHours || 0 : project.soldHours || 0}
+              <span className="ml-0.5 text-[11px] font-normal text-muted-foreground">h</span>
+            </p>
+          </div>
 
-               <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-rose-100 mb-0.5">Última Atualização</p>
-               <h2 className="text-base font-black uppercase tracking-tighter mb-1 text-center">
-                 {format(new Date(project.lastUpdatedAt), "dd MMM", { locale: ptBR })}
-               </h2>
-               <p className="text-xs font-medium text-rose-100/90 bg-black/10 px-2 py-0.5 rounded-full">
-                 {format(new Date(project.lastUpdatedAt), "HH:mm")}
-               </p>
+          {/* Legado */}
+          {!isModelosTN && (
+            <div className="group col-span-2 flex min-w-0 flex-col justify-center rounded-lg border bg-card px-2.5 py-1.5 shadow-xs transition-colors hover:bg-accent/50 sm:col-span-1">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground transition-colors group-hover:text-primary">
+                Legado
+              </p>
+              <p
+                className="mt-0.5 truncate text-xs font-bold text-foreground"
+                title={project.legacySystem || "-"}
+              >
+                {project.legacySystem || "-"}
+              </p>
             </div>
-         </div>
+          )}
+        </div>
+
+        {/* Cards compactos Azul (Status Atual) e Vermelho (Última Atualização) — 4 cols */}
+        <div className="grid grid-cols-2 gap-1.5 lg:col-span-4">
+          {/* Status Atual (Azul) */}
+          <div className="group relative flex min-w-0 items-center gap-2 overflow-hidden rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 px-3 py-2 text-white shadow-sm shadow-blue-900/20">
+            <div className="pointer-events-none absolute -right-4 -top-4 h-12 w-12 rounded-full bg-white/10 blur-xl transition-colors group-hover:bg-white/20" />
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/15 backdrop-blur-sm">
+              <Check className="h-3.5 w-3.5 text-white" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-[8.5px] font-bold uppercase tracking-widest text-blue-100/90">
+                Status Atual
+              </p>
+              <p className="truncate text-xs font-black uppercase tracking-tight leading-tight">
+                {statusLabel}
+              </p>
+            </div>
+          </div>
+
+          {/* Última Atualização (Vermelho/Rosa) */}
+          <div className="group relative flex min-w-0 items-center gap-2 overflow-hidden rounded-lg bg-gradient-to-br from-rose-500 to-pink-600 px-3 py-2 text-white shadow-sm shadow-rose-900/20">
+            <div className="pointer-events-none absolute -left-4 -top-4 h-12 w-12 rounded-full bg-white/10 blur-xl transition-colors group-hover:bg-white/20" />
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/15 backdrop-blur-sm">
+              <Clock className="h-3.5 w-3.5 text-rose-100" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-[8.5px] font-bold uppercase tracking-widest text-rose-100/90">
+                Atualização
+              </p>
+              <div className="flex items-baseline gap-1.5">
+                <span className="truncate text-xs font-black uppercase tracking-tight leading-tight">
+                  {format(new Date(project.lastUpdatedAt), "dd MMM", { locale: ptBR })}
+                </span>
+                <span className="rounded bg-black/15 px-1 py-0.2 text-[10px] font-semibold text-rose-50">
+                  {format(new Date(project.lastUpdatedAt), "HH:mm")}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Auto-detecção comercial do 0800 */}
+      <ProjectCommercial0800Bridge
+        project={project}
+        onProjectUpdated={onProjectUpdated}
+      />
     </div>
   );
 }

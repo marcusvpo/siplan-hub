@@ -595,7 +595,12 @@ export function PosImplantacaoTab({ project }: PosImplantacaoTabProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={Math.max(160, stats.porNatureza.length * 40)}>
+                <ResponsiveContainer
+                  width="100%"
+                  height={Math.max(160, stats.porNatureza.length * 40)}
+                  minWidth={0}
+                  initialDimension={{ width: 320, height: 220 }}
+                >
                   <BarChart
                     data={stats.porNatureza}
                     layout="vertical"
@@ -872,7 +877,12 @@ export function PosImplantacaoTab({ project }: PosImplantacaoTabProps) {
                 <CardTitle className="text-sm font-semibold">Chamados por semana do pós</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={200}>
+                <ResponsiveContainer
+                  width="100%"
+                  height={200}
+                  minWidth={0}
+                  initialDimension={{ width: 320, height: 200 }}
+                >
                   <BarChart data={stats.porSemana} margin={{ top: 16, right: 8, bottom: 0, left: 8 }}>
                     <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="0" />
                     <XAxis
