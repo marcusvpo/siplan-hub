@@ -64,14 +64,14 @@ export function useKnowledgeBase() {
   } = useQuery<MasterKnowledgeDocument>({
     queryKey: ["assistant_knowledge_doc", STORAGE_BUCKET, STORAGE_FILE_PATH],
     queryFn: async () => {
-      // 1. Tenta buscar via URL pública com cache buster para garantir que alterações manuais no Storage reflitam imediatamente
-      try {
-        const { data: publicData } = supabase.storage
-          .from(STORAGE_BUCKET)
-          .getPublicUrl(STORAGE_FILE_PATH);
+      // Download autenticado direto do Supabase Storage (bucket privado)
+      const { data: signedData } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .createSignedUrl(STORAGE_FILE_PATH, 60);
 
-        if (publicData?.publicUrl) {
-          const res = await fetch(`${publicData.publicUrl}?t=${Date.now()}`, {
+      if (signedData?.signedUrl) {
+        try {
+          const res = await fetch(`${signedData.signedUrl}&t=${Date.now()}`, {
             cache: "no-store",
             headers: {
               "Cache-Control": "no-cache",
@@ -82,9 +82,9 @@ export function useKnowledgeBase() {
             const fileText = await res.text();
             return parseMasterDocument(fileText);
           }
+        } catch (fetchErr) {
+          console.warn("Fallback para download direto do Supabase Storage:", fetchErr);
         }
-      } catch (fetchErr) {
-        console.warn("Fallback para download direto do Supabase Storage:", fetchErr);
       }
 
       // Fallback via download autenticado do SDK
@@ -1026,9 +1026,14 @@ export function useKnowledgeBase() {
     },
   });
 
-  const getBackupDownloadUrl = useCallback((backupPath: string) => {
-    const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(backupPath);
-    return data.publicUrl;
+  const getBackupDownloadUrl = useCallback(async (backupPath: string) => {
+    const { data, error } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .createSignedUrl(backupPath, 300);
+    if (error || !data?.signedUrl) {
+      throw new Error(error?.message || "Não foi possível gerar o link de backup.");
+    }
+    return data.signedUrl;
   }, []);
 
   const saveCurrentArticle = useCallback(

@@ -71,6 +71,35 @@ async function parseEdgeFunctionError(error: unknown, fallbackMessage: string): 
   return fallbackMessage;
 }
 
+export interface SkillsBadgeMetadata {
+  cartorioId: string;
+  username: string;
+  lastActivity: string | null;
+  sessionIsActive: boolean;
+}
+
+export function extractSkillsBadgeMetadata(
+  fields?: Record<string, unknown> | null
+): SkillsBadgeMetadata | null {
+  if (!fields) return null;
+  const username = typeof fields.skills_username === 'string' ? fields.skills_username.trim() : '';
+  const cartorioId = typeof fields.skills_cartorio_id === 'string' ? fields.skills_cartorio_id.trim() : '';
+
+  if (!username || !cartorioId) {
+    return null;
+  }
+
+  return {
+    cartorioId,
+    username,
+    lastActivity:
+      typeof fields.skills_last_activity === 'string' && fields.skills_last_activity.trim()
+        ? fields.skills_last_activity.trim()
+        : null,
+    sessionIsActive: Boolean(fields.skills_session_is_active),
+  };
+}
+
 export function extractSkillsCredentialsFromFields(
   fields?: Record<string, unknown> | null
 ): StoredSkillsCredentials | null {

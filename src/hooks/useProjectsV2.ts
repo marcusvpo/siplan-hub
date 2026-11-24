@@ -11,6 +11,11 @@ import {
   resolveResponsibleIds,
 } from "@/utils/project-transformers";
 import {
+  mergeCredentialsIntoProjectRow,
+  mergeVaultCredentialsPayload,
+  splitCustomFieldsForVault,
+} from "@/utils/project-credentials";
+import {
   computeProjectAuditChanges,
   translateStageStatus,
   type ComputedProjectAuditEvent,
@@ -114,15 +119,29 @@ export const useProjectsV2 = () => {
     }): Promise<ComputedProjectAuditEvent[]> => {
       // Sempre busca o estado completo e fresco do banco antes da atualização para diff fiel
       let currentProject: ProjectV2 | undefined;
+      let existingVaultCredentials: Record<string, unknown> | null = null;
       try {
-        const { data: fetchedProject } = await supabase
-          .from("projects")
-          .select("*")
-          .eq("id", projectId)
-          .single();
+        const [projectRes, credsRes] = await Promise.all([
+          supabase
+            .from("projects")
+            .select("*")
+            .eq("id", projectId)
+            .single(),
+          supabase
+            .from("project_credentials")
+            .select("credentials")
+            .eq("project_id", projectId)
+            .maybeSingle(),
+        ]);
 
-        if (fetchedProject) {
-          currentProject = transformToProjectV3(fetchedProject);
+        if (credsRes.data?.credentials && typeof credsRes.data.credentials === "object") {
+          existingVaultCredentials = credsRes.data.credentials as Record<string, unknown>;
+        }
+
+        if (projectRes.data) {
+          currentProject = transformToProjectV3(
+            mergeCredentialsIntoProjectRow(projectRes.data, existingVaultCredentials),
+          );
         }
       } catch {
         // Fallback para cache se consulta direta falhar
@@ -167,6 +186,26 @@ export const useProjectsV2 = () => {
 
       const dbUpdates = transformToDB(updatesWithUser, currentProject);
 
+      let pendingVaultUpsert: Record<string, unknown> | null = null;
+      if (dbUpdates.custom_fields !== undefined) {
+        const { publicCustomFields, credentialsPayload, hasCredentialFields } =
+          splitCustomFieldsForVault(dbUpdates.custom_fields);
+        dbUpdates.custom_fields = publicCustomFields as typeof dbUpdates.custom_fields;
+
+        const touchedVaultSource = Boolean(
+          updates.stages?.environment !== undefined || updates.customFields !== undefined,
+        );
+        if (touchedVaultSource && hasCredentialFields) {
+          const mergedVault = mergeVaultCredentialsPayload(
+            existingVaultCredentials,
+            credentialsPayload,
+          );
+          if (JSON.stringify(mergedVault) !== JSON.stringify(existingVaultCredentials || {})) {
+            pendingVaultUpsert = mergedVault;
+          }
+        }
+      }
+
       // Resolve responsible names → profile UUIDs
       await resolveResponsibleIds(dbUpdates);
 
@@ -178,6 +217,24 @@ export const useProjectsV2 = () => {
       if (error) {
         console.error("--- DEBUG: Supabase Update Error ---", error);
         throw error;
+      }
+
+      if (pendingVaultUpsert) {
+        const { error: credError } = await supabase
+          .from("project_credentials")
+          .upsert(
+            {
+              project_id: projectId,
+              credentials: pendingVaultUpsert,
+              updated_by: actor.userId || null,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "project_id" },
+          );
+        if (credError) {
+          console.error("--- DEBUG: Supabase Credentials Vault Update Error ---", credError);
+          throw credError;
+        }
       }
 
       if (currentProject) {
@@ -240,6 +297,7 @@ export const useProjectsV2 = () => {
       queryClient.invalidateQueries({
         queryKey: ["projectDetails", variables.projectId],
       });
+      queryClient.invalidateQueries({ queryKey: ["projectCredentialsBulk"] });
 
       if (logEvents && logEvents.length > 0) {
         await Promise.all(
@@ -303,6 +361,11 @@ export const useProjectsV2 = () => {
       }
 
       const dbProject = transformToDB(projectWithUser) as TablesInsert<"projects">;
+      const { publicCustomFields, credentialsPayload, hasCredentialFields } =
+        splitCustomFieldsForVault(dbProject.custom_fields);
+      if (dbProject.custom_fields !== undefined) {
+        dbProject.custom_fields = publicCustomFields as typeof dbProject.custom_fields;
+      }
 
       await resolveResponsibleIds(dbProject as Record<string, unknown>);
 
@@ -313,11 +376,31 @@ export const useProjectsV2 = () => {
         .single();
 
       if (error) throw error;
+
+      if (data?.id && hasCredentialFields) {
+        const { error: credError } = await supabase
+          .from("project_credentials")
+          .upsert(
+            {
+              project_id: data.id,
+              credentials: credentialsPayload,
+              updated_by: actor.userId || null,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "project_id" },
+          );
+        if (credError) {
+          console.error("--- DEBUG: Supabase Credentials Vault Insert Error ---", credError);
+          throw credError;
+        }
+      }
+
       return data;
     },
     onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ["projectsV3"] });
       queryClient.invalidateQueries({ queryKey: ["projectsList"] });
+      queryClient.invalidateQueries({ queryKey: ["projectCredentialsBulk"] });
 
       await recordProjectActivityLog({
         projectId: data.id,

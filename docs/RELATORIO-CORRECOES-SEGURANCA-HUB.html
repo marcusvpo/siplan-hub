@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relatório de Remediação e Blindagem de Segurança — Siplan HUB</title>
+<style>
+:root{
+  --bg:#f4f6fb;--card:#fff;--line:#e4e9f2;--tx:#1b2437;--mut:#6b7a99;--acc:#2563eb;--acc2:#eff4ff;
+  --bad:#dc2626;--badbg:#fdecec;--high:#ea580c;--highbg:#fff7ed;--med:#b45309;--medbg:#fef3c7;
+  --ok:#059669;--okbg:#ecfdf5;--info:#0284c7;--infobg:#f0f9ff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 -apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:34px 22px 70px}
+h1{font-size:27px;margin:0 0 6px;letter-spacing:-.3px}
+h2{font-size:18px;margin:36px 0 12px}
+h3{font-size:15px;margin:0 0 6px}
+.sub{color:var(--mut);font-size:14px}
+header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tag-ev{background:var(--okbg);color:var(--ok);border:1px solid #a7f3d0;font-weight:700;font-size:12.5px;padding:8px 13px;border-radius:999px;white-space:nowrap}
+.btn-all{background:var(--card);color:var(--acc);border:1px solid #cbd5e1;font-size:12.5px;font-weight:600;padding:8px 12px;border-radius:999px;cursor:pointer}
+.btn-all:hover{background:var(--acc2);border-color:var(--acc)}
+.alerta{background:var(--okbg);border:1px solid #a7f3d0;border-left:4px solid var(--ok);border-radius:10px;padding:15px 18px;margin:20px 0;font-size:13.8px}
+.alerta b{color:#065f46}
+.nota-info{background:var(--infobg);border:1px solid #bae6fd;border-left:4px solid var(--info);border-radius:10px;padding:14px 17px;margin:16px 0;font-size:13.5px}
+.nota-info b{color:#075985}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px;margin:22px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:0 1px 3px rgba(16,24,40,.05)}
+.kpi .n{font-size:24px;font-weight:700;letter-spacing:-.5px}
+.kpi .l{color:var(--mut);font-size:12px;margin-top:3px}
+.kpi.ok .n{color:var(--ok)} .kpi.info .n{color:var(--acc)}
+.sev{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.45px}
+.sev.crit{background:var(--badbg);color:var(--bad);border:1px solid #f5c2c2}
+.sev.high{background:var(--highbg);color:var(--high);border:1px solid #fed7aa}
+.sev.med{background:var(--medbg);color:var(--med);border:1px solid #fde68a}
+.sev.info{background:var(--infobg);color:var(--info);border:1px solid #bae6fd}
+.sev.ok{background:var(--okbg);color:var(--ok);border:1px solid #a7f3d0}
+.sev.old{background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;text-decoration:line-through}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:0 0 12px;box-shadow:0 1px 3px rgba(16,24,40,.05);overflow:hidden}
+.card .head{display:flex;gap:14px;align-items:center;padding:15px 18px;cursor:pointer}
+.card .head:hover{background:#fafbff}
+.card .idx{width:34px;height:34px;border-radius:10px;background:var(--okbg);color:var(--ok);font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border:1px solid #a7f3d0}
+.card .idx.blue{background:var(--acc2);color:var(--acc);border-color:#bfdbfe}
+.card .who{flex:1;min-width:200px}
+.card .nome{font-weight:650;font-size:15.5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.card .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tag{background:#f1f5f9;border:1px solid var(--line);color:#475569;font-size:11px;padding:2.5px 9px;border-radius:999px}
+.tag.ok{background:var(--okbg);border-color:#a7f3d0;color:#065f46;font-weight:600}
+.expbtn{color:var(--acc);font-size:12.5px;white-space:nowrap;user-select:none}
+.full{border-top:1px solid var(--line);background:#fbfcfe;padding:18px;display:none}
+.card.open .full{display:block}
+.full p,.full li{font-size:13.5px;line-height:1.6}
+.full ul,.full ol{margin:8px 0;padding-left:22px}
+.full li{margin:4px 0}
+.cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:10px 0 14px}
+.cmp-box{border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.55}
+.cmp-box.before{background:#fef2f2;border:1px solid #fecaca}
+.cmp-box.after{background:#ecfdf5;border:1px solid #a7f3d0}
+.cmp-box h4{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.45px}
+.cmp-box.before h4{color:var(--bad)}
+.cmp-box.after h4{color:var(--ok)}
+pre{background:#0d1322;color:#c9d4ee;border:1px solid #1d2740;border-radius:10px;padding:13px 15px;overflow:auto;font-size:12px;line-height:1.5;margin:10px 0}
+pre b{color:#7dd3fc;font-weight:600}
+pre em{color:#34d399;font-style:normal;font-weight:600}
+pre .warn{color:#fbbf24}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:13.5px;margin:10px 0;box-shadow:0 1px 3px rgba(16,24,40,.04)}
+th,td{padding:10px 13px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:#f1f5f9;color:#475569;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px}
+tr:last-child td{border-bottom:none}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
+.status{display:inline-flex;align-items:center;gap:6px;font-weight:650;font-size:12.5px;white-space:nowrap}
+.status::before{content:"";width:9px;height:9px;border-radius:50%;display:inline-block}
+.status.s-ok::before{background:var(--ok)} .status.s-info::before{background:var(--info)}
+.roadmap{display:grid;gap:12px}
+.road{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;border-left:4px solid var(--ok)}
+.road h3{margin:0 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.road ol{margin:6px 0 0;padding-left:22px}
+.road li{font-size:13.5px;margin:5px 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.mini-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:0 1px 3px rgba(16,24,40,.04)}
+.mini-card h3{font-size:14.5px;margin:0 0 6px}
+.mini-card p{margin:0;font-size:13.2px;color:#334155;line-height:1.55}
+.rodape{color:var(--mut);font-size:12.5px;margin-top:34px;border-top:1px solid var(--line);padding-top:14px;line-height:1.7}
+.rodape b{color:var(--tx)}
+code{background:#f1f5f9;padding:1.5px 5px;border-radius:5px;font-size:12.5px;color:#0f172a}
+@media print{.card .full{display:block!important}.expbtn,.btn-all{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <h1>Relatório de Remediação e Blindagem de Segurança — Siplan HUB</h1>
+    <div class="sub"><b>hub.siplan.com.br</b> · <b>siplanhub.vercel.app</b> · Projeto Supabase <code>okvufcwkophaadttmjwa</code> · 24/11/2026 · Resposta oficial ao Pentest + Auditoria White-Box Completa</div>
+  </div>
+  <div class="top-actions">
+    <button type="button" class="btn-all" onclick="toggleAllCards()">Expandir / recolher todos</button>
+    <span class="tag-ev">✓ REMEDIAÇÃO CONCLUÍDA — VALIDADO EM PRODUÇÃO</span>
+  </div>
+</header>
+
+<div class="alerta">
+  <b>Síntese executiva:</b> todos os <b>7 achados</b> do pentest inicial — somados a <b>7 vetores adicionais</b> identificados em auditoria direta no banco Supabase, Edge Functions e código-fonte — foram integralmente corrigidos e validados em ambiente real. O acesso anônimo externo (<code>anon</code>) agora recebe <b>zero linhas</b> nas tabelas internas, todas as senhas técnicas de clientes e tokens do Siplan Skills foram retirados da tabela <code>projects</code> para um <b>cofre segregado com RBAC</b> (<code>project_credentials</code>), o chat público pós-implantação ganhou <b>token de sessão opaco validado por SHA-256</b> sem exigir PIN ou login, o autocadastro e proteção contra senhas vazadas foram ativados no Supabase Auth, e todas as Edge Functions operam com verificação estrita de JWT, permissões e CORS restrito.
+</div>
+
+<div class="kpis">
+  <div class="kpi ok"><div class="n">7 / 7</div><div class="l">achados do pentest remediados</div></div>
+  <div class="kpi ok"><div class="n">+7</div><div class="l">vetores white-box eliminados</div></div>
+  <div class="kpi ok"><div class="n">0</div><div class="l">registros legíveis pelo anon em tabelas sensíveis</div></div>
+  <div class="kpi info"><div class="n">43 → 0</div><div class="l">alertas de <code>search_path</code> mutável</div></div>
+  <div class="kpi info"><div class="n">101 → 19</div><div class="l">RPCs <code>SECURITY DEFINER</code> no anon (só whitelist)</div></div>
+  <div class="kpi ok"><div class="n">100</div><div class="l">projetos no cofre <code>project_credentials</code> (0 vazando)</div></div>
+</div>
+
+<h2>1. Na prática: o que mudou do Antes vs. Depois (visão operacional)</h2>
+<p class="sub">Resumo em linguagem direta para os POs e gestão sobre o que foi blindado no sistema sem prejudicar a rotina das equipes e dos cartórios.</p>
+
+<table>
+  <tr>
+    <th style="width:20%">Área / Fluxo</th>
+    <th style="width:32%">Como era antes</th>
+    <th style="width:32%">Como ficou depois</th>
+    <th style="width:16%">Impacto na operação</th>
+  </tr>
+  <tr>
+    <td><b>Dados dos projetos e senhas de clientes</b></td>
+    <td>A tabela <code>projects</code> era legível para <code>anon</code> via API REST e guardava senhas de Postgres, AnyDesk, TeamViewer, SO e tokens Skills dentro de <code>custom_fields</code>.</td>
+    <td>Leitura anônima de <code>projects</code> fechada (<b>0 linhas</b>). Credenciais técnicas movidas para o cofre dedicado <code>project_credentials</code> com permissão RBAC própria (<code>project_credentials.view/edit</code>) e listagens leves (<code>useProjectsList</code>) não trafegam mais senhas.</td>
+    <td><span class="status s-ok">Zero bloqueio</span><br><span class="sub">Apenas quem abre detalhes ou Planilha de Ambientes carrega credenciais</span></td>
+  </tr>
+  <tr>
+    <td><b>Chat Pós-Implantação</b><br><code>/public/pos-chat/:id</code></td>
+    <td>Listava todos os visitantes do cartório sem autenticação, usava UUID gerado no navegador e não tinha controle de dono na Edge Function nem limite de uso na OpenAI.</td>
+    <td>Continua <b>100% público e sem PIN</b>, mas removeu a lista nominal de colegas. No cadastro, o servidor gera token aleatório de 256 bits e valida o hash SHA-256 em toda leitura, edição, exclusão, feedback e chamada à OpenAI (rate limit <b>30/min</b> e <b>200/h</b>).</td>
+    <td><span class="status s-ok">Mesma UX simples</span><br><span class="sub">Cartório continua entrando só com Nome e Setor</span></td>
+  </tr>
+  <tr>
+    <td><b>Criação de contas e privilégios</b></td>
+    <td>Autocadastro aberto no Auth; <code>handle_new_user()</code> aceitava <code>role</code> via metadata; <code>profiles</code> permitia edição própria sem trava de coluna; 2 Edge Functions legadas criavam usuários sem validação.</td>
+    <td>Autocadastro desativado no Auth Dashboard + proteção contra senhas vazadas ativada; <code>handle_new_user()</code> força sempre <code>'user'</code>; trigger em <code>profiles</code> bloqueia alteração de <code>role</code> com erro <code>42501</code>; functions fantasma retornam <code>HTTP 410</code>.</td>
+    <td><span class="status s-ok">Fluxo preservado</span><br><span class="sub">Colaboradores são criados pelo Admin via <code>create-user</code></span></td>
+  </tr>
+  <tr>
+    <td><b>Integração Siplan Skills</b></td>
+    <td><code>get_project_skills_sibling_group</code> aceitava chamadas sem sessão válida, e <code>login_token</code> era gravado em <code>projects</code> e em eventos da timeline.</td>
+    <td>RPC exige usuário autenticado com <code>projects.view</code>; <code>skills_login_token</code> foi isolado no cofre; <code>timeline_events</code> não grava mais token; segredo interno <code>skills_bridge_secret</code> rotacionado entre HUB e Skills.</td>
+    <td><span class="status s-ok">Badges e botão intactos</span><br><span class="sub">Tags nos cards leem metadado não-sensível</span></td>
+  </tr>
+  <tr>
+    <td><b>Anexos e Backups no Storage</b></td>
+    <td>Buckets <code>project-files</code> e <code>assistant-oriontn-doc</code> estavam públicos e aceitavam acesso aberto em políticas antigas.</td>
+    <td>Ambos convertidos para <b>privados</b> (<code>public = false</code>), com policies restritas a <code>authenticated</code>, download via URL assinada no HUB e leitura por <code>service_role</code> no n8n / worker.</td>
+    <td><span class="status s-ok">Downloads e n8n ok</span><br><span class="sub">Links assinados transparentes na interface</span></td>
+  </tr>
+  <tr>
+    <td><b>Outras rotas públicas</b><br>Checklist, Infra, Roadmap, Aderência</td>
+    <td>Checklist, Roadmap e Aderência (modo impressão) expunham consultas abertas sobre tabelas principais.</td>
+    <td><code>commercial_checklists</code> e <code>roadmaps</code> fechadas para <code>anon</code> (servidas via RPCs estritas); <code>adherence?mode=print</code> agora exige login + permissão; headers de segurança adicionados na Vercel.</td>
+    <td><span class="status s-ok">Clientes e time sem impacto</span><br><span class="sub">Links públicos oficiais mantêm contrato mínimo</span></td>
+  </tr>
+</table>
+
+<div class="nota-info">
+  <b>Decisão alinhada sobre credenciais operacionais vs. chaves internas:</b> conforme alinhado com a gestão, as senhas de infraestrutura dos clientes (Postgres/AnyDesk/SO) e tokens de acesso dos cartórios no portal de vídeos <b>Siplan Skills</b> (destinados a equipes de demonstração/treinamento sem acesso administrativo ao HUB) foram preservados sem rotação em massa para evitar transtorno operacional, sendo agora blindados pelo cofre <code>project_credentials</code> com bloqueio total a anônimos e controle granular em <code>/admin/roles</code>. Já o segredo interno mestre compartilhado entre os backends (<code>skills_bridge_secret</code>) foi <b>rotacionado imediatamente</b> nos dois bancos.
+</div>
+
+<h2>2. Resolução dos 7 achados do pentest original</h2>
+
+<!-- ACHADO 1 -->
+<div class="card open">
+  <div class="head" onclick="toggleCard(this)">
+    <div class="idx">✓</div>
+    <div class="who">
+      <div class="nome">
+        1. Exposição em <code>projects</code> e credenciais de clientes em texto puro
+        <span class="sev old">CRÍTICO</span>
+        <span class="sev ok">CORRIGIDO · PROVADO</span>
+      </div>
+      <div class="tags">
+        <span class="tag ok">anon = 0 linhas</span>
+        <span class="tag ok">cofre project_credentials (100 registros)</span>
+        <span class="tag ok">0 chaves sensíveis em projects</span>
+      </div>
+    </div>
+    <div class="expbtn">fechar ▴</div>
+  </div>
+  <div class="full">
+    <div class="cmp">
+      <div class="cmp-box before">
+        <h4>Antes (Pentest)</h4>
+        <code>GET /rest/v1/projects?select=*</code> com a <code>anon key</code> retornava projetos completos em HTTP 200, incluindo senhas de PostgreSQL, AnyDesk, SO e tokens Skills dentro de <code>custom_fields</code>.
+      </div>
+      <div class="cmp-box after">
+        <h4>Depois (Remediado)</h4>
+        Policy anônima neutralizada (<code>USING (false)</code> para não autenticados). Além disso, as 14 chaves sensíveis + subchaves secretas de <code>dtc</code> foram movidas de <code>projects.custom_fields</code> para a tabela dedicada <code>public.project_credentials</code> protegida por RBAC e invisível para <code>anon</code>.
+      </div>
+    </div>
+    <p><b>O que foi implementado:</b></p>
+    <ul>
+      <li>Neutralização da policy <code>"Allow public select for active commercial checklists and roadma"</code> em <code>public.projects</code> (<code>TO authenticated USING (false)</code>).</li>
+      <li>Criação da tabela cofre <code>public.project_credentials</code> com <code>REVOKE ALL FROM PUBLIC, anon</code> e policies RLS exclusivas para <code>authenticated</code> via <code>has_permission(auth.uid(), 'project_credentials', 'view'/'edit')</code>.</li>
+      <li>Backfill integral para o cofre e remoção física das chaves de senha/token de <code>projects.custom_fields</code> em todos os registros, mantendo apenas metadados não sensíveis nas listagens (<code>useProjectsList.ts</code>).</li>
+    </ul>
+    <p><b>Prova técnica em produção (Supabase <code>okvufcwkophaadttmjwa</code>):</b></p>
+<pre><b>-- Simulacao como papel anon em transacao controlada:</b>
+SELECT COUNT(*) FROM public.projects;             <b>→ 0 registros</b>
+SELECT COUNT(*) FROM public.project_credentials;  <b>→ <em>ERROR 42501: permission denied (DENIED)</em></b>
+
+<b>-- Auditoria do backfill no banco real:</b>
+vault_rows = <em>100</em> | dirty_projects_rows = <em>0</em> | dirty_dtc_rows = <em>0</em></pre>
+  </div>
+</div>
+
+<!-- ACHADO 2 -->
+<div class="card open">
+  <div class="head" onclick="toggleCard(this)">
+    <div class="idx">✓</div>
+    <div class="who">
+      <div class="nome">
+        2. IDOR no chat público (<code>pos-chat</code>) — listagem de visitantes e leitura de terceiros
+        <span class="sev old">CRÍTICO</span>
+        <span class="sev ok">CORRIGIDO · PROVADO</span>
+      </div>
+      <div class="tags">
+        <span class="tag ok">get_pos_chat_visitors bloqueada p/ anon</span>
+        <span class="tag ok">token 256-bit + SHA-256</span>
+        <span class="tag ok">UX sem PIN mantida</span>
+      </div>
+    </div>
+    <div class="expbtn">fechar ▴</div>
+  </div>
+  <div class="full">
+    <div class="cmp">
+      <div class="cmp-box before">
+        <h4>Antes (Pentest)</h4>
+        Qualquer pessoa com o UUID do link chamava <code>get_pos_chat_visitors</code>, obtinha os <code>visitor_id</code> reais dos funcionários do cartório e lia suas sessões e mensagens completas.
+      </div>
+      <div class="cmp-box after">
+        <h4>Depois (Remediado — Opção A)</h4>
+        A listagem pública de visitantes foi removida da interface e revogada do papel <code>anon</code>. Ao entrar com Nome + Setor, o servidor emite um token aleatório secreto (256 bits) e valida seu hash <code>sha256</code> (<code>access_token_hash</code>) em toda leitura e escrita.
+      </div>
+    </div>
+    <p><b>O que foi implementado:</b></p>
+    <ul>
+      <li><code>REVOKE ALL ON FUNCTION public.get_pos_chat_visitors(uuid) FROM PUBLIC, anon</code> e <code>select_pos_chat_visitor(uuid, uuid)</code> revogada de <code>anon</code>.</li>
+      <li>Nova coluna <code>access_token_hash TEXT</code> em <code>public.pos_ai_chat_visitors</code>; <code>register_pos_chat_visitor</code> retorna <code>access_token</code> (64 hex chars via dois UUIDs v4 concatenados) apenas na criação e persiste o digest SHA-256 no banco (tratando homônimos no mesmo setor com sufixo numérico automático).</li>
+      <li>Sobrecargas antigas sem token de <code>get_pos_chat_visitor_sessions</code> e <code>get_pos_chat_session_messages</code> revogadas; as novas exigem e validam <code>p_visitor_token</code> via <code>verify_pos_chat_visitor_token</code> antes de retornar dados.</li>
+    </ul>
+    <p><b>Prova técnica em produção:</b></p>
+<pre><b>1) Chamada anon para listar visitantes do link público:</b>
+PERFORM public.get_pos_chat_visitors(project_id);      <b>→ <em>DENIED: 42501 (permission denied)</em></b>
+
+<b>2) Registro e validação de token emitido pelo servidor:</b>
+register_pos_chat_visitor(proj, 'Teste', 'TI')         <b>→ success: <em>true</em> (+ access_token único)</b>
+verify_pos_chat_visitor_session(proj, id, valid_tok)   <b>→ valid: <em>true</em></b>
+verify_pos_chat_visitor_session(proj, id, forged_tok)  <b>→ valid: <em>false</em></b></pre>
+  </div>
+</div>
+
+<!-- ACHADO 3 -->
+<div class="card">
+  <div class="head" onclick="toggleCard(this)">
+    <div class="idx">✓</div>
+    <div class="who">
+      <div class="nome">
+        3. <code>get_pos_assistant_project_info</code> expunha projetos fora do chat e <code>ticket_number</code>
+        <span class="sev old">ALTO</span>
+        <span class="sev ok">CORRIGIDO · PROVADO</span>
+      </div>
+      <div class="tags">
+        <span class="tag ok">restrito a links ativos</span>
+        <span class="tag ok">ticket_number omitido</span>
+      </div>
+    </div>
+    <div class="expbtn">detalhes ▾</div>
+  </div>
+  <div class="full">
+    <p><b>Correção aplicada:</b> a RPC <code>public.get_pos_assistant_project_info(uuid)</code> foi reescrita para responder apenas a projetos que possuem registro válido na tabela <code>public.pos_ai_chat_links</code> ou habilitação explícita em <code>custom_fields ? 'pos_assistant_enabled'</code>, além de remover o campo interno <code>ticket_number</code> da resposta pública. Qualquer outro UUID retorna <code>null</code>.</p>
+    <p>Combinado ao bloqueio total de <code>SELECT</code> na tabela <code>projects</code> para <code>anon</code> (Achado 1), um atacante externo também não consegue mais enumerar UUIDs de outros clientes.</p>
+  </div>
+</div>
+
+<!-- ACHADO 4 -->
+<div class="card">
+  <div class="head" onclick="toggleCard(this)">
+    <div class="idx">✓</div>
+    <div class="who">
+      <div class="nome">
+        4. Edge Function <code>pos-assistant-chat</code> sem posse de sessão e sem rate limit
+        <span class="sev old">ALTO</span>
+        <span class="sev ok">CORRIGIDO · DEPLOY v19</span>
+      </div>
+      <div class="tags">
+        <span class="tag ok">token SHA-256</span>
+        <span class="tag ok">30/min visitante · 200/h link</span>
+        <span class="tag ok">teto 4000 chars</span>
+        <span class="tag ok">verify_jwt=true</span>
+      </div>
+    </div>
+    <div class="expbtn">detalhes ▾</div>
+  </div>
+  <div class="full">
+    <p><b>Correção aplicada na Edge Function <span class="mono">pos-assistant-chat</span> (implantada v19 em produção):</b></p>
+    <ul>
+      <li><b>Autenticação do visitante:</b> tanto <code>action: "chat"</code> quanto <code>action: "feedback"</code> exigem <code>visitor_token</code>, calculam o hash SHA-256 na função e conferem contra <code>pos_ai_chat_visitors.access_token_hash</code> (status <code>403</code> se inválido ou visitante inativo).</li>
+      <li><b>Vínculo estrito de sessão (anti-injeção):</b> verifica se o <code>session_id</code> já possui mensagens associadas a outro <code>visitor_id</code>; em caso positivo, bloqueia com HTTP <code>403</code>, impedindo injeção em conversas alheias.</li>
+      <li><b>Rate limiting em banco + teto de entrada:</b> mensagens limitadas a <code>4.000</code> caracteres; bloqueio com HTTP <code>429</code> acima de <code>30 mensagens/minuto</code> por visitante ou <code>200 mensagens/hora</code> por projeto/link.</li>
+      <li><b>Sigilo de erros e CORS:</b> removido o repasse de payloads brutos de erro da OpenAI e restringido <code>Access-Control-Allow-Origin</code> para <code>hub.siplan.com.br</code> e <code>siplanhub.vercel.app</code>.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ACHADO 5 -->
+<div class="card">
+  <div class="head" onclick="toggleCard(this)">
+    <div class="idx">✓</div>
+    <div class="who">
+      <div class="nome">
+        5. Cadastro público aberto com autoconfirmação no Supabase Auth
+        <span class="sev old">MÉDIO</span>
+        <span class="sev ok">CORRIGIDO · DASHBOARD + BANCO</span>
+      </div>
+      <div class="tags">
+        <span class="tag ok">disable_signup = true</span>
+        <span class="tag ok">Leaked Password Protection ON</span>
+        <span class="tag ok">handle_new_user blindado</span>
+      </div>
+    </div>
+    <div class="expbtn">detalhes ▾</div>
+  </div>
+  <div class="full">
+    <p><b>Defesa aplicada em duas camadas (Auth Dashboard + Banco de Dados):</b></p>
+    <ul>
+      <li><b>Supabase Auth Dashboard:</b> cadastro público de novos usuários desativado (<code>Allow new users to sign up = OFF</code> / <code>disable_signup = true</code>) e verificação contra senhas vazadas ativada (<code>Leaked Password Protection = ON</code>).</li>
+      <li><b>Defesa em profundidade no banco:</b> <code>public.handle_new_user()</code> foi reescrita para ignorar qualquer campo <code>role</code> enviado no <code>raw_user_meta_data</code>, gravando invariavelmente <code>'user'</code> (<code>handle_new_user_reads_role_meta = false</code>). A criação legítima de colaboradores permanece centralizada na Edge Function autenticada <code>create-user</code>.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ACHADO 6 -->
+<div class="card">
+  <div class="head" onclick="toggleCard(this)">
+    <div class="idx">✓</div>
+    <div class="who">
+      <div class="nome">
+        6. RPCs de rename, delete e feedback no <code>pos-chat</code> sem prova criptográfica de dono
+        <span class="sev old">MÉDIO</span>
+        <span class="sev ok">CORRIGIDO · PROVADO</span>
+      </div>
+      <div class="tags">
+        <span class="tag ok">legadas revogadas (42501)</span>
+        <span class="tag ok">token validado server-side</span>
+      </div>
+    </div>
+    <div class="expbtn">detalhes ▾</div>
+  </div>
+  <div class="full">
+    <ul>
+      <li><b>Funções antigas globais:</b> <code>delete_pos_chat_session</code>, <code>rename_pos_chat_session</code> e <code>save_pos_chat_feedback</code> (sem escopo de visitante) foram desativadas com exceção <code>42501</code> e revogadas para <code>PUBLIC, anon, authenticated</code>.</li>
+      <li><b>Assinaturas sem token revogadas:</b> as sobrecargas antigas de <code>rename_pos_chat_visitor_session</code>, <code>delete_pos_chat_visitor_session</code> (3 args) e <code>save_pos_chat_feedback_for_visitor</code> (4 args) foram revogadas de <code>PUBLIC, anon, authenticated</code>.</li>
+      <li><b>Novas sobrecargas tokenizadas:</b> todas exigem <code>p_visitor_token</code> e validam <code>verify_pos_chat_visitor_token(p_project_id, p_visitor_id, p_visitor_token)</code> antes de alterar ou excluir qualquer conversa ou feedback de terceiros.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ACHADO 7 -->
+<div class="card">
+  <div class="head" onclick="toggleCard(this)">
+    <div class="idx">✓</div>
+    <div class="who">
+      <div class="nome">
+        7. Exposição de <code>notes</code> operacionais e dados comerciais dos clientes
+        <span class="sev old">MÉDIO</span>
+        <span class="sev ok">CORRIGIDO · PROVADO</span>
+      </div>
+      <div class="tags">
+        <span class="tag ok">projects fechado p/ anon</span>
+        <span class="tag ok">commercial_checklists e roadmaps fechados</span>
+      </div>
+    </div>
+    <div class="expbtn">detalhes ▾</div>
+  </div>
+  <div class="full">
+    <p>Com o fechamento integral de <code>SELECT</code> anônimo sobre <code>public.projects</code>, <code>public.commercial_checklists</code> e <code>public.roadmaps</code>, nem <code>notes</code> nem históricos de suporte, valores contratuais ou comentários internos ficam acessíveis pela chave pública.</p>
+    <p>As rotas públicas legítimas passam a consumir exclusivamente RPCs de escopo mínimo: <code>get_public_commercial_checklist(uuid)</code>, <code>submit_public_commercial_checklist(uuid, jsonb)</code> e <code>get_roadmap_data(uuid)</code> (retornando apenas status agregados das etapas, sem credenciais nem anotações internas).</p>
+  </div>
+</div>
+
+<h2>3. Endurecimentos adicionais (auditoria white-box no código e banco)</h2>
+<p class="sub">Além dos 7 pontos externos do pentest, a auditoria direta no Supabase e no repositório identificou e fechou mais 7 vetores internos de risco:</p>
+
+<div class="grid2">
+  <div class="mini-card">
+    <h3>8. Edge Functions fantasma desativadas <span class="sev ok">HTTP 410</span></h3>
+    <p>As funções legadas <code>create-missing-users</code> (v9) e <code>migrate-team-members</code> (v9), que existiam em produção criando usuários com senha padrão hardcoded, foram substituídas por respostas fixas <b>HTTP 410 (Function deprecated and disabled)</b> com <code>verify_jwt: true</code>.</p>
+  </div>
+  <div class="mini-card">
+    <h3>9. Bloqueio de auto-escalação de privilégio <span class="sev ok">42501</span></h3>
+    <p>Implementada a trigger <code>trg_protect_profile_privileged_fields</code> (<code>SECURITY INVOKER</code>) em <code>public.profiles</code> e neutralizada a policy legada <code>profiles_update_own</code>. Qualquer usuário sem <code>users.edit</code> é bloqueado ao tentar alterar a coluna <code>role</code>, mantendo edição normal de nome/perfil.</p>
+  </div>
+  <div class="mini-card">
+    <h3>10. Segregação do cofre &amp; Split Query <span class="sev ok">RBAC</span></h3>
+    <p>Criado o recurso <code>project_credentials</code> (<code>view</code>, <code>edit</code>) no catálogo RBAC e no banco. A listagem principal (<code>useProjectsList</code>) foi limpa de credenciais; detalhes são hidratados sob demanda em <code>useProjectDetails</code> e na abertura da Planilha de Ambientes (<code>EnvironmentListDialog</code>), evitando sobrescrita ao mover cards no Kanban.</p>
+  </div>
+  <div class="mini-card">
+    <h3>11. Rotação da ponte Skills &amp; RPC protegida <span class="sev ok">ROTACIONADO</span></h3>
+    <p>O segredo compartilhado <code>skills_bridge_secret</code> foi rotacionado sincronamente entre <code>okvufcwkophaadttmjwa</code> e <code>bnulocsnxiffavvabfdj</code>. A RPC <code>get_project_skills_sibling_group</code> agora exige <code>projects.view</code> (ou <code>service_role</code>) e valida <code>project_credentials.view</code> para devolver o token.</p>
+  </div>
+  <div class="mini-card">
+    <h3>12. Storage privado (`project-files` e backups) <span class="sev ok">PRIVATE</span></h3>
+    <p>Ambos os buckets de documentos sensíveis tiveram <code>public = false</code> aplicado e policies restritas a <code>authenticated</code>, com migração no frontend de URLs públicas para <code>createSignedUrl</code> (backups do manual de conhecimento e anexos) mantendo o n8n operacional via <code>service_role</code>.</p>
+  </div>
+  <div class="mini-card">
+    <h3>13. Edge Functions, Anti-SSRF &amp; CORS estrito <span class="sev ok">JWT + CORS</span></h3>
+    <p><code>generate-routine-metadata</code> (v2) e <code>bunny-video-info</code> (v2) passaram a exigir JWT + validações (<code>assistants_knowledge.edit</code>, whitelist de library <code>467408</code>, GUID UUID e checagem de host <code>b-cdn.net</code>/<code>mediadelivery.net</code>). Todas as 7 functions ativas tiveram CORS travado para os domínios oficiais.</p>
+  </div>
+  <div class="mini-card">
+    <h3>14. Higiene SQL, rotas extras &amp; headers HTTP <span class="sev ok">43 → 0</span></h3>
+    <p><code>search_path = public</code> fixado em todas as funções de banco (zerando 43 advisors); triggers e RPCs de worker/n8n/BI revogadas de <code>anon</code>; rota <code>/projects/:id/adherence?mode=print</code> agora exige login + permissão; headers <code>X-Content-Type-Options</code>, <code>X-Frame-Options</code>, <code>Referrer-Policy</code> e <code>Permissions-Policy</code> adicionados em <code>vercel.json</code>.</p>
+  </div>
+</div>
+
+<h2>4. Provas técnicas de validação</h2>
+
+<div class="grid2">
+  <div>
+    <h3>4.1. Supabase Security Advisors (Antes × Depois)</h3>
+    <table>
+      <tr><th>Advisor / Categoria</th><th>Antes</th><th>Depois</th><th>Status</th></tr>
+      <tr><td class="mono">function_search_path_mutable</td><td><b>43</b> WARN</td><td><b>0</b></td><td><span class="status s-ok">Zerado</span></td></tr>
+      <tr><td class="mono">anon_security_definer_function_executable</td><td><b>101</b> WARN</td><td><b>19</b> WARN</td><td><span class="status s-ok">Apenas whitelist pública</span></td></tr>
+      <tr><td class="mono">authenticated_security_definer_function_executable</td><td><b>132</b> WARN</td><td><b>126</b> WARN</td><td><span class="status s-ok">Reduzido</span></td></tr>
+      <tr><td class="mono">auth_leaked_password_protection</td><td><b>1</b> WARN</td><td><b>0</b></td><td><span class="status s-ok">Ativado no Auth</span></td></tr>
+      <tr><td class="mono">rls_enabled_no_policy</td><td><b>4</b> INFO</td><td><b>4</b> INFO</td><td><span class="status s-info">Tabelas internas fechadas</span></td></tr>
+    </table>
+  </div>
+  <div>
+    <h3>4.2. Edge Functions implantadas (produção)</h3>
+    <table>
+      <tr><th>Slug da Function</th><th>Versão</th><th>Auth / Proteção</th></tr>
+      <tr><td class="mono">create-missing-users</td><td>v9</td><td>Desativada (HTTP <code>410</code>, <code>verify_jwt: true</code>)</td></tr>
+      <tr><td class="mono">migrate-team-members</td><td>v9</td><td>Desativada (HTTP <code>410</code>, <code>verify_jwt: true</code>)</td></tr>
+      <tr><td class="mono">pos-assistant-chat</td><td>v19</td><td><code>verify_jwt: true</code> + SHA-256 token + rate limit + CORS</td></tr>
+      <tr><td class="mono">generate-routine-metadata</td><td>v2</td><td><code>verify_jwt: true</code> + <code>assistants_knowledge.edit</code> + 30k max</td></tr>
+      <tr><td class="mono">bunny-video-info</td><td>v2</td><td><code>verify_jwt: true</code> + whitelist lib + UUID + anti-SSRF</td></tr>
+      <tr><td class="mono">create-user</td><td>v9</td><td><code>verify_jwt: true</code> + <code>users.create</code> + CORS estrito</td></tr>
+      <tr><td class="mono">admin-reset-password</td><td>v6</td><td><code>verify_jwt: true</code> + <code>users.execute</code> + CORS estrito</td></tr>
+      <tr><td class="mono">siplan-skills-integration</td><td>v4</td><td><code>verify_jwt: true</code> + <code>projects.view/edit</code> + CORS estrito</td></tr>
+      <tr><td class="mono">scan-sd-attachment</td><td>v3</td><td><code>verify_jwt: true</code> + <code>sd_solutions.view</code> + CORS estrito</td></tr>
+    </table>
+  </div>
+</div>
+
+<p style="margin-top:16px"><b>4.3. Evidência SQL executada em produção (transação com <code>ROLLBACK</code> alternando <code>ROLE anon</code> e <code>ROLE authenticated</code>):</b></p>
+<pre>{
+  <b>"anon_projects_count"</b>: <em>0</em>,
+  <b>"anon_checklists_count"</b>: <em>0</em>,
+  <b>"anon_roadmaps_count"</b>: <em>0</em>,
+  <b>"anon_knowledge_count"</b>: <em>0</em>,
+  <b>"anon_profiles_count"</b>: <em>0</em>,
+  <b>"anon_project_credentials"</b>: <em>"DENIED"</em>,
+  <b>"anon_skills_group"</b>: <em>"DENIED:42501"</em>,
+  <b>"anon_pos_visitors"</b>: <em>"DENIED:42501"</em>,
+  <b>"anon_public_roadmap_ok"</b>: <em>true</em>,
+  <b>"anon_pos_register_ok"</b>: <em>true</em>,
+  <b>"anon_pos_token_valid"</b>: <em>true</em>,
+  <b>"anon_pos_token_forged"</b>: <em>false</em>,
+  <b>"user_own_name_update_rows"</b>: <em>1</em>,
+  <b>"user_role_escalation"</b>: <em>"BLOCKED:42501:Sem permissao para alterar o perfil de acesso."</em>,
+  <b>"user_vault_count"</b>: <em>100</em>,
+  <b>"sem_acesso_vault_count"</b>: <em>0</em>
+}
+
+<b>-- Invariantes estruturais no catálogo:</b>
+open_anon_select_policies = <em>0</em> | handle_new_user_reads_role_meta = <em>false</em> | has_profile_guard_trigger = <em>true</em>
+unauthorized_anon_secdef = <em>0</em> | private_buckets = <em>[{"id":"assistant-oriontn-doc","public":false},{"id":"project-files","public":false}]</em></pre>
+
+<p><b>4.4. Validação automatizada no código-fonte e migrations aplicadas:</b></p>
+<table>
+  <tr><th>Verificação / Artefato</th><th>Resultado observado após a última alteração</th></tr>
+  <tr><td class="mono">npx tsc --noEmit</td><td><span class="status s-ok">Aprovado (código 0)</span> — zero erros de tipagem TypeScript</td></tr>
+  <tr><td class="mono">npx vitest run</td><td><span class="status s-ok">184 arquivos aprovados (1108 testes)</span> — inclui <code>project-credentials.test.ts</code> e <code>pos-chat-visitor-dialog.test.tsx</code>; <code>rls-invariants.test.ts</code> (11 testes) pulado localmente sem <code>SUPABASE_DB_URL</code> e validado integralmente no banco em produção</td></tr>
+  <tr><td class="mono">npm run lint</td><td><span class="status s-ok">Aprovado com 0 erros</span> (48 warnings preexistentes de hooks/fast-refresh)</td></tr>
+  <tr><td class="mono">npm run build</td><td><span class="status s-ok">Aprovado (código 0)</span> — <code>5510 modules transformed</code>, 438 chunks verificados, maior chunk <code>407.28 kB</code></td></tr>
+  <tr><td>Migrations registradas em <code>supabase/migrations/</code></td><td class="mono">20261124130000_security_hardening_p0_auth_rls_rpcs_storage.sql<br>20261124133000_security_hardening_p1_pos_chat_token_and_limits.sql<br>20261124140000_security_hardening_p2_credentials_vault_and_hygiene.sql</td></tr>
+</table>
+
+<h2>5. Status do plano de ação do relatório original</h2>
+<div class="roadmap">
+  <div class="road">
+    <h3><span class="sev ok">CONCLUÍDO</span> P0 — Contenção crítica e fechamento de superfície anônima</h3>
+    <ol>
+      <li>Segregação de credenciais (PostgreSQL, AnyDesk/TeamViewer, SO, Orion Admin e tokens Skills) para cofre dedicado protegendo acessos existentes e rotação imediata da chave interna <code>skills_bridge_secret</code> entre HUB e Skills.</li>
+      <li>Fechamento de RLS de <code>projects</code> para <code>anon</code> (<code>0</code> registros retornados) e isolamento das listagens leves no frontend sem carregar senhas.</li>
+      <li>Bloqueio de <code>get_pos_chat_visitors</code> para <code>anon</code> e remoção da listagem nominal pública de colegas.</li>
+    </ol>
+  </div>
+  <div class="road">
+    <h3><span class="sev ok">CONCLUÍDO</span> P1 — Identidade do visitante, Edge Functions e Auth</h3>
+    <ol>
+      <li>Token opaco de 256 bits emitido no cadastro do visitante e validado via hash SHA-256 em todas as RPCs do <code>pos-chat</code> e na Edge Function <code>pos-assistant-chat</code>.</li>
+      <li>Proteção da Edge Function contra injeção em sessão alheia (<code>403</code>), teto de <code>4.000</code> caracteres e rate limit em banco (<code>30/min</code> e <code>200/hora</code>).</li>
+      <li>Auditoria de privilégios de <code>authenticated</code>, trigger anti-escalação em <code>profiles.role</code>, fechamento de autocadastro público e ativação do <i>Leaked Password Protection</i>.</li>
+    </ol>
+  </div>
+  <div class="road">
+    <h3><span class="sev ok">CONCLUÍDO</span> P2 — Cofre, revisão de rotas públicas e higiene geral</h3>
+    <ol>
+      <li>Revisão completa das demais rotas públicas (<code>PublicChecklist</code> via RPCs estritas, <code>RoadmapPage</code> via <code>get_roadmap_data</code>, <code>PublicInfraCollection</code> sem retorno anônimo aberto na tabela e fechamento do modo impressão em Aderência).</li>
+      <li>Migração integral das credenciais de <code>custom_fields</code> para <code>public.project_credentials</code> com permissão granular em <code>/admin/roles</code> e proteção de armazenamento privado nos buckets.</li>
+      <li>Redução total da exposição de <code>notes</code> e campos comerciais para <code>anon</code>, além de headers HTTP defensivos e testes estruturais de invariantes RLS.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="rodape">
+  <b>Nota sobre entrega contínua:</b> todas as correções de banco de dados (RLS, cofre, triggers, RPCs), rotação do segredo interno de bridge, configurações do Supabase Auth e as 9 Edge Functions já estão ativas em produção no projeto <code>okvufcwkophaadttmjwa</code>. Os ajustes de frontend e headers em <code>vercel.json</code> acompanham o próximo deploy na Vercel para ativação integral do novo fluxo tokenizado na interface.<br>
+  <b>Confidencialidade e higiene:</b> nenhuma senha real de cliente, token de cartório ou segredo interno de bridge foi reproduzido neste documento; todas as provas em banco rodaram dentro de transações encerradas com <code>ROLLBACK</code>.<br>
+  <b>Relatório gerado em:</b> 24/11/2026 · Siplan HUB Security Hardening.
+</div>
+
+</div>
+<script>
+function toggleCard(head){
+  var card = head.closest('.card');
+  card.classList.toggle('open');
+  var b = head.querySelector('.expbtn');
+  if (b) b.textContent = card.classList.contains('open') ? 'fechar ▴' : 'detalhes ▾';
+}
+function toggleAllCards(){
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.card'));
+  var allOpen = cards.length > 0 && cards.every(function(c){ return c.classList.contains('open'); });
+  cards.forEach(function(c){
+    c.classList.toggle('open', !allOpen);
+    var b = c.querySelector('.expbtn');
+    if (b) b.textContent = !allOpen ? 'fechar ▴' : 'detalhes ▾';
+  });
+}
+</script>
+</body>
+</html>

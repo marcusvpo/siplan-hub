@@ -89,11 +89,11 @@ Armadilha: `set local role` **só funciona dentro de `begin`**. Fora de transaç
 
 ---
 
-## 7. Estado atual (15/07/2026)
+## 7. Estado atual (24/11/2026)
 
-- Catálogo: 49 recursos, ~90 permissões.
-- Perfis: `admin` (bypass total), `user` (padrão da equipe), `Teste` (mínimo, não-real).
-- RLS: escrita em `projects` exige `has_permission`; todo acesso anônimo fechado; `profiles` e `clients`/`client_contacts` (PII) só legíveis por autenticado.
-- Pendente (comandos administrativos, fora do código): deploy de `create-user`/`admin-reset-password`; rotação da senha do banco.
+- **Catálogo e Perfis:** Inclui o recurso dedicado `project_credentials` (`view`, `edit`) no grupo *Implantação & Projetos*, isolando credenciais técnicas (PostgreSQL, AnyDesk, TeamViewer, SO, Orion Admin e `skills_login_token`) em `public.project_credentials`. Perfis que já possuíam acesso equivalente em projetos/ambiente/transição mantiveram a permissão inicial (`Sem acesso` bloqueado), podendo ser restringidos em `/admin/roles`.
+- **Proteção de Privilégios e Cadastro:** `handle_new_user()` força sempre `role = 'user'` (ignora metadata), `profiles` possui o trigger `trg_protect_profile_privileged_fields` impedindo auto-escalação de `role` sem `users.edit`, e as Edge Functions legadas `create-missing-users` / `migrate-team-members` foram desativadas (`HTTP 410`).
+- **RLS, Rotas Públicas e Storage:** Acesso anônimo fechado em `projects`, `commercial_checklists`, `roadmaps`, `assistant_knowledge_files`, `project_credentials` e `profiles`. As rotas públicas operam via RPCs estritas (`get_public_commercial_checklist`, `submit_public_commercial_checklist`, `get_roadmap_data`, `get_project_public_info`, `update_project_public_infra`, e fluxo tokenizado via SHA-256 em `/public/pos-chat/:id`). Os buckets `project-files` e `assistant-oriontn-doc` são privados (`public = false`) com uso de `createSignedUrl` / `service_role`.
+- **Edge Functions:** `create-user`, `admin-reset-password`, `siplan-skills-integration`, `scan-sd-attachment`, `generate-routine-metadata`, `bunny-video-info` e `pos-assistant-chat` estão implantadas com `verify_jwt: true`, validação de permissões/tokens e CORS restrito aos domínios oficiais.
 
-Migrations RBAC de referência: `supabase/migrations/20260715*_rbac_*.sql` e `20260715*_rls_*.sql`.
+Migrations de referência: `supabase/migrations/20260715*_rbac_*.sql`, `supabase/migrations/20260715*_rls_*.sql` e `supabase/migrations/20261124*_security_hardening_*.sql`.

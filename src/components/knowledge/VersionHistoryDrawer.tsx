@@ -40,7 +40,7 @@ interface VersionHistoryDrawerProps {
   isLoading: boolean;
   onRestoreVersion: (version: KnowledgeVersion) => Promise<any>;
   isRestoring: boolean;
-  getBackupDownloadUrl: (path: string) => string;
+  getBackupDownloadUrl: (path: string) => Promise<string>;
 }
 
 export function VersionHistoryDrawer({
@@ -76,6 +76,15 @@ export function VersionHistoryDrawer({
       setSelectedRestoreVersion(null);
     } catch {
       // O hook ja trata os toasts de erro
+    }
+  };
+
+  const handleDownloadBackup = async (backupPath: string) => {
+    try {
+      const signedUrl = await getBackupDownloadUrl(backupPath);
+      window.open(signedUrl, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      console.error("Erro ao baixar backup:", err);
     }
   };
 
@@ -146,8 +155,6 @@ export function VersionHistoryDrawer({
                   const authorInitials = (version.author_name || version.author_email || "U")
                     .slice(0, 2)
                     .toUpperCase();
-
-                  const backupUrl = getBackupDownloadUrl(version.backup_file_path);
 
                   return (
                     <div
@@ -241,18 +248,16 @@ export function VersionHistoryDrawer({
                           </Button>
 
                           {/* Baixar Backup */}
-                          {backupUrl && (
+                          {version.backup_file_path && (
                             <Button
                               variant="ghost"
                               size="sm"
+                              onClick={() => void handleDownloadBackup(version.backup_file_path)}
                               className="h-7 px-2 text-xs gap-1 text-muted-foreground hover:text-foreground"
-                              asChild
                               title="Baixar arquivo histórico de backup"
                             >
-                              <a href={backupUrl} download target="_blank" rel="noreferrer">
-                                <Download className="h-3.5 w-3.5" />
-                                <span>Backup</span>
-                              </a>
+                              <Download className="h-3.5 w-3.5" />
+                              <span>Backup</span>
                             </Button>
                           )}
 
@@ -283,9 +288,9 @@ export function VersionHistoryDrawer({
         isOpen={!!selectedDetailVersion}
         onClose={() => setSelectedDetailVersion(null)}
         version={selectedDetailVersion}
-        downloadUrl={
-          selectedDetailVersion
-            ? getBackupDownloadUrl(selectedDetailVersion.backup_file_path)
+        onDownloadBackup={
+          selectedDetailVersion?.backup_file_path
+            ? () => handleDownloadBackup(selectedDetailVersion.backup_file_path)
             : undefined
         }
         onRestoreClick={(v) => setSelectedRestoreVersion(v)}

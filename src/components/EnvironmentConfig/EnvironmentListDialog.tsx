@@ -1,5 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useContext } from "react";
+import { QueryClient, QueryClientContext, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { mergeCredentialsIntoCustomFields } from "@/utils/project-credentials";
 import {
   Dialog,
   DialogContent,
@@ -194,6 +197,15 @@ function extractServersAndIps(data: EnvironmentDataResult): { title: string; ip?
   });
 }
 
+const fallbackCredsQueryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      enabled: false,
+    },
+  },
+});
+
 export function EnvironmentListDialog({
   open,
   onOpenChange,
@@ -202,10 +214,71 @@ export function EnvironmentListDialog({
 }: EnvironmentListDialogProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const contextClient = useContext(QueryClientContext);
   const [searchQuery, setSearchQuery] = useState("");
   const [globalStatusFilter, setGlobalStatusFilter] = useState("all");
   const [stageStatusFilter, setStageStatusFilter] = useState("all");
   const [revealedPasswords, setRevealedPasswords] = useState<Record<string, boolean>>({});
+
+  const { data: credentialsByProjectId = {} } = useQuery(
+    {
+      queryKey: ["projectCredentialsBulk"],
+      queryFn: async (): Promise<Record<string, Record<string, unknown>>> => {
+        const { data, error } = await supabase
+          .from("project_credentials")
+          .select("project_id, credentials");
+        if (error || !data) return {};
+        return Object.fromEntries(
+          (data as Array<{ project_id: string; credentials: Record<string, unknown> }>).map((row) => [
+            row.project_id,
+            row.credentials || {},
+          ]),
+        );
+      },
+      enabled: Boolean(open && contextClient),
+      staleTime: 1000 * 60 * 2,
+      retry: false,
+    },
+    contextClient || fallbackCredsQueryClient,
+  );
+
+  const hydratedProjects = useMemo(() => {
+    if (!credentialsByProjectId || Object.keys(credentialsByProjectId).length === 0) {
+      return projects;
+    }
+    return projects.map((p) => {
+      const creds = credentialsByProjectId[p.id];
+      if (!creds || Object.keys(creds).length === 0) return p;
+
+      const mergedCustomFields =
+        mergeCredentialsIntoCustomFields(p.customFields, creds) || p.customFields;
+      const cf = (mergedCustomFields || {}) as Record<string, unknown>;
+      const dtc = (cf.dtc as Record<string, unknown>) || {};
+
+      return {
+        ...p,
+        customFields: mergedCustomFields,
+        stages: {
+          ...p.stages,
+          environment: {
+            ...p.stages?.environment,
+            anydeskId: (cf.environment_anydesk_id as string) ?? p.stages?.environment?.anydeskId,
+            anydeskPassword: (cf.environment_anydesk_password as string) ?? p.stages?.environment?.anydeskPassword,
+            soLogin: (cf.environment_so_login as string) ?? (dtc.soLogin as string) ?? p.stages?.environment?.soLogin,
+            soPassword: (cf.environment_so_password as string) ?? (dtc.soPassword as string) ?? p.stages?.environment?.soPassword,
+            osType: (cf.environment_os_type as string) ?? (dtc.osType as string) ?? p.stages?.environment?.osType,
+            osCredentials: (cf.environment_os_credentials as OsCredential[]) ?? p.stages?.environment?.osCredentials,
+            remoteAccessList: (cf.environment_remote_access_list as RemoteAccessItem[]) ?? (dtc.remoteAccessList as RemoteAccessItem[]) ?? p.stages?.environment?.remoteAccessList,
+            postgresVersion: (cf.environment_postgres_version as string) ?? (dtc.postgresVersion as string) ?? p.stages?.environment?.postgresVersion,
+            postgresAccessData: (cf.environment_postgres_access_data as string) ?? (dtc.postgresAccessData as string) ?? p.stages?.environment?.postgresAccessData,
+            postgresHost: (cf.environment_postgres_host as string) ?? (dtc.postgresHost as string) ?? p.stages?.environment?.postgresHost,
+            postgresUser: (cf.environment_postgres_user as string) ?? (dtc.postgresUser as string) ?? p.stages?.environment?.postgresUser,
+            postgresPassword: (cf.environment_postgres_password as string) ?? (dtc.postgresPassword as string) ?? p.stages?.environment?.postgresPassword,
+          },
+        },
+      };
+    });
+  }, [projects, credentialsByProjectId]);
 
   const togglePassword = (key: string) => {
     setRevealedPasswords((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -222,8 +295,8 @@ export function EnvironmentListDialog({
 
   // 1. Filtrar apenas projetos que possuem dados cadastrados na etapa 4
   const eligibleProjects = useMemo(() => {
-    return projects.filter((p) => !p.isDeleted && hasEnvironmentStageData(p));
-  }, [projects]);
+    return hydratedProjects.filter((p) => !p.isDeleted && hasEnvironmentStageData(p));
+  }, [hydratedProjects]);
 
   // 2. Aplicar busca por texto (Cliente, Chamado ou IP) e filtros de status
   const filteredProjects = useMemo(() => {

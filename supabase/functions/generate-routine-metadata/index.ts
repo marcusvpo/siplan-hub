@@ -1,20 +1,99 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+const DEFAULT_ALLOWED_ORIGINS = [
+  "https://hub.siplan.com.br",
+  "https://siplanhub.vercel.app",
+];
+
+function isAllowedOrigin(origin: string | null): origin is string {
+  if (!origin) return false;
+  if (DEFAULT_ALLOWED_ORIGINS.includes(origin)) return true;
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) return true;
+  const extra = (Deno.env.get("ALLOWED_ORIGINS") ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return extra.includes(origin);
+}
+
+function buildCorsHeaders(req: Request) {
+  const origin = req.headers.get("Origin");
+  const allowOrigin = isAllowedOrigin(origin) ? origin : DEFAULT_ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    Vary: "Origin",
+  };
+}
 
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = buildCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
+    const callerClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
+    const {
+      data: { user: caller },
+      error: callerError,
+    } = await callerClient.auth.getUser();
+
+    if (callerError || !caller) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const [{ data: canEdit }, { data: canManage }] = await Promise.all([
+      supabaseAdmin.rpc("has_permission", {
+        user_id: caller.id,
+        req_resource: "assistants_knowledge",
+        req_action: "edit",
+      }),
+      supabaseAdmin.rpc("has_permission", {
+        user_id: caller.id,
+        req_resource: "assistants_knowledge",
+        req_action: "manage",
+      }),
+    ]);
+
+    if (!canEdit && !canManage) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden: requires assistants_knowledge.edit permission" }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     const {
       bodyMarkdown,
       existingIds = [],
@@ -26,6 +105,13 @@ Deno.serve(async (req: Request) => {
     if (!bodyMarkdown || typeof bodyMarkdown !== "string" || bodyMarkdown.trim().length < 10) {
       return new Response(
         JSON.stringify({ error: "O conteúdo do passo a passo é obrigatório para gerar metadados." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    if (bodyMarkdown.length > 30_000) {
+      return new Response(
+        JSON.stringify({ error: "O conteúdo excede o limite de 30.000 caracteres." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }

@@ -1,39 +1,69 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+const DEFAULT_ALLOWED_ORIGINS = [
+  "https://hub.siplan.com.br",
+  "https://siplanhub.vercel.app",
+];
 
-const PROMPT_ID = Deno.env.get("OPENAI_PROMPT_ID") || "pmpt_6a85e041a0e08196a659d0560497de3402bd152c918f12f4";
+function isAllowedOrigin(origin: string | null): origin is string {
+  if (!origin) return false;
+  if (DEFAULT_ALLOWED_ORIGINS.includes(origin)) return true;
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) return true;
+  const extra = (Deno.env.get("ALLOWED_ORIGINS") ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return extra.includes(origin);
+}
+
+function buildCorsHeaders(req: Request) {
+  const origin = req.headers.get("Origin");
+  const allowOrigin = isAllowedOrigin(origin) ? origin : DEFAULT_ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    Vary: "Origin",
+  };
+}
+
+async function sha256Hex(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value.trim());
+  const hashBuffer = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+const PROMPT_ID =
+  Deno.env.get("OPENAI_PROMPT_ID") ||
+  "pmpt_6a85e041a0e08196a659d0560497de3402bd152c918f12f4";
 const VECTOR_STORE_ID = "vs_6a85e00895f081918844a28887a34a17";
+const MAX_MESSAGE_LENGTH = 4000;
+const VISITOR_RATE_LIMIT_PER_MIN = 30;
+const PROJECT_RATE_LIMIT_PER_HOUR = 200;
 
-// Configuração Oficial de Produção do Assistente Orion TN (Parâmetros Fixos de Inferência e RAG)
 const orionAssistantConfig = {
-  // 1. MODELO OFICIAL (Homologado para melhor custo-benefício e obediência a tools)
   model: "gpt-4o-mini",
-
-  // 2. PARÂMETROS DE INFERÊNCIA & CONTROLE DE ALUCINAÇÃO
-  temperature: 0.1, // Baixíssima aleatoriedade: garante respostas determinísticas e fiéis à documentação
-  max_output_tokens: 1200, // Limite seguro: impede respostas prolixas e protege custos de saída
+  temperature: 0.1,
+  max_output_tokens: 1200,
   top_p: 0.9,
-
-  // 3. FERRAMENTA FILE SEARCH COM CALIBRAÇÃO AVANÇADA
   tools: [
     {
       type: "file_search",
-      vector_store_ids: [VECTOR_STORE_ID], // Vector Store Oficial Homologada
-      max_num_results: 5, // Traz apenas os 5 chunks mais relevantes (evita poluição de contexto)
+      vector_store_ids: [VECTOR_STORE_ID],
+      max_num_results: 5,
       ranking_options: {
-        score_threshold: 0.25, // FILTRO ANTI-RUÍDO: descarta qualquer arquivo periférico com similaridade baixa
+        score_threshold: 0.25,
       },
     },
   ],
 };
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = buildCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -50,11 +80,39 @@ Deno.serve(async (req: Request) => {
 
     // 1. Action: feedback
     if (action === "feedback") {
-      const { message_id, visitor_id, feedback, comment } = body;
-      if (!message_id || !visitor_id || !feedback) {
+      const { message_id, visitor_id, visitor_token, feedback, comment } = body;
+      if (!message_id || !visitor_id || !visitor_token || !feedback) {
         return new Response(
-          JSON.stringify({ error: "message_id, visitor_id e feedback são obrigatórios" }),
+          JSON.stringify({
+            error: "message_id, visitor_id, visitor_token e feedback são obrigatórios",
+          }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (feedback !== "helpful" && feedback !== "unhelpful") {
+        return new Response(
+          JSON.stringify({ error: "Feedback inválido" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const tokenHash = await sha256Hex(String(visitor_token));
+      const { data: visitorRecord } = await supabaseAdmin
+        .from("pos_ai_chat_visitors")
+        .select("id, is_active, access_token_hash")
+        .eq("id", visitor_id)
+        .maybeSingle();
+
+      if (
+        !visitorRecord ||
+        visitorRecord.is_active === false ||
+        !visitorRecord.access_token_hash ||
+        visitorRecord.access_token_hash !== tokenHash
+      ) {
+        return new Response(
+          JSON.stringify({ error: "Sessão de visitante não autorizada" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
@@ -62,12 +120,12 @@ Deno.serve(async (req: Request) => {
         .from("pos_ai_chat_messages")
         .update({
           feedback,
-          feedback_comment: comment || null,
+          feedback_comment: comment ? String(comment).slice(0, 1000) : null,
         })
         .eq("id", message_id)
         .eq("visitor_id", visitor_id)
         .eq("role", "assistant")
-        .select()
+        .select("id, feedback, feedback_comment")
         .single();
 
       if (fbError) throw fbError;
@@ -79,19 +137,37 @@ Deno.serve(async (req: Request) => {
     }
 
     // 2. Action: chat
-    const { project_id, visitor_id, session_id, message, previous_response_id } = body;
+    const {
+      project_id,
+      visitor_id,
+      visitor_token,
+      session_id,
+      message,
+      previous_response_id,
+    } = body;
 
-    if (!project_id || !visitor_id || !session_id || !message?.trim()) {
+    if (!project_id || !visitor_id || !visitor_token || !session_id || !message?.trim()) {
       return new Response(
-        JSON.stringify({ error: "project_id, visitor_id, session_id e message são obrigatórios" }),
+        JSON.stringify({
+          error: "project_id, visitor_id, visitor_token, session_id e message são obrigatórios",
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Resolve either a project-backed link or a standalone client link.
+    const trimmedMessage = String(message).trim();
+    if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
+      return new Response(
+        JSON.stringify({
+          error: `A mensagem excede o limite de ${MAX_MESSAGE_LENGTH} caracteres.`,
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { data: project, error: projError } = await supabaseAdmin.rpc(
       "get_pos_assistant_project_info",
-      { p_id: project_id },
+      { p_id: project_id }
     );
 
     if (projError || !project) {
@@ -108,17 +184,77 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    const tokenHash = await sha256Hex(String(visitor_token));
     const { data: visitor, error: visitorError } = await supabaseAdmin
       .from("pos_ai_chat_visitors")
-      .select("id")
+      .select("id, is_active, access_token_hash")
       .eq("id", visitor_id)
       .eq("project_id", project_id)
       .maybeSingle();
 
-    if (visitorError || !visitor) {
+    if (
+      visitorError ||
+      !visitor ||
+      visitor.is_active === false ||
+      !visitor.access_token_hash ||
+      visitor.access_token_hash !== tokenHash
+    ) {
       return new Response(
-        JSON.stringify({ error: "Usuário não identificado para este cartório" }),
+        JSON.stringify({ error: "Sessão não identificada ou não autorizada para este cartório" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Impede injecao em sessao pertencente a outro visitante
+    const { data: foreignSessionMsg } = await supabaseAdmin
+      .from("pos_ai_chat_messages")
+      .select("id")
+      .eq("project_id", project_id)
+      .eq("session_id", session_id)
+      .neq("visitor_id", visitor_id)
+      .limit(1)
+      .maybeSingle();
+
+    if (foreignSessionMsg) {
+      return new Response(
+        JSON.stringify({ error: "Esta conversa pertence a outro usuário." }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Rate limit por visitante (1 minuto) e por link (1 hora)
+    const oneMinuteAgo = new Date(Date.now() - 60_000).toISOString();
+    const { count: visitorRecentCount } = await supabaseAdmin
+      .from("pos_ai_chat_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("project_id", project_id)
+      .eq("visitor_id", visitor_id)
+      .eq("role", "user")
+      .gte("created_at", oneMinuteAgo);
+
+    if ((visitorRecentCount ?? 0) >= VISITOR_RATE_LIMIT_PER_MIN) {
+      return new Response(
+        JSON.stringify({
+          error: "Muitas perguntas em sequência. Aguarde alguns segundos e tente novamente.",
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const oneHourAgo = new Date(Date.now() - 3_600_000).toISOString();
+    const { count: projectHourCount } = await supabaseAdmin
+      .from("pos_ai_chat_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("project_id", project_id)
+      .eq("role", "user")
+      .gte("created_at", oneHourAgo);
+
+    if ((projectHourCount ?? 0) >= PROJECT_RATE_LIMIT_PER_HOUR) {
+      return new Response(
+        JSON.stringify({
+          error: "Limite temporário de consultas atingido para este link. Tente novamente em instantes.",
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -127,7 +263,6 @@ Deno.serve(async (req: Request) => {
       .update({ last_seen_at: new Date().toISOString() })
       .eq("id", visitor_id);
 
-    // Record user message in DB
     const { data: userMsg, error: userMsgErr } = await supabaseAdmin
       .from("pos_ai_chat_messages")
       .insert({
@@ -135,7 +270,7 @@ Deno.serve(async (req: Request) => {
         visitor_id,
         session_id,
         role: "user",
-        content: message.trim(),
+        content: trimmedMessage,
       })
       .select()
       .single();
@@ -146,9 +281,6 @@ Deno.serve(async (req: Request) => {
 
     const configuredPromptVersion = Deno.env.get("OPENAI_PROMPT_VERSION")?.trim();
 
-    // Prepare OpenAI Responses API payload
-    // As instruções (System Prompt) são resolvidas diretamente a partir do Prompt cadastrado na OpenAI Platform.
-    // O campo version é opcional na OpenAI: quando omitido, consome automaticamente a versão mais recente ativa no Dashboard.
     const openAiPayload: Record<string, unknown> = {
       prompt: {
         id: PROMPT_ID,
@@ -157,7 +289,7 @@ Deno.serve(async (req: Request) => {
       input: [
         {
           role: "user",
-          content: message.trim(),
+          content: trimmedMessage,
         },
       ],
       tools: orionAssistantConfig.tools,
@@ -173,16 +305,14 @@ Deno.serve(async (req: Request) => {
       console.error("OPENAI_API_KEY is not configured in Supabase Secrets");
       return new Response(
         JSON.stringify({
-          error: "Chave da API da OpenAI não configurada (OPENAI_API_KEY). Configure o secret no Supabase.",
+          error: "Assistente temporariamente indisponível por configuração.",
         }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Start timing for latency measurement
     const startTime = performance.now();
 
-    // Call OpenAI Responses API
     const openAiRes = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
@@ -200,13 +330,11 @@ Deno.serve(async (req: Request) => {
       return new Response(
         JSON.stringify({
           error: openAiJson?.error?.message || "Erro ao consultar o assistente de IA",
-          details: openAiJson,
         }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Extract text output
     let replyText = "";
     if (Array.isArray(openAiJson.output)) {
       for (const item of openAiJson.output) {
@@ -238,7 +366,6 @@ Deno.serve(async (req: Request) => {
       configuredPromptVersion ||
       "latest";
 
-    // Record assistant response in DB with metrics
     const { data: assistantMsg, error: asstMsgErr } = await supabaseAdmin
       .from("pos_ai_chat_messages")
       .insert({

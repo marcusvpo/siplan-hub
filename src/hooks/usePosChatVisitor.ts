@@ -13,24 +13,41 @@ interface VisitorActionResult {
   success?: boolean;
   error?: string;
   visitor?: PosChatVisitor;
+  access_token?: string;
+}
+
+interface VisitorVerifyResult {
+  valid?: boolean;
+  visitor?: PosChatVisitor;
+}
+
+interface RememberedVisitorSession {
+  id: string;
+  token: string;
 }
 
 function visitorStorageKey(projectId: string) {
   return `pos-chat-visitor:${projectId}`;
 }
 
-function readRememberedVisitor(projectId: string) {
+function readRememberedVisitor(projectId: string): RememberedVisitorSession | null {
   try {
-    return localStorage.getItem(visitorStorageKey(projectId));
+    const raw = localStorage.getItem(visitorStorageKey(projectId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed.id === "string" && typeof parsed.token === "string" && parsed.token) {
+      return { id: parsed.id, token: parsed.token };
+    }
+    return null;
   } catch {
     return null;
   }
 }
 
-function rememberVisitor(projectId: string, visitorId: string | null) {
+function rememberVisitor(projectId: string, session: RememberedVisitorSession | null) {
   try {
-    if (visitorId) {
-      localStorage.setItem(visitorStorageKey(projectId), visitorId);
+    if (session) {
+      localStorage.setItem(visitorStorageKey(projectId), JSON.stringify(session));
     } else {
       localStorage.removeItem(visitorStorageKey(projectId));
     }
@@ -40,16 +57,16 @@ function rememberVisitor(projectId: string, visitorId: string | null) {
 }
 
 export function usePosChatVisitor(projectId: string) {
-  const [visitors, setVisitors] = useState<PosChatVisitor[]>([]);
   const [visitor, setVisitor] = useState<PosChatVisitor | null>(null);
+  const [visitorToken, setVisitorToken] = useState<string>("");
   const [isLoading, setIsLoading] = useState(Boolean(projectId));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadVisitors = useCallback(async () => {
+  const loadVisitorSession = useCallback(async () => {
     if (!projectId) {
-      setVisitors([]);
       setVisitor(null);
+      setVisitorToken("");
       setIsLoading(false);
       return;
     }
@@ -58,69 +75,46 @@ export function usePosChatVisitor(projectId: string) {
     setError(null);
 
     try {
-      const { data, error: requestError } = await supabase.rpc("get_pos_chat_visitors", {
-        p_project_id: projectId,
-      });
+      const remembered = readRememberedVisitor(projectId);
+      if (!remembered) {
+        setVisitor(null);
+        setVisitorToken("");
+        return;
+      }
+
+      const { data, error: requestError } = await (supabase.rpc as any)(
+        "verify_pos_chat_visitor_session",
+        {
+          p_project_id: projectId,
+          p_visitor_id: remembered.id,
+          p_visitor_token: remembered.token,
+        }
+      );
 
       if (requestError) throw requestError;
 
-      const availableVisitors = (data || []) as PosChatVisitor[];
-      const rememberedId = readRememberedVisitor(projectId);
-      const remembered = availableVisitors.find((item) => item.id === rememberedId) || null;
-
-      setVisitors(availableVisitors);
-      setVisitor(remembered);
-      if (rememberedId && !remembered) rememberVisitor(projectId, null);
+      const result = data as VisitorVerifyResult | null;
+      if (result?.valid && result.visitor) {
+        setVisitor(result.visitor);
+        setVisitorToken(remembered.token);
+      } else {
+        rememberVisitor(projectId, null);
+        setVisitor(null);
+        setVisitorToken("");
+      }
     } catch (requestError) {
-      console.error("Error loading post-chat visitors:", requestError);
-      setError("Não foi possível carregar a identificação dos usuários.");
-      setVisitors([]);
+      console.error("Error validating post-chat visitor session:", requestError);
+      rememberVisitor(projectId, null);
       setVisitor(null);
+      setVisitorToken("");
     } finally {
       setIsLoading(false);
     }
   }, [projectId]);
 
   useEffect(() => {
-    void loadVisitors();
-  }, [loadVisitors]);
-
-  const selectVisitor = useCallback(
-    async (selectedVisitor: PosChatVisitor) => {
-      if (!projectId || isSubmitting) return false;
-
-      setIsSubmitting(true);
-      try {
-        const { data, error: requestError } = await supabase.rpc("select_pos_chat_visitor", {
-          p_project_id: projectId,
-          p_visitor_id: selectedVisitor.id,
-        });
-        const result = data as VisitorActionResult | null;
-
-        if (requestError || !result?.success || !result.visitor) {
-          throw new Error(result?.error || requestError?.message || "Usuário não encontrado.");
-        }
-
-        setVisitor(result.visitor);
-        setVisitors((current) => [
-          result.visitor as PosChatVisitor,
-          ...current.filter((item) => item.id !== result.visitor?.id),
-        ]);
-        rememberVisitor(projectId, result.visitor.id);
-        return true;
-      } catch (requestError) {
-        toast.error(
-          requestError instanceof Error
-            ? requestError.message
-            : "Não foi possível selecionar este usuário."
-        );
-        return false;
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-    [isSubmitting, projectId]
-  );
+    void loadVisitorSession();
+  }, [loadVisitorSession]);
 
   const registerVisitor = useCallback(
     async (name: string, sector: string) => {
@@ -135,18 +129,18 @@ export function usePosChatVisitor(projectId: string) {
         });
         const result = data as VisitorActionResult | null;
 
-        if (requestError || !result?.success || !result.visitor) {
+        if (requestError || !result?.success || !result.visitor || !result.access_token) {
           throw new Error(
             result?.error || requestError?.message || "Não foi possível concluir a identificação."
           );
         }
 
         setVisitor(result.visitor);
-        setVisitors((current) => [
-          result.visitor as PosChatVisitor,
-          ...current.filter((item) => item.id !== result.visitor?.id),
-        ]);
-        rememberVisitor(projectId, result.visitor.id);
+        setVisitorToken(result.access_token);
+        rememberVisitor(projectId, {
+          id: result.visitor.id,
+          token: result.access_token,
+        });
         toast.success(`Olá, ${result.visitor.name}!`);
         return true;
       } catch (requestError) {
@@ -166,17 +160,18 @@ export function usePosChatVisitor(projectId: string) {
   const clearVisitor = useCallback(() => {
     rememberVisitor(projectId, null);
     setVisitor(null);
+    setVisitorToken("");
   }, [projectId]);
 
   return {
-    visitors,
+    visitors: [] as PosChatVisitor[],
     visitor,
+    visitorToken,
     isLoading,
     isSubmitting,
     error,
-    selectVisitor,
     registerVisitor,
     clearVisitor,
-    reloadVisitors: loadVisitors,
+    reloadVisitors: loadVisitorSession,
   };
 }

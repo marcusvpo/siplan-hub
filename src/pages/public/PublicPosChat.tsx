@@ -96,12 +96,11 @@ export default function PublicPosChat() {
   const { id: projectId } = useParams<{ id: string }>();
   const resolvedProjectId = projectId || "";
   const {
-    visitors,
     visitor,
+    visitorToken,
     isLoading: isLoadingVisitors,
     isSubmitting: isSubmittingVisitor,
     error: visitorError,
-    selectVisitor,
     registerVisitor,
     reloadVisitors,
   } = usePosChatVisitor(resolvedProjectId);
@@ -123,7 +122,11 @@ export default function PublicPosChat() {
     renameSession,
     deleteSession,
     exportSession,
-  } = usePosAiChat({ projectId: resolvedProjectId, visitorId: visitor?.id });
+  } = usePosAiChat({
+    projectId: resolvedProjectId,
+    visitorId: visitor?.id,
+    visitorToken,
+  });
 
   const [inputText, setInputText] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -601,13 +604,11 @@ export default function PublicPosChat() {
       <PosChatVisitorDialog
         open={visitorDialogOpen}
         projectName={projectInfo.client_name}
-        visitors={visitors}
         currentVisitor={visitor}
         isLoading={isLoadingVisitors}
         isSubmitting={isSubmittingVisitor}
         error={visitorError}
         onOpenChange={setVisitorDialogOpen}
-        onSelectVisitor={selectVisitor}
         onRegisterVisitor={registerVisitor}
         onRetry={() => void reloadVisitors()}
       />

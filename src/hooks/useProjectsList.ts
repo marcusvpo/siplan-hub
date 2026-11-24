@@ -18,7 +18,7 @@ import {
 
 import { ViewPreset } from "@/stores/filterStore";
 import { normalizeSpecialty } from "@/utils/projectSpecialty";
-import { sanitizeOrionAdminConfig } from "@/lib/secondary-products";
+import { splitCustomFieldsForVault } from "@/utils/project-credentials";
 
 let lastAutoFinishCheck = 0;
 let lastAutoFinishDate = "";
@@ -239,7 +239,7 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
           : undefined,
         conversionDispatchDone: Boolean(row.conversion_dispatch_done),
         conversionDispatchedBy: row.conversion_dispatched_by as string | undefined,
-        customFields: (row.custom_fields as Record<string, unknown>) || {},
+        customFields: (splitCustomFieldsForVault(row.custom_fields).publicCustomFields as Record<string, unknown>) || {},
         // Stages with complete date tracking for bottleneck detection
         stages: {
             infra: { 
@@ -271,20 +271,10 @@ function userProjectsListTransform(row: ProjectRow): Partial<ProjectV2> {
                 startDate: row.environment_start_date ? new Date(row.environment_start_date as string) : undefined,
                 endDate: row.environment_end_date ? new Date(row.environment_end_date as string) : undefined,
                 responsible: row.environment_responsible as string | undefined,
-                anydeskId: (row.custom_fields as any)?.environment_anydesk_id || "",
-                anydeskPassword: (row.custom_fields as any)?.environment_anydesk_password || "",
-                soLogin: (row.custom_fields as any)?.environment_so_login || (row.custom_fields as any)?.dtc?.soLogin || "",
-                soPassword: (row.custom_fields as any)?.environment_so_password || (row.custom_fields as any)?.dtc?.soPassword || "",
-                osType: (row.custom_fields as any)?.environment_os_type || (row.custom_fields as any)?.dtc?.osType || "",
-                osCredentials: (row.custom_fields as any)?.environment_os_credentials || [],
-                remoteAccessList: (row.custom_fields as any)?.environment_remote_access_list || (row.custom_fields as any)?.dtc?.remoteAccessList || [],
-                postgresVersion: (row.custom_fields as any)?.environment_postgres_version || (row.custom_fields as any)?.dtc?.postgresVersion || "",
-                postgresAccessData: (row.custom_fields as any)?.environment_postgres_access_data || (row.custom_fields as any)?.dtc?.postgresAccessData || "",
-                postgresHost: (row.custom_fields as any)?.environment_postgres_host || (row.custom_fields as any)?.dtc?.postgresHost || "",
-                postgresUser: (row.custom_fields as any)?.environment_postgres_user || (row.custom_fields as any)?.dtc?.postgresUser || "",
-                postgresPassword: (row.custom_fields as any)?.environment_postgres_password || (row.custom_fields as any)?.dtc?.postgresPassword || "",
-                orionAdminConfig: sanitizeOrionAdminConfig((row.custom_fields as any)?.environment_orion_admin_config),
+                // Credenciais sensiveis residem no cofre `project_credentials` (carregadas sob demanda em useProjectDetails / EnvironmentListDialog)
                 orionAdminConfigured: Boolean((row.custom_fields as any)?.environment_orion_admin_configured),
+                orionAdminConfiguredAt: (row.custom_fields as any)?.environment_orion_admin_configured_at || undefined,
+                orionAdminConfiguredBy: (row.custom_fields as any)?.environment_orion_admin_configured_by as string | undefined,
                 kanbanStatus: isEnvironmentEligible
                   ? (((row.custom_fields as any)?.environment_kanban_status as ("not_started" | "in_progress" | "completed") | undefined) || (row.environment_status === 'done' ? 'completed' : row.environment_status === 'in-progress' ? 'in_progress' : 'not_started'))
                   : undefined,

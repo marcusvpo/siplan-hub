@@ -1,53 +1,128 @@
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const DEFAULT_ALLOWED_ORIGINS = [
+  "https://hub.siplan.com.br",
+  "https://siplanhub.vercel.app",
+];
+
+function isAllowedOrigin(origin: string | null): origin is string {
+  if (!origin) return false;
+  if (DEFAULT_ALLOWED_ORIGINS.includes(origin)) return true;
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)) return true;
+  const extra = (Deno.env.get("ALLOWED_ORIGINS") ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return extra.includes(origin);
+}
+
+function buildCorsHeaders(req: Request) {
+  const origin = req.headers.get("Origin");
+  const allowOrigin = isAllowedOrigin(origin) ? origin : DEFAULT_ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    Vary: "Origin",
+  };
+}
 
 const BUNNY_API_KEY =
   Deno.env.get("BUNNY_STREAM_API_KEY") ??
   Deno.env.get("BUNNY_API_KEY") ??
   "";
 
+const ALLOWED_LIBRARY_IDS = new Set(["467408"]);
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isSafeBunnyHost(rawUrl: string): boolean {
+  try {
+    const parsed = new URL(rawUrl);
+    if (parsed.protocol !== "https:") return false;
+    const host = parsed.hostname.toLowerCase();
+    return host.endsWith(".b-cdn.net") || host === "mediadelivery.net" || host.endsWith(".mediadelivery.net");
+  } catch {
+    return false;
+  }
+}
+
 function decodeHtmlEntities(str: string): string {
   if (!str) return "";
   return str
     .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(dec))
     .replace(/&quot;/g, '"')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&aacute;/g, 'á')
-    .replace(/&eacute;/g, 'é')
-    .replace(/&iacute;/g, 'í')
-    .replace(/&oacute;/g, 'ó')
-    .replace(/&uacute;/g, 'ú')
-    .replace(/&atilde;/g, 'ã')
-    .replace(/&otilde;/g, 'õ')
-    .replace(/&ccedil;/g, 'ç')
-    .replace(/&Aacute;/g, 'Á')
-    .replace(/&Eacute;/g, 'É')
-    .replace(/&Iacute;/g, 'Í')
-    .replace(/&Oacute;/g, 'Ó')
-    .replace(/&Uacute;/g, 'Ú')
-    .replace(/&Ccedil;/g, 'Ç');
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&aacute;/g, "á")
+    .replace(/&eacute;/g, "é")
+    .replace(/&iacute;/g, "í")
+    .replace(/&oacute;/g, "ó")
+    .replace(/&uacute;/g, "ú")
+    .replace(/&atilde;/g, "ã")
+    .replace(/&otilde;/g, "õ")
+    .replace(/&ccedil;/g, "ç")
+    .replace(/&Aacute;/g, "Á")
+    .replace(/&Eacute;/g, "É")
+    .replace(/&Iacute;/g, "Í")
+    .replace(/&Oacute;/g, "Ó")
+    .replace(/&Uacute;/g, "Ú")
+    .replace(/&Ccedil;/g, "Ç");
 }
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = buildCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const callerClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      {
+        global: { headers: { Authorization: authHeader } },
+        auth: { persistSession: false, autoRefreshToken: false },
+      }
+    );
+
+    const {
+      data: { user: caller },
+      error: callerError,
+    } = await callerClient.auth.getUser();
+
+    if (callerError || !caller) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { libraryId, videoId } = await req.json();
 
     const cleanLibId = String(libraryId || "467408").trim();
     const cleanVideoId = String(videoId || "").trim();
 
-    if (!cleanVideoId) {
+    if (!/^\d{1,10}$/.test(cleanLibId) || !ALLOWED_LIBRARY_IDS.has(cleanLibId)) {
       return new Response(
-        JSON.stringify({ error: "O ID do vídeo (GUID) da Bunny é obrigatório." }),
+        JSON.stringify({ error: "Library ID da Bunny inválido ou não permitido." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    if (!UUID_REGEX.test(cleanVideoId)) {
+      return new Response(
+        JSON.stringify({ error: "O ID do vídeo (GUID) da Bunny é inválido." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -60,7 +135,6 @@ Deno.serve(async (req: Request) => {
     let thumbnailUrl = `https://vz-${cleanLibId}.b-cdn.net/${cleanVideoId}/thumbnail.jpg`;
     let base64Thumbnail = "";
 
-    // 1. Tentar consultar via Bunny Stream API oficial se a chave estiver configurada
     if (BUNNY_API_KEY) {
       try {
         const bunnyRes = await fetch(
@@ -83,7 +157,6 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // 2. Extrair metadados reais diretamente da página Direct Play da Bunny
     try {
       const pageRes = await fetch(playUrl, {
         headers: {
@@ -95,7 +168,6 @@ Deno.serve(async (req: Request) => {
       if (pageRes.ok) {
         const html = await pageRes.text();
 
-        // Extrair Título
         if (!videoTitle) {
           const ogTitleMatch =
             html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i) ||
@@ -107,7 +179,6 @@ Deno.serve(async (req: Request) => {
           }
         }
 
-        // Extrair Duração
         if (!durationSeconds) {
           const durationMatch =
             html.match(/<meta[^>]*property=["']video:duration["'][^>]*content=["']([^"']+)["']/i) ||
@@ -118,17 +189,15 @@ Deno.serve(async (req: Request) => {
           }
         }
 
-        // Extrair Thumbnail OG Image
         const ogImageMatch =
           html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
           html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
 
-        if (ogImageMatch && ogImageMatch[1]) {
+        if (ogImageMatch && ogImageMatch[1] && isSafeBunnyHost(ogImageMatch[1])) {
           thumbnailUrl = ogImageMatch[1];
         }
 
-        // Baixar imagem do thumbnail com Referer e converter para Base64 para exibição perfeita no frontend
-        if (thumbnailUrl) {
+        if (thumbnailUrl && isSafeBunnyHost(thumbnailUrl)) {
           try {
             const imgRes = await fetch(thumbnailUrl, {
               headers: { Referer: playUrl },
@@ -151,7 +220,6 @@ Deno.serve(async (req: Request) => {
       console.warn("Aviso ao extrair metadados da página de play:", pageErr);
     }
 
-    // Formatar timestamp mm:ss ou hh:mm:ss
     const hours = Math.floor(durationSeconds / 3600);
     const minutes = Math.floor((durationSeconds % 3600) / 60);
     const remainingSeconds = durationSeconds % 60;

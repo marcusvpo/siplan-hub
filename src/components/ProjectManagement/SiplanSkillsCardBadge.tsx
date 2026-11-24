@@ -2,7 +2,7 @@ import React from 'react';
 import { ProjectV2 } from '@/types/ProjectV2';
 import { Badge } from '@/components/ui/badge';
 import {
-  extractSkillsCredentialsFromFields,
+  extractSkillsBadgeMetadata,
   useSkillsBatchActivity,
 } from '@/hooks/useSiplanSkillsIntegration';
 import { isEligibleSkillsSystemType } from '@/utils/skills-username-generator';
@@ -110,7 +110,7 @@ export const SiplanSkillsCardBadge: React.FC<SiplanSkillsCardBadgeProps> = ({ pr
     return null;
   }
 
-  const stored = extractSkillsCredentialsFromFields(project.customFields);
+  const stored = extractSkillsBadgeMetadata(project.customFields);
 
   if (!stored) {
     return (

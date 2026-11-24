@@ -114,6 +114,18 @@ export function useCommercialChecklists() {
 
   const submitChecklist = useMutation({
     mutationFn: async ({ id, responses }: { id: string; responses: any }) => {
+      if (!user?.id) {
+        const { data, error } = await (supabase.rpc as any)(
+          "submit_public_commercial_checklist",
+          {
+            p_checklist_id: id,
+            p_responses: responses,
+          },
+        );
+        if (error) throw error;
+        return data;
+      }
+
       const { data, error } = await supabase
         .from("commercial_checklists" as any)
         .update({
@@ -172,17 +184,33 @@ export function useSingleCommercialChecklist(id: string | null) {
     queryKey: ["commercial-checklist", id],
     queryFn: async () => {
       if (!id) return null;
-      const { data, error } = await supabase
-        .from("commercial_checklists" as any)
-        .select("*, projects:project_id(id, client_name, ticket_number, system_type, global_status)")
-        .eq("id", id)
-        .single();
 
-      if (error) throw error;
+      const { data: sessionData } = await supabase.auth.getSession();
+      let rawData: any = null;
 
-      const proj = data.projects;
+      if (sessionData.session) {
+        const { data, error } = await supabase
+          .from("commercial_checklists" as any)
+          .select("*, projects:project_id(id, client_name, ticket_number, system_type, global_status)")
+          .eq("id", id)
+          .single();
+
+        if (error) throw error;
+        rawData = data;
+      } else {
+        const { data, error } = await (supabase.rpc as any)(
+          "get_public_commercial_checklist",
+          { p_checklist_id: id },
+        );
+
+        if (error) throw error;
+        if (!data) throw new Error("Checklist não encontrado");
+        rawData = data;
+      }
+
+      const proj = rawData.projects;
       return {
-        ...data,
+        ...rawData,
         projects: proj ? {
           id: proj.id,
           clientName: proj.client_name,

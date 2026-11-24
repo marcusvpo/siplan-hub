@@ -70,23 +70,22 @@ suite("invariantes de RLS (banco real)", () => {
   });
 
   it("nenhuma tabela expoe LEITURA irrestrita ao anonimo fora das rotas publicas", async () => {
-    // Estas tres sustentam /roadmap/:token e /public/checklist/:id.
-    // A configuração de manutenção do blog é pública por contrato; a exceção
-    // abaixo identifica a policy exata e tem uma verificação adicional da RPC.
-    const permitidas = ["roadmaps", "commercial_checklists", "form_templates"];
+    // /roadmap/:token, /public/checklist/:id e /public/pos-chat/:id operam via RPCs SECURITY DEFINER dedicadas.
+    // Apenas templates de formulario (kind = 'commercial_checklist') e settings de manutencao do blog sao lidos via SELECT.
+    const permitidas = ["form_templates"];
     const { rows } = await client.query(
       `
-      select tablename, policyname
+      select tablename, policyname, qual::text as qual
       from pg_policies
       where schemaname = 'public'
         and cmd = 'SELECT'
         and ('public' = any(roles) or 'anon' = any(roles))
-        and qual::text = 'true'
         and tablename <> all($1::text[])
         and not (
           tablename = 'orion_update_settings'
           and policyname = 'orion_update_settings_public_select'
         )
+        and coalesce(qual::text, '') !~* '(auth\\.uid\\(\\)|auth\\.role\\(\\)|has_permission\\()'
       order by tablename
     `,
       [permitidas],
@@ -271,5 +270,110 @@ suite("invariantes de RLS (banco real)", () => {
     expect(rows[0].invitation_definition).toMatch(
       /'theme'(?:::text)?,\s*questionnaire\.theme/,
     );
+  });
+
+  it("handle_new_user nao aceita role do metadata e profiles bloqueia auto-escalacao", async () => {
+    const { rows } = await client.query(`
+      select
+        pg_get_functiondef('public.handle_new_user()'::regprocedure) as handle_new_user_def,
+        exists (
+          select 1
+          from pg_trigger
+          where tgrelid = 'public.profiles'::regclass
+            and tgname = 'trg_protect_profile_privileged_fields'
+            and not tgisinternal
+        ) as has_profile_guard_trigger
+    `);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].has_profile_guard_trigger).toBe(true);
+    expect(rows[0].handle_new_user_def).not.toMatch(/raw_user_meta_data\s*->>\s*'role'/i);
+  });
+
+  it("cofre project_credentials bloqueia anon e exige permissao RBAC dedicada", async () => {
+    const { rows } = await client.query(`
+      select
+        (
+          select relrowsecurity
+          from pg_class
+          where oid = 'public.project_credentials'::regclass
+        ) as rls_enabled,
+        has_table_privilege('anon', 'public.project_credentials', 'SELECT') as anon_select,
+        has_table_privilege('anon', 'public.project_credentials', 'INSERT') as anon_insert,
+        has_table_privilege('anon', 'public.project_credentials', 'UPDATE') as anon_update,
+        exists (
+          select 1
+          from pg_policies
+          where schemaname = 'public'
+            and tablename = 'project_credentials'
+            and cmd = 'SELECT'
+            and 'authenticated' = any(roles)
+            and qual::text ~* 'has_permission\\(.*project_credentials.*view'
+        ) as has_view_policy
+    `);
+
+    expect(rows).toEqual([
+      {
+        rls_enabled: true,
+        anon_select: false,
+        anon_insert: false,
+        anon_update: false,
+        has_view_policy: true,
+      },
+    ]);
+  });
+
+  it("buckets sensiveis project-files e assistant-oriontn-doc sao privados", async () => {
+    const { rows } = await client.query(`
+      select id, public
+      from storage.buckets
+      where id in ('project-files', 'assistant-oriontn-doc')
+      order by id
+    `);
+
+    expect(rows).toEqual([
+      { id: "assistant-oriontn-doc", public: false },
+      { id: "project-files", public: false },
+    ]);
+  });
+
+  it("funcoes SECURITY DEFINER nao-trigger executaveis por anon ficam restritas a whitelist publica", async () => {
+    const whitelist = [
+      "delete_pos_chat_visitor_session",
+      "get_pos_assistant_project_info",
+      "get_pos_chat_session_messages",
+      "get_pos_chat_visitor_sessions",
+      "get_project_public_info",
+      "get_public_commercial_checklist",
+      "get_roadmap_data",
+      "has_permission",
+      "is_pos_chat_link_enabled",
+      "orion_updates_get_settings",
+      "orion_updates_post_detail",
+      "orion_updates_public_posts",
+      "orion_updates_public_versions",
+      "register_pos_chat_visitor",
+      "rename_pos_chat_visitor_session",
+      "save_pos_chat_feedback_for_visitor",
+      "submit_public_commercial_checklist",
+      "update_project_public_infra",
+      "verify_pos_chat_visitor_session",
+    ];
+    const { rows } = await client.query(
+      `
+      select p.proname
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'public'
+        and p.prosecdef
+        and p.prorettype <> 'trigger'::regtype
+        and has_function_privilege('anon', p.oid, 'EXECUTE')
+        and p.proname <> all($1::text[])
+      order by p.proname
+    `,
+      [whitelist],
+    );
+
+    expect(rows).toEqual([]);
   });
 });

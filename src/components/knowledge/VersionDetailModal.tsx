@@ -29,7 +29,7 @@ interface VersionDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   version: KnowledgeVersion | null;
-  downloadUrl?: string;
+  onDownloadBackup?: () => void;
   onRestoreClick?: (version: KnowledgeVersion) => void;
 }
 
@@ -37,7 +37,7 @@ export function VersionDetailModal({
   isOpen,
   onClose,
   version,
-  downloadUrl,
+  onDownloadBackup,
   onRestoreClick,
 }: VersionDetailModalProps) {
   if (!version) return null;
@@ -163,17 +163,15 @@ export function VersionDetailModal({
 
           {/* Ações da Versão */}
           <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t">
-            {downloadUrl && (
+            {onDownloadBackup && (
               <Button
                 variant="outline"
                 size="sm"
+                onClick={onDownloadBackup}
                 className="gap-2 text-xs"
-                asChild
               >
-                <a href={downloadUrl} download target="_blank" rel="noreferrer">
-                  <Download className="h-3.5 w-3.5" />
-                  Baixar Arquivo de Backup (.md)
-                </a>
+                <Download className="h-3.5 w-3.5" />
+                Baixar Arquivo de Backup (.md)
               </Button>
             )}
 

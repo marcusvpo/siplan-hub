@@ -38,6 +38,7 @@ export interface ProjectPublicInfo {
 export interface UsePosAiChatOptions {
   projectId: string;
   visitorId?: string;
+  visitorToken?: string;
 }
 
 interface SessionActionResult {
@@ -87,6 +88,7 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
   const projectId =
     typeof optionsOrId === "string" ? optionsOrId : optionsOrId?.projectId || "";
   const visitorId = typeof optionsOrId === "string" ? "" : optionsOrId?.visitorId || "";
+  const visitorToken = typeof optionsOrId === "string" ? "" : optionsOrId?.visitorToken || "";
 
   const [projectInfo, setProjectInfo] = useState<ProjectPublicInfo | null>(null);
   const [isLoadingProject, setIsLoadingProject] = useState(true);
@@ -117,50 +119,18 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
       setProjectError(null);
 
       try {
-        // Try RPC first
         const { data, error } = await supabase.rpc("get_pos_assistant_project_info", {
           p_id: projectId,
         });
 
         if (error || !data) {
-          // Fallback to direct query on projects
-          const { data: directData, error: directErr } = await supabase
-            .from("projects")
-            .select("id, client_name, system_type, products, ticket_number, custom_fields, is_deleted")
-            .eq("id", projectId)
-            .eq("is_deleted", false)
-            .maybeSingle();
+          throw new Error("Projeto não encontrado ou link expirado");
+        }
 
-          if (directErr || !directData) {
-            throw new Error("Projeto não encontrado ou link expirado");
-          }
-
-          const isEnabled = Boolean(
-            (directData.custom_fields as Record<string, unknown>)?.pos_assistant_enabled
-          );
-          const disabledAt =
-            ((directData.custom_fields as Record<string, unknown>)
-              ?.pos_assistant_disabled_at as string) || null;
-
-          if (isMounted) {
-            const info: ProjectPublicInfo = {
-              id: directData.id,
-              client_name: directData.client_name || "Cartório",
-              system_type: directData.system_type || "Orion TN",
-              products: directData.products || [],
-              ticket_number: directData.ticket_number,
-              pos_assistant_enabled: isEnabled,
-              pos_assistant_disabled_at: disabledAt,
-            };
-            setProjectInfo(info);
-            setIsAccessDisabled(!isEnabled);
-          }
-        } else {
-          if (isMounted) {
-            const info = data as unknown as ProjectPublicInfo;
-            setProjectInfo(info);
-            setIsAccessDisabled(info.pos_assistant_enabled === false);
-          }
+        if (isMounted) {
+          const info = data as unknown as ProjectPublicInfo;
+          setProjectInfo(info);
+          setIsAccessDisabled(info.pos_assistant_enabled === false);
         }
       } catch (err: unknown) {
         if (isMounted) {
@@ -184,16 +154,17 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
 
   // 2. Fetch list of past sessions for the sidebar (Strictly sorted newest first)
   const loadSessions = useCallback(async () => {
-    if (!projectId || !visitorId) {
+    if (!projectId || !visitorId || !visitorToken) {
       setSessions([]);
       return;
     }
     setIsLoadingSessions(true);
 
     try {
-      const { data, error } = await supabase.rpc("get_pos_chat_visitor_sessions", {
+      const { data, error } = await (supabase.rpc as any)("get_pos_chat_visitor_sessions", {
         p_project_id: projectId,
         p_visitor_id: visitorId,
+        p_visitor_token: visitorToken,
       });
 
       if (error) {
@@ -214,15 +185,15 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
     } finally {
       setIsLoadingSessions(false);
     }
-  }, [projectId, visitorId]);
+  }, [projectId, visitorId, visitorToken]);
 
   useEffect(() => {
-    if (projectId && visitorId) {
+    if (projectId && visitorId && visitorToken) {
       loadSessions();
     } else {
       setSessions([]);
     }
-  }, [projectId, visitorId, loadSessions]);
+  }, [projectId, visitorId, visitorToken, loadSessions]);
 
   useEffect(() => {
     if (previousVisitorIdRef.current === visitorId) return;
@@ -237,14 +208,15 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
   // 3. Load message history for active session
   const loadHistoryForSession = useCallback(
     async (targetSessionId: string) => {
-      if (!projectId || !visitorId || !targetSessionId) return;
+      if (!projectId || !visitorId || !visitorToken || !targetSessionId) return;
       setIsLoadingHistory(true);
 
       try {
-        const { data, error } = await supabase.rpc("get_pos_chat_session_messages", {
+        const { data, error } = await (supabase.rpc as any)("get_pos_chat_session_messages", {
           p_project_id: projectId,
           p_session_id: targetSessionId,
           p_visitor_id: visitorId,
+          p_visitor_token: visitorToken,
         });
 
         if (error) {
@@ -282,7 +254,7 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
         setIsLoadingHistory(false);
       }
     },
-    [projectId, visitorId]
+    [projectId, visitorId, visitorToken]
   );
 
   // 4. Select an existing conversation from sidebar
@@ -304,7 +276,7 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
   // 6. Send a message to AI assistant
   const sendMessage = async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed || isGenerating || !projectId || !visitorId || !sessionId) return;
+    if (!trimmed || isGenerating || !projectId || !visitorId || !visitorToken || !sessionId) return;
 
     if (isAccessDisabled) {
       toast.error("O acesso ao assistente de pós-implantação deste cartório foi encerrado.");
@@ -359,6 +331,7 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
           action: "chat",
           project_id: projectId,
           visitor_id: visitorId,
+          visitor_token: visitorToken,
           session_id: sessionId,
           message: trimmed,
           previous_response_id: previousResponseIdRef.current,
@@ -440,13 +413,14 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
     );
 
     try {
-      if (!visitorId) return;
+      if (!visitorId || !visitorToken) return;
 
-      const { error } = await supabase.rpc("save_pos_chat_feedback_for_visitor", {
+      const { error } = await (supabase.rpc as any)("save_pos_chat_feedback_for_visitor", {
         p_message_id: messageId,
         p_visitor_id: visitorId,
         p_feedback: feedback,
         p_comment: comment || null,
+        p_visitor_token: visitorToken,
       });
 
       if (error) {
@@ -455,6 +429,7 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
             action: "feedback",
             message_id: messageId,
             visitor_id: visitorId,
+            visitor_token: visitorToken,
             feedback,
             comment,
           },
@@ -483,13 +458,14 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
     }
 
     try {
-      if (!visitorId) return false;
+      if (!visitorId || !visitorToken) return false;
 
-      const { data, error } = await supabase.rpc("rename_pos_chat_visitor_session", {
+      const { data, error } = await (supabase.rpc as any)("rename_pos_chat_visitor_session", {
         p_project_id: projectId,
         p_session_id: targetSessionId,
         p_visitor_id: visitorId,
         p_title: normalizedTitle,
+        p_visitor_token: visitorToken,
       });
       const result = data as SessionActionResult | null;
 
@@ -514,12 +490,13 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
 
   const deleteSession = async (targetSessionId: string) => {
     try {
-      if (!visitorId) return false;
+      if (!visitorId || !visitorToken) return false;
 
-      const { data, error } = await supabase.rpc("delete_pos_chat_visitor_session", {
+      const { data, error } = await (supabase.rpc as any)("delete_pos_chat_visitor_session", {
         p_project_id: projectId,
         p_session_id: targetSessionId,
         p_visitor_id: visitorId,
+        p_visitor_token: visitorToken,
       });
       const result = data as SessionActionResult | null;
 
@@ -545,12 +522,13 @@ export function usePosAiChat(optionsOrId?: string | UsePosAiChatOptions) {
 
   const exportSession = async (targetSessionId: string) => {
     try {
-      if (!visitorId) return false;
+      if (!visitorId || !visitorToken) return false;
 
-      const { data, error } = await supabase.rpc("get_pos_chat_session_messages", {
+      const { data, error } = await (supabase.rpc as any)("get_pos_chat_session_messages", {
         p_project_id: projectId,
         p_session_id: targetSessionId,
         p_visitor_id: visitorId,
+        p_visitor_token: visitorToken,
       });
 
       if (error || !data?.length) {

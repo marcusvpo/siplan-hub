@@ -183,23 +183,23 @@ const ProjectAdherenceRouteWrapper = () => {
   const isPrintMode =
     new URLSearchParams(window.location.search).get("print") === "true";
 
-  if (isPrintMode) {
-    return (
-      <Suspense fallback={<PageLoader />}>
-        <ProjectAdherenceForm />
-      </Suspense>
-    );
-  }
-
   return (
     <ProtectedRoute>
-      <MainLayout>
+      {isPrintMode ? (
         <Suspense fallback={<PageLoader />}>
           <RequirePermission resource="projects">
             <ProjectAdherenceForm />
           </RequirePermission>
         </Suspense>
-      </MainLayout>
+      ) : (
+        <MainLayout>
+          <Suspense fallback={<PageLoader />}>
+            <RequirePermission resource="projects">
+              <ProjectAdherenceForm />
+            </RequirePermission>
+          </Suspense>
+        </MainLayout>
+      )}
     </ProtectedRoute>
   );
 };

@@ -690,6 +690,22 @@ export type InternalIntegrationSecretInsert = {
 
 export type InternalIntegrationSecretUpdate = Partial<InternalIntegrationSecretInsert>;
 
+export type ProjectCredentialsRow = {
+  project_id: string;
+  credentials: Json;
+  updated_by: string | null;
+  updated_at: string;
+};
+
+export type ProjectCredentialsInsert = {
+  project_id: string;
+  credentials?: Json;
+  updated_by?: string | null;
+  updated_at?: string;
+};
+
+export type ProjectCredentialsUpdate = Partial<ProjectCredentialsInsert>;
+
 
 /**
  * O arquivo gerado do projeto estava vazio antes desta mudança. Estes aliases
@@ -994,6 +1010,7 @@ export type Tables<TableName extends string> =
                                              : TableName extends "assistant_knowledge_files" ? AssistantKnowledgeFileRow
                                               : TableName extends "cs_cx_nps_invitations" ? CsCxNpsInvitationRow
                                               : TableName extends "cs_cx_nps_access_events" ? CsCxNpsAccessEventRow
+                                              : TableName extends "project_credentials" ? ProjectCredentialsRow
                                     : UntypedSupabaseShape;
 
 export type TablesInsert<TableName extends string> =
@@ -1028,6 +1045,7 @@ export type TablesInsert<TableName extends string> =
                                              : TableName extends "assistant_knowledge_files" ? AssistantKnowledgeFileInsert
                                               : TableName extends "cs_cx_nps_invitations" ? CsCxNpsInvitationInsert
                                               : TableName extends "cs_cx_nps_access_events" ? CsCxNpsAccessEventInsert
+                                              : TableName extends "project_credentials" ? ProjectCredentialsInsert
                                     : UntypedSupabaseShape;
 
 export type TablesUpdate<TableName extends string> =
@@ -1062,4 +1080,5 @@ export type TablesUpdate<TableName extends string> =
                                              : TableName extends "assistant_knowledge_files" ? AssistantKnowledgeFileUpdate
                                               : TableName extends "cs_cx_nps_invitations" ? CsCxNpsInvitationUpdate
                                               : TableName extends "cs_cx_nps_access_events" ? CsCxNpsAccessEventUpdate
+                                              : TableName extends "project_credentials" ? ProjectCredentialsUpdate
                                     : UntypedSupabaseShape;
