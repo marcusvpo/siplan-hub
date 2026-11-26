@@ -48,8 +48,8 @@ Referência das tabelas, funções (RPCs), políticas de segurança (RLS) e buck
 | `has_permission(user_id, resource, action)` | Núcleo do RBAC — checa permissão do usuário |
 | `sync_project_form_response_status()` | Sincroniza status do projeto a partir do verdict da resposta de formulário |
 | `coerce_project_global_status()` | Normaliza/deriva o status global do projeto |
-| `get_project_public_info(p_id)` | Info pública do projeto para a tela de coleta de infra (sem login) |
-| `update_project_public_infra(...)` | Submissão pública de infra (servidores/estações) via anon key |
+| `get_project_public_info(p_token)` | Info pública do projeto para a tela de coleta de infra via token criptográfico (`infra_public_link_token`), ocultando dados quando encerrado |
+| `update_project_public_infra(p_token, ...)` | Submissão pública de infra (servidores/estações) via `infra_public_link_token` com rate limit e limites de payload |
 | `claim_model_generation_job(p_worker_id)` | Reivindica 1 job de geração de modelo de forma atômica (`FOR UPDATE SKIP LOCKED`) — um worker por job |
 | `append_available_model(p_project_id, p_file)` | Append atômico de um JSON em `projects.modelos_editor_available_files` (usado pelo worker e pelo upload manual) |
 | `remove_available_model(p_project_id, p_file_id)` | Remove atômico (por id) de um modelo disponível — evita o frontend reescrever o array e apagar modelos gerados (lost-update) |

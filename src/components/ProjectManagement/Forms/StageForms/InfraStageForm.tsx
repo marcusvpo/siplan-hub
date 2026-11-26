@@ -214,10 +214,12 @@ export function InfraStageForm({
     new Set(sameClientProjects.map((p) => p.systemType).filter(Boolean))
   );
 
-  // Deterministic canonical project ID for client's single shared public link
-  const canonicalProjectId = sameClientProjects.length > 0
-    ? [...sameClientProjects].sort((a, b) => a.id.localeCompare(b.id))[0].id
-    : projectId;
+  // Deterministic canonical project & opaque share token for client's single shared public link
+  const canonicalProject = sameClientProjects.length > 0
+    ? [...sameClientProjects].sort((a, b) => a.id.localeCompare(b.id))[0]
+    : null;
+  const canonicalInfraToken =
+    canonicalProject?.stages?.infra?.publicLinkToken || stage.publicLinkToken;
 
   const handleUpdateWithSync = (updates: Partial<InfraStageV2>) => {
     onUpdate(updates);
@@ -1246,7 +1248,15 @@ export function InfraStageForm({
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  const link = `${window.location.origin}/public/infra-coleta/${canonicalProjectId}`;
+                  if (!canonicalInfraToken) {
+                    toast({
+                      title: "Token de Coleta Indisponível",
+                      description: "Recarregue o projeto para obter o link seguro de coleta.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  const link = `${window.location.origin}/public/infra-coleta/${canonicalInfraToken}`;
                   navigator.clipboard.writeText(link);
                   toast({
                     title: "Link de Coleta Copiado",
@@ -1254,7 +1264,7 @@ export function InfraStageForm({
                     className: "bg-emerald-500 text-white border-emerald-600",
                   });
                 }}
-                disabled={stage.publicLinkClosed === true}
+                disabled={stage.publicLinkClosed === true || !canonicalInfraToken}
                 className="font-bold border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900/50 shadow-sm h-8 text-xs"
               >
                 <Share2 className="mr-1.5 h-3.5 w-3.5" />

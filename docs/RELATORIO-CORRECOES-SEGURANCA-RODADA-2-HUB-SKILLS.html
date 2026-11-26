@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relatório de Remediação — Rodada 2 — Siplan HUB + Siplan Skills</title>
+<style>
+:root{
+  --bg:#f4f6fb;--card:#fff;--line:#e4e9f2;--tx:#1b2437;--mut:#6b7a99;--acc:#2563eb;--acc2:#eff4ff;
+  --bad:#dc2626;--badbg:#fdecec;--high:#ea580c;--highbg:#fff7ed;--med:#b45309;--medbg:#fef3c7;
+  --ok:#059669;--okbg:#ecfdf5;--info:#0284c7;--infobg:#f0f9ff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 -apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding:34px 22px 70px}
+h1{font-size:27px;margin:0 0 6px;letter-spacing:-.3px}
+h2{font-size:18px;margin:36px 0 12px}
+h3{font-size:15px;margin:0 0 6px}
+.sub{color:var(--mut);font-size:14px}
+header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tag-ev{background:var(--okbg);color:var(--ok);border:1px solid #a7f3d0;font-weight:700;font-size:12.5px;padding:8px 13px;border-radius:999px;white-space:nowrap}
+.btn-all{background:var(--card);color:var(--acc);border:1px solid #cbd5e1;font-size:12.5px;font-weight:600;padding:8px 12px;border-radius:999px;cursor:pointer}
+.btn-all:hover{background:var(--acc2);border-color:var(--acc)}
+.alerta{background:var(--okbg);border:1px solid #a7f3d0;border-left:4px solid var(--ok);border-radius:10px;padding:15px 18px;margin:20px 0;font-size:13.8px}
+.alerta b{color:#065f46}
+.nota-info{background:var(--infobg);border:1px solid #bae6fd;border-left:4px solid var(--info);border-radius:10px;padding:14px 17px;margin:16px 0;font-size:13.5px}
+.nota-info b{color:#075985}
+.nota-warn{background:var(--medbg);border:1px solid #fde68a;border-left:4px solid var(--med);border-radius:10px;padding:14px 17px;margin:16px 0;font-size:13.5px}
+.nota-warn b{color:#92400e}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px;margin:22px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:0 1px 3px rgba(16,24,40,.05)}
+.kpi .n{font-size:24px;font-weight:700;letter-spacing:-.5px}
+.kpi .l{color:var(--mut);font-size:12px;margin-top:3px}
+.kpi.ok .n{color:var(--ok)} .kpi.info .n{color:var(--acc)}
+.sev{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.45px}
+.sev.crit{background:var(--badbg);color:var(--bad);border:1px solid #f5c2c2}
+.sev.high{background:var(--highbg);color:var(--high);border:1px solid #fed7aa}
+.sev.med{background:var(--medbg);color:var(--med);border:1px solid #fde68a}
+.sev.info{background:var(--infobg);color:var(--info);border:1px solid #bae6fd}
+.sev.ok{background:var(--okbg);color:var(--ok);border:1px solid #a7f3d0}
+.sev.pend{background:var(--medbg);color:var(--med);border:1px solid #fde68a}
+.sev.old{background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;text-decoration:line-through}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:0 0 12px;box-shadow:0 1px 3px rgba(16,24,40,.05);overflow:hidden}
+.card .head{display:flex;gap:14px;align-items:center;padding:15px 18px;cursor:pointer}
+.card .head:hover{background:#fafbff}
+.card .idx{width:34px;height:34px;border-radius:10px;background:var(--okbg);color:var(--ok);font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 auto;border:1px solid #a7f3d0}
+.card .idx.warn{background:var(--medbg);color:var(--med);border-color:#fde68a}
+.card .who{flex:1;min-width:200px}
+.card .nome{font-weight:650;font-size:15.5px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.card .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tag{background:#f1f5f9;border:1px solid var(--line);color:#475569;font-size:11px;padding:2.5px 9px;border-radius:999px}
+.tag.ok{background:var(--okbg);border-color:#a7f3d0;color:#065f46;font-weight:600}
+.expbtn{color:var(--acc);font-size:12.5px;white-space:nowrap;user-select:none}
+.full{border-top:1px solid var(--line);background:#fbfcfe;padding:18px;display:none}
+.card.open .full{display:block}
+.full p,.full li{font-size:13.5px;line-height:1.6}
+.full ul,.full ol{margin:8px 0;padding-left:22px}
+.full li{margin:4px 0}
+.cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:10px 0 14px}
+.cmp-box{border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.55}
+.cmp-box.before{background:#fef2f2;border:1px solid #fecaca}
+.cmp-box.after{background:#ecfdf5;border:1px solid #a7f3d0}
+.cmp-box h4{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.45px}
+.cmp-box.before h4{color:var(--bad)}
+.cmp-box.after h4{color:var(--ok)}
+pre{background:#0d1322;color:#c9d4ee;border:1px solid #1d2740;border-radius:10px;padding:13px 15px;overflow:auto;font-size:12px;line-height:1.5;margin:10px 0}
+pre b{color:#7dd3fc;font-weight:600}
+pre em{color:#34d399;font-style:normal;font-weight:600}
+pre .warn{color:#fbbf24}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:13.5px;margin:10px 0;box-shadow:0 1px 3px rgba(16,24,40,.04)}
+th,td{padding:10px 13px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:#f1f5f9;color:#475569;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px}
+tr:last-child td{border-bottom:none}
+.status{display:inline-flex;align-items:center;gap:6px;font-weight:650;font-size:12.5px;white-space:nowrap}
+.status::before{content:"";width:9px;height:9px;border-radius:50%;display:inline-block}
+.status.s-ok::before{background:var(--ok)} .status.s-info::before{background:var(--info)} .status.s-pend::before{background:var(--med)}
+.road{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;border-left:4px solid var(--ok);margin-bottom:12px}
+.road.pend{border-left-color:var(--med)}
+.road h3{margin:0 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.road ol,.road ul{margin:6px 0 0;padding-left:22px}
+.road li{font-size:13.5px;margin:5px 0}
+.rodape{color:var(--mut);font-size:12.5px;margin-top:34px;border-top:1px solid var(--line);padding-top:14px;line-height:1.7}
+.rodape b{color:var(--tx)}
+code{background:#f1f5f9;padding:1.5px 5px;border-radius:5px;font-size:12.5px;color:#0f172a}
+@media print{.card .full{display:block!important}.expbtn,.btn-all{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <h1>Relatório de Remediação — Rodada 2 — Siplan HUB + Siplan Skills</h1>
+    <div class="sub">Siplan HUB <code>okvufcwkophaadttmjwa</code> · Siplan Skills <code>bnulocsnxiffavvabfdj</code> (<b>skills.siplan.com.br</b>) · 25/11/2026 · Resposta ao <b>RELATORIO-EXPLORACAO-2</b> + Auditoria White-Box</div>
+  </div>
+  <div class="top-actions">
+    <button type="button" class="btn-all" onclick="toggleAllCards()">Expandir / recolher todos</button>
+    <span class="tag-ev">✓ BACKEND CORRIGIDO E VALIDADO EM PRODUÇÃO</span>
+  </div>
+</header>
+
+<div class="alerta">
+  <b>Síntese executiva:</b> os <b>8 achados</b> do segundo relatório de exploração foram tratados, e a auditoria direta no código das Edge Functions, nas policies RLS e nas funções SQL revelou <b>12 falhas adicionais</b> (incluindo duas formas de entrar no login do Skills sem conhecer usuário nem token). O Siplan HUB manteve o blindamento da Rodada 1 (35 tabelas com 0 linhas para <code>anon</code>) e teve o link público de coleta de infraestrutura tokenizado. O Siplan Skills, que ainda não havia passado por hardening, teve <b>15 Edge Functions reimplantadas</b>, RLS corrigida, gabaritos/manuais/vídeos fechados para anônimos, limite de tentativas no login e novos tokens gerados com criptografia forte. Os <b>350 tokens de cartório existentes continuam válidos</b> (decisão: sem rotação). Restam <b>2 ajustes manuais de painel</b> e alguns pontos de acompanhamento listados na seção 5.
+</div>
+
+<div class="kpis">
+  <div class="kpi ok"><div class="n">8 / 8</div><div class="l">achados do relatório tratados</div></div>
+  <div class="kpi ok"><div class="n">+12</div><div class="l">falhas white-box adicionais corrigidas</div></div>
+  <div class="kpi ok"><div class="n">17 / 17</div><div class="l">ataques de reteste bloqueados em produção (Skills)</div></div>
+  <div class="kpi ok"><div class="n">15</div><div class="l">Edge Functions do Skills reimplantadas</div></div>
+  <div class="kpi info"><div class="n">2 → 0</div><div class="l">alertas <code>ERROR</code> de RLS no Skills</div></div>
+  <div class="kpi info"><div class="n">22 → 0</div><div class="l">funções com <code>search_path</code> mutável (Skills)</div></div>
+  <div class="kpi info"><div class="n">24 → 14</div><div class="l">RPCs <code>SECURITY DEFINER</code> expostas ao anon (Skills; as restantes validam o chamador)</div></div>
+  <div class="kpi ok"><div class="n">106</div><div class="l">projetos do HUB com token próprio (0 por UUID)</div></div>
+  <div class="kpi ok"><div class="n">71</div><div class="l">links de infra já concluídos, encerrados automaticamente</div></div>
+</div>
+
+<h2>1. Na prática: Antes vs. Depois (visão operacional)</h2>
+<p class="sub">Resumo para POs e gestão. Nenhuma permissão, perfil ou fluxo existente foi alterado para o usuário final.</p>
+
+<table>
+  <tr>
+    <th style="width:18%">Área / Fluxo</th>
+    <th style="width:30%">Como era antes</th>
+    <th style="width:32%">Como ficou depois</th>
+    <th style="width:20%">Impacto na operação</th>
+  </tr>
+  <tr>
+    <td><b>Login do cartório no Skills</b></td>
+    <td>Aceitava curingas (<code>%</code>) no token e no usuário. Uma única requisição com <code>CART%</code> / <code>%</code> entrava no primeiro cartório. Sem limite de tentativas.</td>
+    <td>Token e usuário só aceitam caracteres válidos, a comparação é exata e há limite de tentativas por IP (10 / 15 min) e por usuário (8 / 15 min).</td>
+    <td><span class="status s-ok">Zero bloqueio</span><br><span class="sub">Tokens atuais seguem funcionando</span></td>
+  </tr>
+  <tr>
+    <td><b>Cabeçalho <code>CART-</code> em Base64</b></td>
+    <td>Duas funções aceitavam um texto Base64 sem assinatura como prova de identidade. Um ID inexistente liberava o catálogo inteiro.</td>
+    <td>O formato foi rejeitado. Só vale JWT assinado do login ou token <code>CART…</code> ativo e dentro da validade no banco.</td>
+    <td><span class="status s-ok">Zero bloqueio</span><br><span class="sub">O portal usa o JWT do login</span></td>
+  </tr>
+  <tr>
+    <td><b>Trilhas de treinamento</b></td>
+    <td>Criar, editar e apagar trilhas funcionava sem ser administrador (as funções usavam a chave de serviço sem checar quem chamava).</td>
+    <td>Só administrador autenticado e presente na tabela <code>admins</code> consegue alterar trilhas.</td>
+    <td><span class="status s-ok">Zero bloqueio</span><br><span class="sub">Admins seguem editando normalmente</span></td>
+  </tr>
+  <tr>
+    <td><b>Catálogo de vídeos, transcrições e manuais</b></td>
+    <td>Qualquer pessoa com a chave pública lia as 196 videoaulas (com links e transcrição) e os 9 manuais internos.</td>
+    <td>Visitante anônimo recebe 0 linhas. Aluno logado continua vendo o conteúdo liberado para o seu cartório.</td>
+    <td><span class="status s-ok">Zero bloqueio</span></td>
+  </tr>
+  <tr>
+    <td><b>Quizzes e certificações</b></td>
+    <td>O gabarito (<code>resposta_correta</code>) era legível via API e qualquer pessoa podia registrar aprovação em nome de outro usuário.</td>
+    <td>Gabarito restrito a administradores. O envio de respostas usa a identidade do JWT, nunca o <code>user_id</code> enviado no corpo.</td>
+    <td><span class="status s-ok">Zero bloqueio</span></td>
+  </tr>
+  <tr>
+    <td><b>Assistente de IA do Skills</b></td>
+    <td>Respondia a qualquer chamada anônima, sem limite, consumindo créditos da OpenAI.</td>
+    <td>Exige login de cartório ou admin; limite de 20 mensagens / 10 min por usuário e 60 / hora por cartório; mensagem de até 4.000 caracteres.</td>
+    <td><span class="status s-ok">Uso normal preservado</span></td>
+  </tr>
+  <tr>
+    <td><b>Progresso de aulas</b></td>
+    <td>A tabela <code>user_video_progress</code> estava com RLS desligada e permitia leitura e apagamento por anônimos.</td>
+    <td>RLS ativa; cada usuário enxerga e altera só o próprio progresso.</td>
+    <td><span class="status s-ok">Zero bloqueio</span></td>
+  </tr>
+  <tr>
+    <td><b>Link público de infraestrutura (HUB)</b><br><code>/public/infra-coleta/:token</code></td>
+    <td>O "segredo" era o ID do projeto, e 13 IDs já haviam vazado. 106 de 106 links estavam abertos e a gravação atualizava todos os projetos do mesmo cliente.</td>
+    <td>Token aleatório de 144 bits por projeto, IDs antigos deixam de funcionar, link fechado não mostra dado nenhum, fecha sozinho ao concluir a Etapa 1 e tem limite de envios.</td>
+    <td><span class="status s-info">Ação do analista</span><br><span class="sub">Copiar o novo link na Etapa 1 (35 projetos abertos)</span></td>
+  </tr>
+</table>
+
+<div class="nota-info">
+  <b>Decisões aplicadas conforme combinado:</b> (1) <b>Tokens CART existentes mantidos</b> (Opção A). Os novos cadastros já nascem com token criptográfico de 64 bits; (2) <b>Link de infra com segurança máxima</b> (Opção A): token opaco imediato, sem aceitar UUID, e encerramento dos 71 projetos com Etapa 1 concluída. Se um técnico precisar reenviar dados, o analista usa "Reabrir Link Público" e copia o novo link.
+</div>
+
+<h2>2. Achados do relatório de exploração e vetores white-box</h2>
+<p class="sub">Clique em cada item para ver o antes/depois, o que foi implementado e a prova técnica.</p>
+
+<!-- W1 -->
+<div class="card open">
+  <div class="head" onclick="toggleCard(this)">
+    <div class="idx">✓</div>
+    <div class="who">
+      <div class="nome">W1. Bypass de login em 1 requisição (curingas <code>.ilike</code>) + sem rate limit (Achado #4)
+        <span class="sev old">CRÍTICO</span><span class="sev ok">CORRIGIDO · PROVADO</span></div>
+      <div class="tags"><span class="tag ok">login-cartorio v104</span><span class="tag ok">verify-token v169</span><span class="tag ok">rate limit em banco</span></div>
+    </div>
+    <div class="expbtn">fechar ▴</div>
+  </div>
+  <div class="full">
+    <div class="cmp">
+      <div class="cmp-box before"><h4>Antes</h4>A função usava <code>.ilike('login_token', valor)</code> e <code>.ilike('username', valor)</code> com o texto digitado. Como <code>%</code> e <code>_</code> são curingas, <code>{"login_token":"CART%","username":"%"}</code> casava com o primeiro cartório e devolvia um JWT de 24h. O <code>verify-token</code> ainda funcionava como oráculo público, revelando nome e validade, sem limite.</div>
+      <div class="cmp-box after"><h4>Depois</h4>Entradas fora de <code>[A-Za-z0-9-]</code> (token) e <code>[A-Za-z0-9._@-]</code> (usuário) são rejeitadas, os curingas restantes são escapados e a igualdade é conferida exatamente em memória. Há limite por IP e por usuário. O <code>verify-token</code> passou a devolver apenas <code>{valid}</code> para quem não é admin.</div>
+    </div>
+    <p><b>O que foi implementado:</b></p>
+    <ul>
+      <li>Tabela <code>skills_rate_limits</code> + RPC atômica <code>check_skills_rate_limit</code> (apenas <code>service_role</code>); resposta <code>429</code> com <code>Retry-After</code>.</li>
+      <li>Mensagem única "Credenciais inválidas" para token, usuário ou cartório inativo, sem diferenciar a causa; remoção do log que despejava todos os usuários do cartório.</li>
+      <li><code>hub_provision_cartorio_skills</code> passou a gerar tokens com <code>gen_random_bytes(8)</code> (64 bits). O Wizard de cadastro e o hook de criação do painel admin usam <code>crypto.getRandomValues</code>.</li>
+    </ul>
+    <p><b>Prova técnica em produção:</b></p>
+<pre><b>POST /functions/v1/login-cartorio</b>  {"username":"%","login_token":"CART%"}
+<b>→</b> <em>401</em> {"error":"Credenciais inválidas"}</pre>
+  </div>
+</div>
+
+<!-- W2 -->
+<div class="card open">
+  <div class="head" onclick="toggleCard(this)">
+    <div class="idx">✓</div>
+    <div class="who">
+      <div class="nome">W2/W3. Identidade falsificável por <code>CART-&lt;base64&gt;</code> e dump sem autenticação
+        <span class="sev old">CRÍTICO</span><span class="sev ok">CORRIGIDO · PROVADO</span></div>
+      <div class="tags"><span class="tag ok">get-sistemas-cartorio-with-permissions</span><span class="tag ok">get-webinar-video</span><span class="tag ok">get-sistemas-cartorio</span></div>
+    </div>
+    <div class="expbtn">fechar ▴</div>
+  </div>
+  <div class="full">
+    <div class="cmp">
+      <div class="cmp-box before"><h4>Antes</h4>O cabeçalho <code>x-custom-auth: CART-eyJjYXJ0b3Jpb19pZCI6...</code> era decodificado com <code>atob</code> e o <code>cartorio_id</code> contido nele era aceito sem assinatura. Com um ID sem permissões cadastradas, a regra "sem permissões = libera tudo" entregava todos os sistemas e webinars. <code>get-sistemas-cartorio</code> nem lia a autenticação.</div>
+      <div class="cmp-box after"><h4>Depois</h4>As três funções passaram a exigir JWT HS256 assinado (<code>JWT_SECRET</code>) com cartório ativo, ou token <code>CART…</code> literal ativo e não expirado no banco, ou administrador validado em <code>admins</code>. A função <code>get-sistemas-cartorio</code> ignora o <code>cartorioId</code> do corpo para não-admin e usa o do JWT.</div>
+    </div>
+    <p><b>Prova técnica em produção:</b></p>
+<pre><b>x-custom-auth: CART-eyJjYXJ0b3Jpb19pZCI6IjAwMDAw...</b>  (UUID fantasma em Base64)
+get-sistemas-cartorio-with-permissions → <em>401</em> UNAUTHORIZED
+get-webinar-video                      → <em>401</em> UNAUTHORIZED
+get-sistemas-cartorio (sem token)      → <em>401</em> "Autenticação obrigatória"</pre>
+  </div>
+</div>
+
+<!-- #1 -->
+<div class="card open">
+  <div class="head" onclick="toggleCard(this)">
+    <div class="idx">✓</div>
+    <div class="who">
+      <div class="nome">1. CRUD de trilhas sem autenticação (<code>create/update/delete-trilha</code>)
+        <span class="sev old">CRÍTICO</span><span class="sev ok">CORRIGIDO · PROVADO</span></div>
+      <div class="tags"><span class="tag ok">requireAdmin</span><span class="tag ok">admins por e-mail</span><span class="tag ok">validação de entrada</span></div>
+    </div>
+    <div class="expbtn">fechar ▴</div>
+  </div>
+  <div class="full">
+    <div class="cmp">
+      <div class="cmp-box before"><h4>Antes</h4><code>update-trilha</code> e <code>delete-trilha</code> não verificavam nada; <code>create-trilha</code> só checava se existia o cabeçalho <code>Authorization</code> (qualquer texto servia). Todas gravavam com a chave de serviço, permitindo alterar o treinamento visto pelos 350 cartórios.</div>
+      <div class="cmp-box after"><h4>Depois</h4>O token é validado pelo Supabase Auth (<code>auth.getUser</code>) ou como JWT de admin assinado, e o e-mail precisa existir em <code>public.admins</code>. A chave publicável é rejeitada explicitamente. Corpo validado (nome, produto, id).</div>
+    </div>
+<pre><b>create-trilha (Authorization: Bearer fake-token)</b> → <em>401</em> "Token inválido ou não autorizado"
+<b>update-trilha / delete-trilha (sem token)</b>      → <em>401</em> "Autenticação administrativa obrigatória"</pre>
+  </div>
+</div>
+
+<!-- W4/W5 -->
+<div class="card">
+  <div class="head" onclick="toggleCard(this)">
+    <div class="idx">✓</div>
+    <div class="who">
+      <div class="nome">W4/W5. Fraude de certificação (<code>submit-quiz</code>) e gabarito legível via API
+        <span class="sev old">ALTO</span><span class="sev ok">CORRIGIDO · PROVADO</span></div>
+      <div class="tags"><span class="tag ok">user_id vem do JWT</span><span class="tag ok">quiz_perguntas só admin</span></div>
+    </div>
+    <div class="expbtn">detalhes ▾</div>
+  </div>
+  <div class="full">
+    <div class="cmp">
+      <div class="cmp-box before"><h4>Antes</h4><code>submit-quiz</code> aceitava <code>user_id</code> no corpo e marcava a trilha como concluída para qualquer pessoa. A tabela <code>quiz_perguntas</code> tinha policy <code>SELECT true</code>, então <code>GET /rest/v1/quiz_perguntas?select=resposta_correta</code> entregava todo o gabarito.</div>
+      <div class="cmp-box after"><h4>Depois</h4>O aluno só envia respostas em nome do próprio <code>user_id</code> do JWT (admin pode informar outro). Perguntas chegam ao aluno somente pelo <code>get-quiz-perguntas</code>, que continua removendo <code>resposta_correta</code>. A aprovação da trilha passou a contar quizzes distintos aprovados.</div>
+    </div>
+<pre><b>submit-quiz (sem token)</b>                    → <em>401</em> "Autenticação obrigatória"
+<b>GET /rest/v1/quiz_perguntas (anon)</b>        → <em>200</em> []   (0 linhas)</pre>
+  </div>
+</div>
+
+<!-- #8 / W8 -->
+<div class="card">
+  <div class="head" onclick="toggleCard(this)">
+    <div class="idx">✓</div>
+    <div class="who">
+      <div class="nome">8/W8. <code>video_aulas</code>, <code>produtos</code> e <code>sistemas</code> legíveis por anônimos (bug de <code>NOT EXISTS</code> com <code>NULL</code>)
+        <span class="sev old">ALTO</span><span class="sev ok">CORRIGIDO · PROVADO</span></div>
+      <div class="tags"><span class="tag ok">causa raiz corrigida</span><span class="tag ok">196 aulas protegidas</span></div>
+    </div>
+    <div class="expbtn">detalhes ▾</div>
+  </div>
+  <div class="full">
+    <div class="cmp">
+      <div class="cmp-box before"><h4>Antes</h4>As policies faziam <code>NOT EXISTS (… WHERE cartorio_id = get_current_cartorio_id_from_jwt())</code>. Para um visitante sem token a função retorna <code>NULL</code>, a comparação nunca casa, o <code>EXISTS</code> é falso e o <code>NOT EXISTS</code> vira verdadeiro. Resultado: o catálogo inteiro, com <code>url_video</code> e <code>transcricao_completa_texto</code>, ficava público.</div>
+      <div class="cmp-box after"><h4>Depois</h4>Todas as policies passaram a exigir <code>is_admin() OR get_current_cartorio_id_from_jwt() IS NOT NULL</code> antes de avaliar as permissões do cartório. As funções de identidade foram endurecidas: não aceitam mais o contexto de sessão forjável (<code>set_config</code>), validam cartório/usuário ativos e fixam <code>search_path</code>.</div>
+    </div>
+<pre><b>GET /rest/v1/video_aulas   (anon)</b> → <em>200</em> []
+<b>GET /rest/v1/produtos       (anon)</b> → <em>200</em> []
+<b>GET /rest/v1/sistemas       (anon)</b> → <em>200</em> []</pre>
+  </div>
+</div>
+
+<!-- W6/W7/W9 -->
+<div class="card">
+  <div class="head" onclick="toggleCard(this)">
+    <div class="idx">✓</div>
+    <div class="who">
+      <div class="nome">W6/W7/W9. RLS desligada, RPCs de depuração abertas e manuais internos públicos
+        <span class="sev old">CRÍTICO / ALTO</span><span class="sev ok">CORRIGIDO · PROVADO</span></div>
+      <div class="tags"><span class="tag ok">user_video_progress RLS ON</span><span class="tag ok">REVOKE em RPCs internas</span><span class="tag ok">manuais autenticados</span></div>
+    </div>
+    <div class="expbtn">detalhes ▾</div>
+  </div>
+  <div class="full">
+    <div class="cmp">
+      <div class="cmp-box before"><h4>Antes</h4><code>user_video_progress</code> tinha 4 policies, mas RLS desabilitada e privilégios amplos para <code>anon</code> (leitura, alteração, <code>DELETE</code>, <code>TRUNCATE</code>). RPCs como <code>set_cartorio_context</code>, <code>test_insert_visualizacao_cartorio</code>, <code>upsert_cartorio_session</code> e <code>get_user_progress_by_cartorio</code> (que lista usuários e e-mails) estavam executáveis por anônimos. <code>produto_manuais</code> e o bucket <code>manuais</code> tinham leitura pública.</div>
+      <div class="cmp-box after"><h4>Depois</h4>RLS ativa e policies ajustadas. RPCs de depuração, contexto e sessão sem <code>EXECUTE</code> para <code>anon</code>/<code>authenticated</code>; as de progresso validam que o <code>p_cartorio_id</code> é o do JWT (ou admin). Funções da ponte HUB limitadas a <code>service_role</code>. Removidos <code>TRUNCATE/TRIGGER/REFERENCES</code> e escritas de <code>anon</code> em tabelas administrativas. Manuais e storage só para cartório logado ou admin.</div>
+    </div>
+<pre><b>GET /rest/v1/user_video_progress (anon)</b> → <em>200</em> []
+<b>GET /rest/v1/produto_manuais    (anon)</b> → <em>200</em> []
+<b>RPC set_cartorio_context        (anon)</b> → <em>401</em> permission denied (42501)
+<b>RPC get_user_progress_by_cartorio (anon)</b> → <em>400</em> "Acesso negado"</pre>
+  </div>
+</div>
+
+<!-- #3 -->
+<div class="card">
+  <div class="head" onclick="toggleCard(this)">
+    <div class="idx">✓</div>
+    <div class="who">
+      <div class="nome">3. <code>chat-ai</code> aberto, sem limite e com RAG interno exposto
+        <span class="sev old">ALTO</span><span class="sev ok">CORRIGIDO · PROVADO</span></div>
+      <div class="tags"><span class="tag ok">login obrigatório</span><span class="tag ok">20/10min · 60/h</span><span class="tag ok">4.000 caracteres</span></div>
+    </div>
+    <div class="expbtn">detalhes ▾</div>
+  </div>
+  <div class="full">
+    <div class="cmp">
+      <div class="cmp-box before"><h4>Antes</h4>Qualquer requisição anônima acionava a OpenAI Responses API com busca nos manuais (<code>file_search</code>) e <code>web_search</code> por até 110 s, sem limite. Risco de consumo financeiro indevido e de extração do conteúdo do Orion TN/PRO.</div>
+      <div class="cmp-box after"><h4>Depois</h4>Exige JWT de cartório ativo ou admin (a chave publicável e JWT <code>anon</code> são rejeitados), aplica limites em banco por usuário e por cartório, valida o tamanho da mensagem e não repassa detalhes de erro da OpenAI ao cliente. O componente <code>AIChat</code> agora envia o JWT do login explicitamente.</div>
+    </div>
+<pre><b>POST /functions/v1/chat-ai (sem sessão)</b> → <em>401</em> UNAUTHORIZED</pre>
+  </div>
+</div>
+
+<!-- W10/W12 -->
+<div class="card">
+  <div class="head" onclick="toggleCard(this)">
+    <div class="idx">✓</div>
+    <div class="who">
+      <div class="nome">W10/W12. Funções de vídeo sem autenticação, chave Bunny no código e <code>generate-admin-jwt</code>
+        <span class="sev old">ALTO / MÉDIO</span><span class="sev ok">CORRIGIDO · PROVADO</span></div>
+      <div class="tags"><span class="tag ok">get-bunny-video-details v165</span><span class="tag ok">upload-video-bunny v170</span><span class="tag ok">update-bunny-video-ids v153</span><span class="tag ok">generate-admin-jwt v18</span></div>
+    </div>
+    <div class="expbtn">detalhes ▾</div>
+  </div>
+  <div class="full">
+    <ul>
+      <li><code>get-bunny-video-details</code>: exige cartório ou admin, valida o <code>videoId</code> como GUID e removeu o campo <code>expectedKey</code> (chave da Bunny embutida no código) e o prefixo de <code>BUNNY_API_KEY</code> das respostas de erro.</li>
+      <li><code>upload-video-bunny</code>: exige admin antes de ler o arquivo; <code>update-bunny-video-ids</code>: a verificação de admin, antes opcional, passou a ser obrigatória.</li>
+      <li><code>generate-admin-jwt</code> (sem código-fonte visível no painel): reescrita para só emitir token a quem tem sessão válida do Supabase Auth <b>e</b> está em <code>public.admins</code> (validade de 8 h).</li>
+    </ul>
+<pre><b>get-bunny-video-details (sem token)</b> → <em>401</em> "Autenticação obrigatória"</pre>
+    <div class="nota-warn"><b>Atenção:</b> a chave <code>43c05ec2-…</code> que estava escrita no código da função ficou exposta a quem leu essa função. Recomenda-se rotacionar a <code>BUNNY_API_KEY</code> no painel Bunny.net caso ela seja a chave ativa (ver seção 5).</div>
+  </div>
+</div>
+
+<!-- #2/#5 HUB -->
+<div class="card open">
+  <div class="head" onclick="toggleCard(this)">
+    <div class="idx">✓</div>
+    <div class="who">
+      <div class="nome">2/5. HUB — coleta pública de infraestrutura por UUID (escrita e leitura anônimas)
+        <span class="sev old">ALTO</span><span class="sev ok">CORRIGIDO · PROVADO</span></div>
+      <div class="tags"><span class="tag ok">infra_public_link_token (144 bits)</span><span class="tag ok">71 links encerrados</span><span class="tag ok">migration 20261125120500</span></div>
+    </div>
+    <div class="expbtn">fechar ▴</div>
+  </div>
+  <div class="full">
+    <div class="cmp">
+      <div class="cmp-box before"><h4>Antes</h4><code>update_project_public_infra(p_id uuid, …)</code> aceitava gravação anônima conhecendo apenas o UUID do projeto (13 já vazados). 106 de 106 links estavam abertos. A gravação propagava para todos os projetos do mesmo cliente, podia mudar a Etapa 1 para "Bloqueado", apagar <code>infra_end_date</code> e poluir a timeline. <code>get_project_public_info</code> devolvia nome do cliente, chamado e equipamentos mesmo com o link encerrado.</div>
+      <div class="cmp-box after"><h4>Depois</h4>As RPCs agora recebem <code>p_token text</code> e só aceitam o formato hexadecimal de 24 a 64 caracteres. As versões por UUID foram desativadas e revogadas. Link encerrado devolve só <code>{"infra_public_link_closed": true}</code>. Limites de payload (25 servidores, 300 estações), teto de 6 envios por 10 min por projeto, <code>infra_end_date</code> preservado e fechamento automático ao concluir a Etapa 1.</div>
+    </div>
+    <p><b>O que foi implementado:</b></p>
+    <ul>
+      <li>Coluna <code>projects.infra_public_link_token</code> (<code>NOT NULL</code>, único, padrão <code>gen_random_bytes(18)</code>) preenchida para os 106 projetos.</li>
+      <li>Encerramento dos <b>71</b> projetos com <code>infra_status = 'done'</code>; ficaram <b>35</b> abertos (em andamento).</li>
+      <li>Frontend: <code>InfraStageForm</code> copia <code>/public/infra-coleta/&lt;token&gt;</code> (botão desabilitado sem token); <code>PublicInfraCollection</code> chama as RPCs com <code>p_token</code>; tipos (<code>ProjectV2</code>, <code>types.ts</code>) e <code>project-transformers</code> atualizados.</li>
+      <li>Revogado <code>EXECUTE</code> de <code>anon</code> nas 15 funções internas <code>cs_cx_*</code>; mantido para <code>authenticated</code>/<code>service_role</code>.</li>
+      <li>Notificação de changelog registrada e documentação operacional atualizada.</li>
+    </ul>
+    <p><b>Prova técnica em produção (chave pública do HUB):</b></p>
+<pre><b>get_project_public_info(p_id = UUID vazado)</b>          → <em>401</em> permission denied
+<b>get_project_public_info(p_token = UUID)</b>           → <em>200</em> null
+<b>update_project_public_infra(p_id = UUID)</b>          → <em>401</em> permission denied
+<b>update_project_public_infra(p_token = UUID)</b>       → <em>200</em> false
+<b>get_project_public_info(token de link encerrado)</b>  → <em>200</em> {"infra_public_link_closed": true}
+<b>get_project_public_info(token de link aberto)</b>     → <em>200</em> (formulário carrega normalmente)
+<b>cs_cx_apply_routine (anon)</b>                        → <em>401</em> permission denied
+<b>Totais:</b> projetos = 106 | encerrados = <em>71</em> | abertos = <em>35</em></pre>
+  </div>
+</div>
+
+<!-- #6 / #7 -->
+<div class="card">
+  <div class="head" onclick="toggleCard(this)">
+    <div class="idx warn">!</div>
+    <div class="who">
+      <div class="nome">6/7. Cadastro público no Auth do Skills e dicas de tabelas do PostgREST
+        <span class="sev med">MÉDIO / INFO</span><span class="sev pend">PARCIAL · AÇÃO MANUAL</span></div>
+      <div class="tags"><span class="tag">Dashboard Skills: desativar signup</span><span class="tag">PGRST205: risco aceito</span></div>
+    </div>
+    <div class="expbtn">detalhes ▾</div>
+  </div>
+  <div class="full">
+    <ul>
+      <li><b>#6 (Skills):</b> <code>disable_signup=false</code> e <code>mailer_autoconfirm=true</code> são configurações do painel e não podem ser alteradas por migration. O risco de uma conta nova virar admin foi mitigado: <code>is_admin()</code> exige presença em <code>public.admins</code> (e o fallback de contexto de sessão foi removido), e as policies deixaram de dar acesso a quem é apenas <code>authenticated</code>. Mesmo assim, o cadastro deve ser fechado (seção 5).</li>
+      <li><b>#7 (HUB):</b> as dicas <code>Perhaps you meant 'public.X'</code> são nativas do PostgREST. Com 0 linhas para <code>anon</code> em todas as tabelas, saber o nome de uma tabela não dá acesso a dado. Risco aceito, sem alteração.</li>
+    </ul>
+  </div>
+</div>
+
+<h2>3. Matriz consolidada</h2>
+<table>
+  <tr><th>ID</th><th>Sistema</th><th>Severidade</th><th>Vulnerabilidade</th><th>Status</th></tr>
+  <tr><td>W1</td><td>Skills</td><td><span class="sev crit">Crítica</span></td><td>Curingas <code>.ilike</code> no login</td><td><span class="status s-ok">Corrigido</span></td></tr>
+  <tr><td>W2</td><td>Skills</td><td><span class="sev crit">Crítica</span></td><td>Identidade por Base64 sem assinatura</td><td><span class="status s-ok">Corrigido</span></td></tr>
+  <tr><td>#1</td><td>Skills</td><td><span class="sev crit">Crítica</span></td><td>CRUD de trilhas sem admin</td><td><span class="status s-ok">Corrigido</span></td></tr>
+  <tr><td>W3</td><td>Skills</td><td><span class="sev crit">Crítica</span></td><td><code>get-sistemas-cartorio</code> sem autenticação</td><td><span class="status s-ok">Corrigido</span></td></tr>
+  <tr><td>W6</td><td>Skills</td><td><span class="sev crit">Crítica</span></td><td>RLS desligada em <code>user_video_progress</code></td><td><span class="status s-ok">Corrigido</span></td></tr>
+  <tr><td>#2</td><td>HUB</td><td><span class="sev high">Alta</span></td><td>Escrita anônima por UUID em infra pública</td><td><span class="status s-ok">Corrigido</span></td></tr>
+  <tr><td>#3</td><td>Skills</td><td><span class="sev high">Alta</span></td><td><code>chat-ai</code> aberto e sem limite</td><td><span class="status s-ok">Corrigido</span></td></tr>
+  <tr><td>#4</td><td>Skills</td><td><span class="sev high">Alta</span></td><td>Sem rate limit e token previsível</td><td><span class="status s-ok">Corrigido (novos tokens)</span></td></tr>
+  <tr><td>W4</td><td>Skills</td><td><span class="sev high">Alta</span></td><td><code>submit-quiz</code> sem autenticação</td><td><span class="status s-ok">Corrigido</span></td></tr>
+  <tr><td>W5</td><td>Skills</td><td><span class="sev high">Alta</span></td><td>Gabarito legível por API</td><td><span class="status s-ok">Corrigido</span></td></tr>
+  <tr><td>W7</td><td>Skills</td><td><span class="sev high">Alta</span></td><td>RPCs de depuração/contexto abertas</td><td><span class="status s-ok">Corrigido</span></td></tr>
+  <tr><td>#8/W8</td><td>Skills</td><td><span class="sev high">Alta</span></td><td>Catálogo legível por anônimos (<code>NOT EXISTS</code>)</td><td><span class="status s-ok">Corrigido</span></td></tr>
+  <tr><td>W9</td><td>Skills</td><td><span class="sev high">Alta</span></td><td>Manuais públicos (tabela + storage)</td><td><span class="status s-ok">Corrigido</span></td></tr>
+  <tr><td>W10</td><td>Skills</td><td><span class="sev high">Alta</span></td><td>Funções de vídeo sem auth e chave no código</td><td><span class="status s-ok">Corrigido · rotacionar chave</span></td></tr>
+  <tr><td>#5</td><td>HUB</td><td><span class="sev med">Média</span></td><td>Metadados por UUID / link encerrado vazando</td><td><span class="status s-ok">Corrigido</span></td></tr>
+  <tr><td>#6</td><td>Skills</td><td><span class="sev med">Média</span></td><td>Signup aberto no Auth</td><td><span class="status s-pend">Ação manual</span></td></tr>
+  <tr><td>W12</td><td>Skills</td><td><span class="sev med">Média</span></td><td>Funções sem metadados (<code>generate-admin-jwt</code> etc.)</td><td><span class="status s-pend">Parcial</span></td></tr>
+  <tr><td>W11</td><td>HUB</td><td><span class="sev info">Baixa</span></td><td><code>cs_cx_*</code> executáveis por anon; <code>project_id</code> no checklist público</td><td><span class="status s-info">cs_cx_* corrigido · checklist em acompanhamento</span></td></tr>
+  <tr><td>#7</td><td>HUB</td><td><span class="sev info">Info</span></td><td>Dicas PGRST205</td><td><span class="status s-info">Risco aceito</span></td></tr>
+</table>
+
+<h2>4. Reteste ao vivo e validações</h2>
+<table>
+  <tr><th style="width:42%">Verificação</th><th>Resultado</th></tr>
+  <tr><td>17 ataques HTTP contra o Skills com a chave pública (login com curinga, Base64 forjado, 3 funções de trilha, <code>chat-ai</code>, quiz, vídeo, 6 leituras REST, 2 RPCs)</td><td><span class="status s-ok">17 / 17 bloqueados ou com 0 linhas</span></td></tr>
+  <tr><td>7 verificações das RPCs públicas do HUB (UUID antigo, token inválido, link encerrado, link aberto, <code>cs_cx_*</code>)</td><td><span class="status s-ok">7 / 7 conforme esperado</span></td></tr>
+  <tr><td>Security Advisor do Skills após a migration</td><td><span class="status s-ok">0 ERROR · 0 search_path mutável</span></td></tr>
+  <tr><td>HUB: <code>tsc --noEmit</code>, <code>lint</code>, <code>vitest run</code> (inclui invariantes RLS), <code>build</code> + PWA + <code>check:bundle</code></td><td><span class="status s-ok">Todos aprovados</span></td></tr>
+</table>
+
+<div class="nota-warn">
+  <b>Limites desta validação:</b> os retestes de intrusão usaram apenas a chave pública (visão do atacante). O fluxo <b>logado</b> de um cartório e de um admin no portal Skills (assistir aula, marcar progresso, quiz, chat, trilhas) não foi exercitado de ponta a ponta com credenciais reais; o projeto Skills local não tinha <code>node_modules</code>, então <code>tsc</code>/<code>build</code> do frontend Skills ainda não foram rodados. Recomenda-se um teste manual rápido após o deploy (seção 5).
+</div>
+
+<h2>5. Pendências e recomendações</h2>
+
+<div class="road pend">
+  <h3><span class="sev pend">AÇÃO MANUAL</span> Painéis</h3>
+  <ol>
+    <li><b>Supabase do Skills</b> (<code>bnulocsnxiffavvabfdj</code>) → Authentication: desativar <i>Allow new users to sign up</i>, ativar <i>Prevent use of leaked passwords</i> e reduzir a expiração do OTP para até 3600 s.</li>
+    <li><b>Bunny.net</b> (biblioteca <code>467408</code>) → Security: adicionar <code>skills.siplan.com.br</code> em <i>Allowed Referrers</i>, bloquear acesso direto a arquivos e <b>rotacionar a <code>BUNNY_API_KEY</code></b> (a chave anterior esteve escrita no código de uma função).</li>
+  </ol>
+</div>
+
+<div class="road pend">
+  <h3><span class="sev pend">PRÓXIMO DEPLOY</span> Código e testes</h3>
+  <ol>
+    <li><b>Frontend do Skills</b> (<code>skills-siplan-nexus</code>, não commitado): o <code>chat-ai</code>, as miniaturas e o cadastro de vídeo agora enviam o JWT explicitamente (<code>getFunctionAuthHeaders</code>), e a geração de token usa <code>crypto.getRandomValues</code>. Rodar <code>npm i</code>, <code>tsc</code> e <code>build</code>, e fazer deploy. Sem o deploy, o <b>backend já protegido</b> pode recusar chamadas do portal que dependam do cabeçalho antigo; testar <code>chat-ai</code> e a página de vídeos logando com um cartório de demonstração.</li>
+    <li><b>Frontend do HUB</b> (não commitado): o novo link <code>/public/infra-coleta/&lt;token&gt;</code> só funciona com o deploy do HUB. Enquanto isso, o botão de copiar link do código antigo gera links por UUID, que agora retornam "inválido".</li>
+    <li>Testar com <b>usuário admin do Skills</b>: criação/edição de trilha, upload de manual (<code>manage-produto-manuais</code>) e <code>generate-admin-jwt</code> (reescrita sem acesso ao código anterior; se algum fluxo admin dependia de outro formato de resposta, ajustar).</li>
+  </ol>
+</div>
+
+<div class="road pend">
+  <h3><span class="sev info">ACOMPANHAMENTO</span> Itens fora do escopo desta rodada</h3>
+  <ul>
+    <li><code>mark-lesson-progress</code>, <code>get-active-trail-roadmap</code> e <code>auth-provider-wrapper</code> continuam sem código-fonte acessível (nem no painel nem no repositório). Sondagem sem credenciais retornou <code>401</code>, mas o conteúdo não foi auditado.</li>
+    <li><code>get_public_commercial_checklist</code> (HUB) ainda devolve <code>project_id</code> no JSON público (o UUID do checklist é o segredo do link). Baixo risco; ajuste planejado junto com o frontend do checklist.</li>
+    <li>Policies antigas do Skills ainda dependem de <code>get_current_cartorio_id_from_jwt()</code>. As 14 RPCs <code>SECURITY DEFINER</code> restantes visíveis ao anon (por exemplo <code>is_admin</code>, <code>get_current_cartorio_*</code> e as de progresso) retornam vazio/negam sem identidade válida.</li>
+    <li>Avisos de infraestrutura do Skills: Postgres com patch de segurança disponível, MFA limitado e OTP longo (ver painel).</li>
+    <li>Decisão mantida: tokens de cartório existentes <b>não foram rotacionados</b>. O CSV da Rodada 1 continua expondo 12 desses tokens; a nova trava de tentativas reduz o risco, mas a rotação seletiva desses 12 segue como opção.</li>
+  </ul>
+</div>
+
+<div class="rodape">
+  <b>Nota de entrega:</b> as alterações de banco (migrations <code>hardening_skills_rls_rpcs_and_rate_limits</code> no Skills e <code>20261125120500_security_hardening_p3_public_infra_token.sql</code> no HUB) e as 15 Edge Functions do Skills já estão ativas em produção. As mudanças de frontend (HUB e Skills) estão no disco, sem commit/push, aguardando revisão e deploy.<br>
+  <b>Confidencialidade:</b> nenhum token de cartório, senha de cliente ou segredo interno foi reproduzido neste documento. Os exemplos usam apenas valores fictícios ou prefixos.<br>
+  <b>Relatório gerado em:</b> 25/11/2026 · Siplan HUB + Siplan Skills Security Hardening — Rodada 2.
+</div>
+
+</div>
+<script>
+function toggleCard(head){
+  var card = head.closest('.card');
+  card.classList.toggle('open');
+  var b = head.querySelector('.expbtn');
+  if (b) b.textContent = card.classList.contains('open') ? 'fechar ▴' : 'detalhes ▾';
+}
+function toggleAllCards(){
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.card'));
+  var allOpen = cards.length > 0 && cards.every(function(c){ return c.classList.contains('open'); });
+  cards.forEach(function(c){
+    c.classList.toggle('open', !allOpen);
+    var b = c.querySelector('.expbtn');
+    if (b) b.textContent = !allOpen ? 'fechar ▴' : 'detalhes ▾';
+  });
+}
+</script>
+</body>
+</html>

@@ -787,6 +787,8 @@ export type ProjectRow = {
   infra_dispatched_at: string | null;
   infra_dispatch_done: boolean | null;
   infra_dispatched_by: string | null;
+  infra_public_link_closed?: boolean | null;
+  infra_public_link_token?: string | null;
   adherence_status?: string | null;
   adherence_responsible?: string | null;
   adherence_start_date?: string | null;

@@ -218,6 +218,7 @@ export interface InfraStageV2 {
   servers?: ServerInfo[];
   workstations?: WorkstationInfo[];
   publicLinkClosed?: boolean;
+  publicLinkToken?: string;
   clientResponsible?: string;
   infraDispatchedAt?: Date;
   infraDispatchDone?: boolean;

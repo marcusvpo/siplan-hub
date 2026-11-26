@@ -198,7 +198,7 @@ export default function PublicInfraCollection() {
     queryFn: async () => {
       if (!id) return null;
 
-      const { data, error } = await (supabase.rpc as any)("get_project_public_info", { p_id: id });
+      const { data, error } = await (supabase.rpc as any)("get_project_public_info", { p_token: id });
       if (error) throw error;
       return data;
     },
@@ -532,7 +532,7 @@ export default function PublicInfraCollection() {
     try {
 
       const { data: success, error } = await (supabase.rpc as any)("update_project_public_infra", {
-        p_id: id,
+        p_token: id,
         p_workstations: workstations,
         p_servers: servers,
         p_workstations_count: workstationsCount,

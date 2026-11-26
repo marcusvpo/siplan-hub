@@ -73,8 +73,8 @@ flowchart LR
 #### Etapa 1: Análise de Infraestrutura
 * **Objetivo:** Auditar servidores, estações, rede local, internet, bancos de dados existentes e acessos remotos (AnyDesk/RDP).
 * **Operadores Principais:** Alex Silva e Bruno Fernandes.
-* **Telas:** `/projects` (Aba Análise de Infraestrutura) e formulário público `/public/infra-coleta/:id`.
-* **Fluxo de Coleta:** Alex ou Bruno enviam o link `/public/infra-coleta/:id` diretamente ao responsável de TI do cartório com instruções formais de preenchimento.
+* **Telas:** `/projects` (Aba Análise de Infraestrutura) e formulário público `/public/infra-coleta/:token`.
+* **Fluxo de Coleta:** Alex ou Bruno copiam na Etapa 1 o link seguro `/public/infra-coleta/:token` (autenticado pelo token opaco criptográfico `infra_public_link_token` de 144 bits, desacoplado do UUID do projeto) e enviam diretamente ao responsável de TI do cartório com instruções formais de preenchimento. Ao concluir a Etapa 1 (`done`), o link público é encerrado automaticamente (`infra_public_link_closed = true`), ocultando metadados do cartório e bloqueando novas submissões até que um analista reabra deliberadamente.
 * **Automação de Retorno:** Assim que o TI do cartório conclui e envia o formulário, uma automação interna dispara um e-mail com o sumário completo de infraestrutura para o gestor e a diretoria, com Alex Silva e Bruno Fernandes em cópia.
 * **Tratativa de Impeditivos:** Quando o cartório não atende aos requisitos mínimos, o card é sinalizado como bloqueio comercial em `/commercial/blockers`. O Comercial negocia com o cliente. Após resolução, o gestor atualiza manualmente a etapa em `/projects`.
 
@@ -285,7 +285,7 @@ O módulo de CS/CX (`/cs-cx/registros` e `/cs-cx/nps`) acompanha o relacionament
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
 │                        AÇÕES FORA DO HUB                               │
-│ • Alex/Bruno enviam /public/infra-coleta/:id ao TI do cartório         │
+│ • Alex/Bruno enviam /public/infra-coleta/:token ao TI do cartório      │
 │ • Automação dispara e-mail com dados de infra (Diretoria em cópia)     │
 │ • E-mail com credenciais e links de homologação (Diretoria em cópia)   │
 │ • Criação de grupo de WhatsApp com o cartório (15 dias corridos)       │

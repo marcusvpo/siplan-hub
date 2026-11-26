@@ -398,6 +398,11 @@ function mapInfraStage(infra: InfraStageV2 | undefined, oldInfra?: InfraStageV2)
     infra_server_in_use: infra.serverInUse,
     infra_server_needed: infra.serverNeeded,
     infra_public_link_closed: infra.publicLinkClosed !== undefined ? infra.publicLinkClosed : oldInfra?.publicLinkClosed,
+    ...(infra.publicLinkToken !== undefined
+      ? { infra_public_link_token: infra.publicLinkToken }
+      : oldInfra?.publicLinkToken !== undefined
+        ? { infra_public_link_token: oldInfra.publicLinkToken }
+        : {}),
     infra_client_responsible: infra.clientResponsible,
     infra_dispatched_at: infra.infraDispatchedAt !== undefined ? formatDateForDB(infra.infraDispatchedAt) : (oldInfra?.infraDispatchedAt !== undefined ? formatDateForDB(oldInfra.infraDispatchedAt) : undefined),
     infra_dispatch_done: infra.infraDispatchDone !== undefined ? infra.infraDispatchDone : oldInfra?.infraDispatchDone,

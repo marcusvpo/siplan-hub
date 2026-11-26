@@ -159,20 +159,21 @@ Orquestrado por [src/hooks/usePublicChecklist.ts](../../src/hooks/usePublicCheck
 ---
 
 ## Coleta Pública de Infraestrutura
-- **Rota:** `/public/infra-coleta/:id`
+- **Rota:** `/public/infra-coleta/:id` (onde `:id` recebe o token opaco criptográfico `infra_public_link_token`)
 - **Arquivo-fonte:** [src/pages/public/PublicInfraCollection.tsx](../../src/pages/public/PublicInfraCollection.tsx)
-- **Acesso:** público sem login (lazy-loaded, sem `ProtectedRoute`). O `:id` é o UUID do projeto (`projects.id`).
+- **Acesso:** público sem login (lazy-loaded, sem `ProtectedRoute`). O parâmetro na URL é o `infra_public_link_token` (36 caracteres hexadecimais / 144 bits CSPRNG, desacoplado de `projects.id`).
 
 ### Objetivo
 Permitir que o técnico/responsável do cartório envie diretamente à Siplan o inventário de hardware (servidores e estações de trabalho), a partir de arquivos `.txt` gerados por scripts coletores, com validação dinâmica de requisitos antes do envio.
 
 ### Dados e Hooks
 Ao contrário do checklist (que usa RLS direta), esta tela usa **RPCs `SECURITY DEFINER`** que encapsulam o acesso à tabela `projects`:
-- **Leitura:** `useQuery` → `supabase.rpc("get_project_public_info", { p_id: id })`.
-  - A função busca `projects WHERE id = p_id AND is_deleted = false`; retorna `NULL` se não encontrado.
-  - Retorna JSONB com: `client_name`, `system_type`, `ticket_number`, `infra_servers`, `infra_workstations`, `infra_workstations_count`, `infra_status`, `workstations_status`, `server_status` e **`infra_public_link_closed`**.
-- **Escrita:** `supabase.rpc("update_project_public_infra", { p_id, p_workstations, p_servers, p_workstations_count, p_workstations_status, p_server_status })`.
-  - Retorna `FALSE` se o projeto não existir/estiver deletado **ou se `infra_public_link_closed = true`** (bloqueio de link encerrado).
+- **Leitura:** `useQuery` → `supabase.rpc("get_project_public_info", { p_token: id })`.
+  - A função busca `projects WHERE infra_public_link_token = lower(btrim(p_token)) AND is_deleted = false`; retorna `NULL` se não encontrado ou se receber um UUID comum.
+  - Se `infra_public_link_closed = true`, retorna **apenas** `{ "infra_public_link_closed": true }` (sem vazar `client_name`, `ticket_number` ou equipamentos).
+  - Quando aberto, retorna JSONB com: `client_name`, `system_type`, `ticket_number`, `infra_servers`, `infra_workstations`, `infra_workstations_count`, `infra_status`, `workstations_status`, `server_status` e **`infra_public_link_closed`**.
+- **Escrita:** `supabase.rpc("update_project_public_infra", { p_token, p_workstations, p_servers, p_workstations_count, p_workstations_status, p_server_status })`.
+  - Retorna `FALSE` se o token não existir/estiver deletado, exceder limites de payload/rate limit **ou se `infra_public_link_closed = true`** (bloqueio de link encerrado). Ao concluir (`done`), encerra automaticamente o link público.
   - Atualiza os campos de infra, define `last_update_by = 'Coleta Pública (Técnico)'` e **registra um evento** em `timeline_events` (`type='auto'`, autor "Técnico (Link Público)").
 - **Migrations relevantes:**
   - [public_infra_collection_rpc](../../supabase/migrations/20260622182500_public_infra_collection_rpc.sql) (criação das RPCs)
@@ -210,7 +211,7 @@ Ao contrário do checklist (que usa RLS direta), esta tela usa **RPCs `SECURITY 
 
 ### Segurança / Pontos de Manutenção
 - Modelo de segurança baseado em **RPC `SECURITY DEFINER`**: o anon **não** tem acesso direto à tabela `projects` por essa via — apenas ao subconjunto de campos exposto pelo `get_project_public_info` e à escrita controlada pelo `update_project_public_infra`. Ambas filtram `is_deleted = false`.
-- O link é o **UUID do projeto** (`projects.id`), sem token adicional. Quem conhece o UUID pode ler os campos de infra e (se o link não estiver encerrado) sobrescrever `infra_workstations`/`infra_servers`. Não há autenticação nem verificação de autoria no envio.
+- O link utiliza o token opaco **`infra_public_link_token`** (144 bits CSPRNG), desacoplado de `projects.id`. Chamadas por UUID puro são bloqueadas. Quando `infra_public_link_closed = true`, nenhum metadado do projeto é retornado. Ao concluir a Etapa 1 (`done`), o link fecha automaticamente.
 - O envio é **anônimo** e registra rastro em `timeline_events` como "Técnico (Link Público)".
 - O "encerramento" do link (`infra_public_link_closed`) é o mecanismo de revogação — controlado no HUB pelo implantador; efetivo tanto na UI quanto na RPC de escrita.
 - Chamadas RPC usam cast `(supabase.rpc as any)` — não tipadas; alterar assinatura da função exige atualizar os parâmetros no cliente.
