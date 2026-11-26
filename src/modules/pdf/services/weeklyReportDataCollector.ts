@@ -25,21 +25,27 @@ function getSupabaseClient(): SupabaseClient {
   let url = "";
   let key = "";
 
-  // 1. Tentar ler de import.meta.env (Vite)
+  // 1. Tentar ler de import.meta.env (Vite — apenas chaves públicas, nunca secret/service_role)
   try {
     if (typeof import.meta !== "undefined" && import.meta.env) {
       url = (import.meta.env.VITE_SUPABASE_URL as string) || "";
-      key = (import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY as string) ||
-            (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) || "";
+      key = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) || "";
     }
   } catch {
     /* ambiente Node */
   }
 
-  // 2. Se vazio, tentar ler de process.env (Node / tsx)
-  if (!url && typeof process !== "undefined" && process.env) {
-    url = process.env.VITE_SUPABASE_URL || "";
-    key = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
+  // 2. Se vazio ou em ambiente Node / tsx, ler de process.env (server-side)
+  if (typeof process !== "undefined" && process.env) {
+    if (!url) {
+      url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "";
+    }
+    const serverKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (serverKey) {
+      key = serverKey;
+    } else if (!key) {
+      key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
+    }
   }
 
   // 3. Fallback: carregar manualmente do arquivo .env se estiver no Node
@@ -50,10 +56,12 @@ function getSupabaseClient(): SupabaseClient {
         const lines = fs.readFileSync(envPath, "utf-8").split("\n");
         for (const rawLine of lines) {
           const line = rawLine.trim();
-          if (line.startsWith("VITE_SUPABASE_URL=")) {
-            url = line.replace("VITE_SUPABASE_URL=", "").replace(/["']/g, "").trim();
-          } else if (line.startsWith("VITE_SUPABASE_SERVICE_ROLE_KEY=")) {
-            key = line.replace("VITE_SUPABASE_SERVICE_ROLE_KEY=", "").replace(/["']/g, "").trim();
+          if (!url && (line.startsWith("SUPABASE_URL=") || line.startsWith("VITE_SUPABASE_URL="))) {
+            url = line.replace(/^(VITE_)?SUPABASE_URL=/, "").replace(/["']/g, "").trim();
+          } else if (line.startsWith("SUPABASE_SECRET_KEY=")) {
+            key = line.replace("SUPABASE_SECRET_KEY=", "").replace(/["']/g, "").trim();
+          } else if (!key && line.startsWith("SUPABASE_SERVICE_ROLE_KEY=")) {
+            key = line.replace("SUPABASE_SERVICE_ROLE_KEY=", "").replace(/["']/g, "").trim();
           } else if (!key && line.startsWith("VITE_SUPABASE_PUBLISHABLE_KEY=")) {
             key = line.replace("VITE_SUPABASE_PUBLISHABLE_KEY=", "").replace(/["']/g, "").trim();
           }

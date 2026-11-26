@@ -36,9 +36,20 @@ function loadEnv() {
 }
 
 const env = loadEnv();
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || env.VITE_SUPABASE_URL || "https://okvufcwkophaadttmjwa.supabase.co";
-const SUPABASE_KEY = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || env.VITE_SUPABASE_ANON_KEY;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || env.OPENAI_API_KEY || env.VITE_OPENAI_API_KEY;
+const SUPABASE_URL =
+  process.env.SUPABASE_URL ||
+  env.SUPABASE_URL ||
+  process.env.VITE_SUPABASE_URL ||
+  env.VITE_SUPABASE_URL ||
+  "https://okvufcwkophaadttmjwa.supabase.co";
+const SUPABASE_KEY =
+  process.env.SUPABASE_SECRET_KEY ||
+  env.SUPABASE_SECRET_KEY ||
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || env.OPENAI_API_KEY;
 
 const isDryRun = process.argv.includes("--dry-run");
 const shouldPurgeOld = process.argv.includes("--purge-old") || true;

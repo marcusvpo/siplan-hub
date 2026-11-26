@@ -26,14 +26,16 @@ dist-ssr
 
 # Security & Environment
 .env
-.env.local
-.env.*.local
-.env.development
-.env.test
-.env.production
+.env.*
+!.env.example
+!vm-worker/.env.example
+*session*.json
+*auth*.json
 *.pem
+*.key
+*.p12
+*.pfx
 .vercel
-.env*.local
 
 # TypeScript build info & temp files
 *.tsbuildinfo

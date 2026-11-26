@@ -15,11 +15,14 @@ function getEnvVar(key) {
   return match ? match[1].trim() : process.env[key];
 }
 
-const supabaseUrl = getEnvVar("VITE_SUPABASE_URL");
-const supabaseServiceKey = getEnvVar("VITE_SUPABASE_SERVICE_ROLE_KEY") || getEnvVar("VITE_SUPABASE_PUBLISHABLE_KEY");
+const supabaseUrl = getEnvVar("SUPABASE_URL") || getEnvVar("VITE_SUPABASE_URL");
+const supabaseServiceKey =
+  getEnvVar("SUPABASE_SECRET_KEY") ||
+  getEnvVar("SUPABASE_SERVICE_ROLE_KEY") ||
+  getEnvVar("VITE_SUPABASE_PUBLISHABLE_KEY");
 
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.error("VITE_SUPABASE_URL ou SERVICE_ROLE_KEY ausentes no .env!");
+  console.error("SUPABASE_URL/VITE_SUPABASE_URL ou SUPABASE_SECRET_KEY ausentes no .env!");
   process.exit(1);
 }
 
