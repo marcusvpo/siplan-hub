@@ -1,9 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 
-const sb = createClient(
-  process.env.VITE_SUPABASE_URL || "https://okvufcwkophaadttmjwa.supabase.co",
-  process.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rdnVmY3drb3BoYWFkdHRtandhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAzNTQ5ODUsImV4cCI6MjA1NTkzMDk4NX0.eG8aG-xM6o55U5Z-s_2Y6Y9bT6rZ4j7J_j1G1T8vB4o"
-);
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+const supabaseKey =
+  process.env.SUPABASE_SECRET_KEY ||
+  process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error("Defina SUPABASE_URL (ou VITE_SUPABASE_URL) e SUPABASE_SECRET_KEY (ou VITE_SUPABASE_PUBLISHABLE_KEY) no ambiente.");
+  process.exit(1);
+}
+
+const sb = createClient(supabaseUrl, supabaseKey);
 
 async function testRegex() {
   const { data, error } = await sb.storage.from("assistant-oriontn-doc").download("OrionTN pos.md");

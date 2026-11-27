@@ -1,7 +1,11 @@
 import fs from "node:fs";
 
-const N8N_API_URL = "http://n8n.siplan.com.br:5678/api/v1";
-const N8N_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiYTkxN2Q4OS03MWRjLTRlYmEtYTdkZi01NDkxNTM1NGIzNWUiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiM2UyYzE5MTUtMGQ0OC00MmFiLWIzN2QtNmUxNDJkNjIzNTNlIiwiaWF0IjoxNzkzODA0ODcyfQ.tSzuchSumuBrmIh-cbS1Q_vrY72upYsAxovpz01CNJw";
+const N8N_API_URL = process.env.N8N_API_URL || "http://n8n.siplan.com.br:5678/api/v1";
+const N8N_API_KEY = process.env.N8N_API_KEY;
+if (!N8N_API_KEY) {
+  console.error("Erro: defina a variável de ambiente N8N_API_KEY antes de executar este script.");
+  process.exit(1);
+}
 const WORKFLOW_ID = "mNQ9HfJUls39FIVi";
 
 async function main() {

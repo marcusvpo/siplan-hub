@@ -9,7 +9,11 @@
 
 const N8N_BASE_URL = process.env.N8N_BASE_URL || 'http://n8n.siplan.com.br:5678';
 const N8N_API_URL = process.env.N8N_API_URL || `${N8N_BASE_URL}/api/v1`;
-const N8N_API_KEY = process.env.N8N_API_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiYTkxN2Q4OS03MWRjLTRlYmEtYTdkZi01NDkxNTM1NGIzNWUiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiM2UyYzE5MTUtMGQ0OC00MmFiLWIzN2QtNmUxNDJkNjIzNTNlIiwiaWF0IjoxNzkzODA0ODcyfQ.tSzuchSumuBrmIh-cbS1Q_vrY72upYsAxovpz01CNJw';
+const N8N_API_KEY = process.env.N8N_API_KEY;
+if (!N8N_API_KEY) {
+  console.error('Erro: defina a variável de ambiente N8N_API_KEY antes de executar o n8n-manager.');
+  process.exit(1);
+}
 
 async function fetchN8n(path, options = {}) {
   const url = `${N8N_API_URL}${path.startsWith('/') ? path : '/' + path}`;

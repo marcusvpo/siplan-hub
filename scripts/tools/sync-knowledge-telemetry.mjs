@@ -36,10 +36,13 @@ function loadEnv() {
 loadEnv();
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const supabaseKey =
+  process.env.SUPABASE_SECRET_KEY ||
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-  console.error('❌ Erro: Variáveis VITE_SUPABASE_URL ou VITE_SUPABASE_PUBLISHABLE_KEY não encontradas.');
+  console.error('❌ Erro: Variáveis VITE_SUPABASE_URL e SUPABASE_SECRET_KEY (ou VITE_SUPABASE_PUBLISHABLE_KEY) não encontradas.');
   process.exit(1);
 }
 

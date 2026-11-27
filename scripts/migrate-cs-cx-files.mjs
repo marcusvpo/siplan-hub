@@ -12,12 +12,12 @@ const confirmation = [...args].find((arg) => arg.startsWith('--confirm-project='
 loadDotEnv();
 const targetUrl = process.env.SUPABASE_DB_URL;
 const apiUrl = process.env.VITE_SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const serviceRoleKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 const legacyRoot = path.resolve(process.env.CS_CX_LEGACY_UPLOADS_PATH
   ?? '\\\\10.0.10.9\\Siplan\\SistemaRegistro\\uploads');
 
 if (!targetUrl || !apiUrl || !serviceRoleKey) {
-  fail('Defina SUPABASE_DB_URL, VITE_SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no ambiente ou .env.');
+  fail('Defina SUPABASE_DB_URL, VITE_SUPABASE_URL e SUPABASE_SECRET_KEY (ou SUPABASE_SERVICE_ROLE_KEY) no ambiente ou .env.');
 }
 const projectRef = resolveProjectRef(targetUrl, apiUrl);
 if (apply && (!projectRef || confirmation !== projectRef)) {
